@@ -1,0 +1,26 @@
+{
+    "impressions": [
+        {
+            "uuid": "aaaaaaaaaaaaaaaaaaaaa",
+            "name": "blue ocean",
+            "type": "ComplexGlyphs",
+            "visible": true,
+            "inputValues": {
+                "Key Data": {
+                    "inputType": "IKeyData",
+                    "inputValue": "ParaView://TACC/GulfOfMexico/Bathymetry"
+                },
+                "Color Map": {
+                    "inputType": "IColormap",
+                    "inputValue": "somerealllylonguuid"
+                }
+            }
+        }
+    ],
+    "scene": {
+        "SethIsCool": [1, 2, 3],
+        "HomogeneousMilk": {
+            "sour": true
+        }
+    }
+}

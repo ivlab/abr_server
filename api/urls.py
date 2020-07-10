@@ -1,12 +1,8 @@
-from django.conf.urls import url, include
-from rest_framework.urlpatterns import format_suffix_patterns
-from .views import CreateViewImpression, DetailsViewImpression, CreateViewInputValue, DetailsViewInputValue
+from django.urls import path
 
-urlpatterns = {
-    url(r'^impressions/$', CreateViewImpression.as_view(), name='create'),
-    url(r'^impressions/(?P<pk>([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}){1})/$', DetailsViewImpression.as_view(), name='details'),
-    url(r'^input-values/$', CreateViewInputValue.as_view(), name='create'),
-    url(r'^input-values/(?P<pk>[0-9]+)/$', DetailsViewInputValue.as_view(), name='details'),
-}
+from . import views
 
-urlpatterns = format_suffix_patterns(urlpatterns)
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('schema/', views.schema),
+]

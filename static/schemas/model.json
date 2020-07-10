@@ -5,7 +5,7 @@
     "description": "The canonical model for Artifact-Based Rendering operations - the 'state' which is changeable by the user",
     "type": "object",
 
-    "required": ["version", "spec"],
+    "required": ["version"],
 
 
     "properties": {
@@ -13,11 +13,6 @@
             "type": "string",
             "description": "Version of the model (semantic version, update this when updating the model)",
             "const": "0.0.0"
-        },
-
-        "spec": {
-            "type": "string",
-            "description": "Version of the spec (sematic version)"
         },
 
         "impressions": {
@@ -61,7 +56,16 @@
             "type": "object",
             "description": "A single data impression (ABR layer)",
             "required": ["uuid"],
+            "oneOf": [
+                {"$ref": "#/definitions/ComplexGlyphs"},
+                {"$ref": "#/definitions/Blah"}
+            ],
             "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "What type of data impression is it? (one of the plate types specified in the spec)",
+                    "enum": ["ComplexGlyphs", "SimpleSurface", "CrappyLines"]
+                },
                 "uuid": {
                     "$ref": "#/definitions/UUID",
                     "description": "The unique identifier for this data impression"
@@ -77,9 +81,11 @@
                     "default": true
                 },
                 "inputValues": {
-                    "type": "array",
-                    "items": {"$ref": "#/definitions/InputValue"},
-                    "description": "Input values for this data impression (i.e. Key Data, Colormap, Color Variable, etc.)"
+                    "type": "object",
+                    "description": "Input values for this data impression (i.e. Key Data, Colormap, Color Variable, etc.)",
+                    "patternProperties": {
+                        "[a-zA-Z ]+": {"$ref": "#/definitions/InputValue"}
+                    }
                 }
             }
         },
@@ -87,15 +93,12 @@
         "InputValue": {
             "type": "object",
             "description": "A single input value for a data impression",
-            "required": ["inputName", "inputValue"],
+            "required": ["inputValue", "inputType"],
             "properties": {
                 "inputType": {
                     "type": "string",
-                    "description": "The type of this input (corresponds to a type in the ABR spec)"
-                },
-                "inputName": {
-                    "type": "string",
-                    "description": "Name of the input"
+                    "description": "The type of this input (corresponds to a type in the ABR spec)",
+                    "enum": ["Colormap", "KeyData", "Float"]
                 },
                 "inputValue": {
                     "type": "string",
@@ -167,7 +170,11 @@
 
         "Path": {
             "type": "string",
-            "pattern": "^(/[^/]+)+$"
+            "pattern": "^(ParaView:|Generated:|VTK:)(/[^/]+)+$"
+        },
+
+        "ComplexGlyphs": {
+
         }
     }
 }
