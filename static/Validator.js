@@ -2,10 +2,13 @@ export class Validator {
     constructor(schemaID) {
         this._pendingValidations = [];
 
-        this._validator = fetch('/api/schema')
+        this.schemaID = schemaID;
+
+        this._validator = fetch(`/api/schemas/${schemaID}`)
             .then((resp) => resp.text())
             .then((text) => {
                 let schemaObj = JSON.parse(text);
+                console.log(schemaObj);
                 let ajv = new Ajv({
                     allErrors: true,
                     verbose: true,
@@ -17,11 +20,12 @@ export class Validator {
     }
 
     async validate(data) {
-        console.log(data);
-        let schemaID = data.schemaID;
-        let valid = await this._validator.then((v) => {
-            console.log(v.validate(schemaID, data));
-            console.log(v.errors);
+        return await this._validator.then((v) => {
+            if (!v.validate(this.schemaID, data)) {
+                return v.errors;
+            } else {
+                return null;
+            }
         });
     }
 }

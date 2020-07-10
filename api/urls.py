@@ -4,5 +4,5 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('schema/', views.schema),
+    path('schemas/<str:schema_name>', views.schema),
 ]

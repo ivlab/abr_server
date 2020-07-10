@@ -1,8 +1,8 @@
 {
-    "$schema": "https://www.sculpting-vis.org/abr-schemas/",
-    "$id": "https://www.sculpting-vis.org/abr-schemas/spec.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "spec.json",
     "title": "ABR Specification",
-    "description": "The specification for ABR - a contract between the ABR Model, Renderer, and all UIs",
+    "description": "The specification for ABR - a contract between the ABR Model, Renderer, and all UIs. The actual spec will likely be generated from the ABR Unity project.",
     "type": "object",
 
 
@@ -12,17 +12,13 @@
     "properties": {
         "version": {
             "type": "string",
-            "description": "Version of the spec (semantic versioning, incremented when a change is made to the spec)"
+            "description": "Version of the spec (semantic versioning, incremented when a change is made to the spec)",
+            "const": "0.0.0"
         },
         "plates": {
             "type": "array",
             "description": "Plates (layers) that the ABR Rendering engine implements",
             "items": {"$ref": "#/definitions/Plate"}
-        },
-        "types": {
-            "type": "array",
-            "description": "C# types exposed by ABR",
-            "items": "string"
         }
     },
 
@@ -32,7 +28,7 @@
             "type": "object",
             "description": "A Plate in ABR (e.g. a SurfacePlate) which becomes a data impression when instantiated",
             "properties": {
-                "type": {
+                "plateType": {
                     "type": "string",
                     "description": "String representation of a C# type"
                 },
@@ -41,9 +37,10 @@
                     "description": "Version of the plate (semantic versioning, increment every time you change this plate)"
                 },
                 "inputs": {
-                    "type": "array",
                     "description": "The inputs available to this plate, associated with their types",
-                    "items": {"$ref": "#/definitions/Input"}
+                    "patternProperties": {
+                        "^[a-zA-Z ]+": {"$ref": "#/definitions/Input"}
+                    }
                 }
             }
         },
@@ -55,10 +52,6 @@
                 "inputType": {
                     "type": "string",
                     "description": "The type of this input (corresponds to a C# type, e.g. `ColormapVisAsset`)"
-                },
-                "inputName": {
-                    "type": "string",
-                    "description": "Name of the input (e.g. `Colormap`)"
                 },
                 "inputGroup": {
                     "type": "string",

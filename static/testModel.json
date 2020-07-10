@@ -1,6 +1,6 @@
 {
     "version": "0.0.0",
-    "schemaID": "model.json",
+    "spec": "0.0.0",
     "impressions": [
         {
             "uuid": "30abc55c-343f-4428-ae8c-07b2da687ba4",

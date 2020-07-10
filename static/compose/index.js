@@ -10,12 +10,17 @@ function init() {
     //     console.log(text)
     // });
 
-    let validator = new Validator('model.json');
-
-    fetch(`${STATIC_URL}test.json`).then((r) => r.text()).then((text) => {
+    let modelValidator = new Validator('model2.json');
+    fetch(`${STATIC_URL}testModel.json`).then((r) => r.text()).then((text) => {
         let j = JSON.parse(text);
-        validator.validate(j).then((error) => console.log(error));
-    })
+        modelValidator.validate(j).then((error) => console.log(error));
+    });
+
+    let specValidator = new Validator('spec.json');
+    fetch(`${STATIC_URL}testSpec.json`).then((r) => r.text()).then((text) => {
+        let j = JSON.parse(text);
+        specValidator.validate(j).then((error) => console.log(error));
+    });
 }
 
 window.onload = init;

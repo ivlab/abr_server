@@ -1,0 +1,95 @@
+{
+    "version": "0.0.0",
+    "plates": [
+        {
+            "plateType": "Glyphs",
+            "version": "0.0.0",
+            "inputs": {
+                "Key Data": {
+                    "inputType": "KeyData",
+                    "inputGroup": "Key Data"
+                },
+                "Color Variable": {
+                    "inputType": "ScalarDataVariable",
+                    "inputGroup": "Color"
+                },
+                "Colormap": {
+                    "inputType": "ColormapVisAsset",
+                    "inputGroup": "Color"
+                },
+                "Glyph Variable": {
+                    "inputType": "ScalarDataVariable",
+                    "inputGroup": "Glyph"
+                },
+                "Glyph": {
+                    "inputType": "GlyphVisAsset",
+                    "inputGroup": "Glyph"
+                },
+                "Glyph Size": {
+                    "inputType": "DistancePrimitive",
+                    "inputGroup": "Glyph Size"
+                }
+            }
+        },
+        {
+            "plateType": "Lines",
+            "version": "0.0.0",
+            "inputs": {
+                "Key Data": {
+                    "inputType": "KeyData",
+                    "inputGroup": "Key Data"
+                },
+                "Color Variable": {
+                    "inputType": "ScalarDataVariable",
+                    "inputGroup": "Color"
+                },
+                "Colormap": {
+                    "inputType": "ColormapVisAsset",
+                    "inputGroup": "Color"
+                },
+                "Line Variable": {
+                    "inputType": "ScalarDataVariable",
+                    "inputGroup": "Line"
+                },
+                "Line": {
+                    "inputType": "LineVisAsset",
+                    "inputGroup": "Line"
+                },
+                "Line Width": {
+                    "inputType": "DistancePrimitive",
+                    "inputGroup": "Line Width"
+                }
+            }
+        },
+        {
+            "plateType": "Surface",
+            "version": "0.0.0",
+            "inputs": {
+                "Key Data": {
+                    "inputType": "KeyData",
+                    "inputGroup": "Key Data"
+                },
+                "Color Variable": {
+                    "inputType": "ScalarDataVariable",
+                    "inputGroup": "Color"
+                },
+                "Colormap": {
+                    "inputType": "ColormapVisAsset",
+                    "inputGroup": "Color"
+                },
+                "Pattern Variable": {
+                    "inputType": "ScalarDataVariable",
+                    "inputGroup": "Pattern"
+                },
+                "Pattern": {
+                    "inputType": "TextureVisAsset",
+                    "inputGroup": "Pattern"
+                },
+                "Pattern Scale": {
+                    "inputType": "PercentagePrimitive",
+                    "inputGroup": "Pattern Scale"
+                }
+            }
+        }
+    ]
+}

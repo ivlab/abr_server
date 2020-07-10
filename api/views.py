@@ -6,5 +6,5 @@ from django.conf import settings
 def index(request):
     return render(request, 'abr_server.html')
 
-def schema(request):
-    return redirect(settings.STATIC_URL + 'schemas/model2.json')
+def schema(request, schema_name):
+    return redirect(settings.STATIC_URL + 'schemas/{}'.format(schema_name))
