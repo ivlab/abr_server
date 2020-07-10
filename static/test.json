@@ -1,26 +1,22 @@
 {
+    "version": "0.0.0",
+    "schemaID": "model.json",
     "impressions": [
         {
-            "uuid": "aaaaaaaaaaaaaaaaaaaaa",
+            "uuid": "30abc55c-343f-4428-ae8c-07b2da687ba4",
+            "impressionType": "Glyphs",
             "name": "blue ocean",
-            "type": "ComplexGlyphs",
             "visible": true,
             "inputValues": {
                 "Key Data": {
-                    "inputType": "IKeyData",
+                    "inputType": "KeyData",
                     "inputValue": "ParaView://TACC/GulfOfMexico/Bathymetry"
                 },
                 "Color Map": {
-                    "inputType": "IColormap",
-                    "inputValue": "somerealllylonguuid"
+                    "inputType": "Colormap",
+                    "inputValue": "24684dff-9447-4b01-8f28-072e4fde07fb"
                 }
             }
         }
-    ],
-    "scene": {
-        "SethIsCool": [1, 2, 3],
-        "HomogeneousMilk": {
-            "sour": true
-        }
-    }
+    ]
 }

@@ -1,6 +1,5 @@
 {
-    "$schema": "https://www.sculpting-vis.org/abr-schemas/",
-    "$id": "https://www.sculpting-vis.org/abr-schemas/model.json",
+    "$id": "model.json",
     "title": "ABR Model",
     "description": "The canonical model for Artifact-Based Rendering operations - the 'state' which is changeable by the user",
     "type": "object",

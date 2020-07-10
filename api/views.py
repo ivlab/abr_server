@@ -7,4 +7,4 @@ def index(request):
     return render(request, 'abr_server.html')
 
 def schema(request):
-    return redirect(settings.STATIC_URL + 'schemas/model.json')
+    return redirect(settings.STATIC_URL + 'schemas/model2.json')
