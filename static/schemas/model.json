@@ -14,6 +14,11 @@
             "const": "0.0.0"
         },
 
+        "spec": {
+            "type": "string",
+            "description": "Version of the ABR Specification that this state was made with (spec should be loaded first)"
+        },
+
         "schemaID": {
             "type": "string",
             "description": "Version of the spec this model was created with"
