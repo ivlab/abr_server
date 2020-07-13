@@ -24,10 +24,12 @@ def impressions(request):
             resp = state.get_path(item_path_parts)
             return JsonResponse({'data': resp})
         except:
-            raise Http404('Impression does not exist: {}'.format(request.path))
+            raise Http404('Unable to access state: {}'.format(request.path))
     elif request.method == 'PUT':
         try:
-            state.set_path(item_path_parts, json.loads(request.body))
+            success = state.set_path(item_path_parts, json.loads(request.body))
+            if not success:
+                raise Exception()
             return HttpResponse()
         except:
-            raise Http404('Impression does not exist: {}'.format(request.path))
+            raise Http404('Unable to update state: {}'.format(request.path))

@@ -1,5 +1,6 @@
 import jsonschema
 import json
+from copy import deepcopy
 from django.conf import settings
 from pathlib import Path
 from threading import Lock
@@ -51,8 +52,16 @@ class State():
 
     def set_path(self, item_path, new_value):
         with self._state_lock:
+            backup = deepcopy(self._state)
             self._set_path(self._state, item_path, new_value)
-            print(self._state)
+            try:
+                jsonschema.validate(backup, self.state_schema)
+                return True
+            except jsonschema.ValidationError:
+                self._state = backup
+                return False
+
+
 
     def _set_path(self, sub_state, sub_path_parts, new_value):
         if len(sub_path_parts) == 1:
