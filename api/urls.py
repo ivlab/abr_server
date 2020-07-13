@@ -1,10 +1,9 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
     path('schemas/<str:schema_name>/', views.schema),
-    path('state/impressions/', views.impressions),
-    path('state/impressions/<uuid:uuid>/', views.impressions),
+    re_path('^state/*', views.impressions),
 ]

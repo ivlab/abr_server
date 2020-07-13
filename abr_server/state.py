@@ -23,7 +23,13 @@ class State():
             self.state_schema = json.load(scm)
 
         # Initialize a blank starting state
-        self._state = {}
+        self._state = {
+            'impressions': [
+                {
+                    'uuid': 'bb4f75b2-03d5-45e7-a40d-b49a1ce572f0'
+                }
+            ]
+        }
 
         # Populate the required fields
         self._state['version'] = self.state_schema['properties']['version']['const']
@@ -36,12 +42,23 @@ class State():
 
         self._state_lock = Lock()
 
-    def get(self, item_path):
-        item_path_parts = Path(item_path).parts
-        with self._state_lock:
-            tmp_access = self._state[item_path_parts[0]]
-            for level in range(1, len(item_path_parts)):
-                tmp_access = tmp_access[item_path_parts[level]]
-            return tmp_access
+    def get_path(self, item_path):
+        return self._get_path(self._state, item_path)
+        
+    def _get_path(self, sub_state, sub_path_parts):
+        if len(sub_path_parts) == 1:
+            return sub_state[sub_path_parts[0]]
+        else:
+            root = sub_path_parts[0]
+            rest = sub_path_parts[1:]
+            return self._get_path(sub_state[root], rest)
+
+    # def set_path(self, item_path, item):
+    #     item_path_parts = Path(item_path).parts
+    #     with self._state_lock:
+    #         tmp_access = self._state[item_path_parts[0]]
+    #         for level in range(1, len(item_path_parts)):
+    #             tmp_access = tmp_access[item_path_parts[level]]
+
 
 state = State()
