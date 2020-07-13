@@ -25,9 +25,12 @@
         },
 
         "impressions": {
-            "type": "array",
-            "items": {"$ref": "#/definitions/Impression"},
-            "description": "The data impressions that a user has created"
+            "type": "object",
+            "description": "The data impressions that a user has created",
+            "$comment": "Unfortunately necessary to explicitly specify a UUID here; 'format': 'uuid' doesn't work in patternProperties",
+            "patternProperties": {
+                "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}){1}$": {"$ref": "#/definitions/Impression"}
+            }
         },
 
         "scene": {

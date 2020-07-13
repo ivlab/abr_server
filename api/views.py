@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse, Http404
 from django.conf import settings
@@ -22,5 +23,11 @@ def impressions(request):
         try:
             resp = state.get_path(item_path_parts)
             return JsonResponse({'data': resp})
-        except KeyError:
+        except:
+            raise Http404('Impression does not exist: {}'.format(request.path))
+    elif request.method == 'PUT':
+        try:
+            state.set_path(item_path_parts, json.loads(request.body))
+            return HttpResponse()
+        except:
             raise Http404('Impression does not exist: {}'.format(request.path))

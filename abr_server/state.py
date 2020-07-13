@@ -23,13 +23,7 @@ class State():
             self.state_schema = json.load(scm)
 
         # Initialize a blank starting state
-        self._state = {
-            'impressions': [
-                {
-                    'uuid': 'bb4f75b2-03d5-45e7-a40d-b49a1ce572f0'
-                }
-            ]
-        }
+        self._state = {}
 
         # Populate the required fields
         self._state['version'] = self.state_schema['properties']['version']['const']
@@ -42,8 +36,10 @@ class State():
 
         self._state_lock = Lock()
 
+    # CRUD operations
     def get_path(self, item_path):
-        return self._get_path(self._state, item_path)
+        with self._state_lock:
+            return self._get_path(self._state, item_path)
         
     def _get_path(self, sub_state, sub_path_parts):
         if len(sub_path_parts) == 1:
@@ -53,12 +49,24 @@ class State():
             rest = sub_path_parts[1:]
             return self._get_path(sub_state[root], rest)
 
-    # def set_path(self, item_path, item):
-    #     item_path_parts = Path(item_path).parts
-    #     with self._state_lock:
-    #         tmp_access = self._state[item_path_parts[0]]
-    #         for level in range(1, len(item_path_parts)):
-    #             tmp_access = tmp_access[item_path_parts[level]]
+    def set_path(self, item_path, new_value):
+        with self._state_lock:
+            self._set_path(self._state, item_path, new_value)
+            print(self._state)
+
+    def _set_path(self, sub_state, sub_path_parts, new_value):
+        if len(sub_path_parts) == 1:
+            # Relies on dicts being mutable
+            sub_state[sub_path_parts[0]] = new_value
+        else:
+            root = sub_path_parts[0]
+            rest = sub_path_parts[1:]
+
+            # TODO: assuming we're creating an object for now
+            if root not in sub_state:
+                sub_state[root] = {}
+
+            self._set_path(sub_state[root], rest, new_value)
 
 
 state = State()
