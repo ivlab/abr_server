@@ -20,16 +20,11 @@ def impressions(request):
     item_path_parts = item_path_parts[3:]
 
     if request.method == 'GET':
-        try:
-            resp = state.get_path(item_path_parts)
-            return JsonResponse({'data': resp})
-        except:
-            raise Http404('Unable to access state: {}'.format(request.path))
+        resp = state.get_path(item_path_parts)
+        return JsonResponse({'data': resp})
     elif request.method == 'PUT':
-        try:
-            success = state.set_path(item_path_parts, json.loads(request.body))
-            if not success:
-                raise Exception()
+        err_message = state.set_path(item_path_parts, json.loads(request.body))
+        if len(err_message) > 0:
+            return HttpResponse(err_message, status=400)
+        else:
             return HttpResponse()
-        except:
-            raise Http404('Unable to update state: {}'.format(request.path))

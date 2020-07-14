@@ -8,13 +8,11 @@ export class Validator {
             .then((resp) => resp.text())
             .then((text) => {
                 let schemaObj = JSON.parse(text);
-                console.log(schemaObj);
                 let ajv = new Ajv({
                     allErrors: true,
                     verbose: true,
                 });
                 ajv.addSchema(schemaObj, schemaID);
-                // return ajv.compile(schemaObj);
                 return ajv;
             });
     }

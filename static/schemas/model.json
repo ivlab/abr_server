@@ -5,18 +5,13 @@
     "description": "The canonical model for Artifact-Based Rendering operations - the 'state' which is changeable by the user",
     "type": "object",
 
-    "required": ["version", "spec"],
+    "required": ["version"],
 
     "properties": {
         "version": {
             "type": "string",
             "description": "Version of the model (semantic version, update this when updating the model)",
             "const": "0.0.0"
-        },
-
-        "spec": {
-            "type": "string",
-            "description": "Version of the ABR Specification that this state was made with (spec should be loaded first)"
         },
 
         "schemaID": {
@@ -65,12 +60,14 @@
     "definitions": {
         "Impression": {
             "type": "object",
-            "description": "A single data impression (ABR layer)",
+            "description": "A single data impression (ABR layer) - instantiated version of a plate",
             "required": ["impressionType", "uuid"],
             "properties": {
                 "impressionType": {
                     "type": "string",
-                    "description": "What type of data impression is it? (one of the plate types specified in the spec)"
+                    "description": "What type of data impression is it? (one of the plate types specified in the spec)",
+                    "$comment": "Change this when adding a new plate type",
+                    "enum": ["Glyphs", "Lines", "Surface"]
                 },
                 "uuid": {
                     "format": "uuid",
@@ -89,11 +86,13 @@
                 "inputValues": {
                     "type": "object",
                     "description": "Input values for this data impression (i.e. Key Data, Colormap, Color Variable, etc.)",
-                    "$comment": "We enforce [a-zA-Z ]+ for readability",
                     "patternProperties": {
-                        "^[a-zA-Z ]+$": {"$ref": "#/definitions/InputValue"}
+                        ".*": { "$ref": "#/definitions/InputValue"}
                     },
-                    "additionalProperties": false
+                    "$comment": "Update this when you create a new plate",
+                    "oneOf": [
+                        { "$ref": "#/definitions/Plates/Glyphs" }
+                    ]
                 }
             }
         },
@@ -101,22 +100,28 @@
         "InputValue": {
             "type": "object",
             "description": "A single input value for a data impression",
-            "required": ["inputValue", "inputType"],
+            "required": ["inputValue", "inputType", "inputGroup"],
             "properties": {
                 "inputType": {
                     "type": "string",
-                    "description": "The type of this input (corresponds to a type in the ABR spec)"
+                    "description": "The type of this input (corresponds to a C# type in ABR)"
                 },
                 "inputValue": {
                     "type": "string",
-                    "description": "UUID or resolvable path where the input can be found",
+                    "description": "Null, UUID, primitive, or resolvable path where the input can be found. Should be a string.",
                     "oneOf": [
-                        { "format": "uuid" },
-                        { "$ref": "#/definitions/DataPath" },
-                        { "$ref": "#/definitions/Primitive" }
+                        { "$ref": "#/definitions/InputStringTypes/NullString" },
+                        { "$ref": "#/definitions/InputStringTypes/Primitive" },
+                        { "$ref": "#/definitions/InputStringTypes/UUID" },
+                        { "$ref": "#/definitions/InputStringTypes/DataPath" }
                     ]
+                },
+                "inputGroup": {
+                    "type": "string",
+                    "description": "The group that this input belongs to (e.g. `Colormap` and `Color Variable` belong to the `Color` group)"
                 }
-            }
+            },
+            "additionalProperties": false
         },
 
         "LocalVisAsset": {
@@ -169,18 +174,88 @@
             "enum": ["colormap", "glyph", "line", "texture"]
         },
 
-        "DataPath": {
-            "type": "string",
-            "$comment": "Update whenever a new data source is added to the data server. Eventually should pull this bit of schema from the data server.",
-            "pattern": "^(ParaView|Generated|VTK)(:\/\/)([^/]\/*)+$"
+        "InputStringTypes": {
+            "NullString": {
+                "pattern": "^null$"
+            },
+
+            "UUID": {
+                "type": "string",
+                "pattern": "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}){1}$"
+            },
+
+            "DataPath": {
+                "$comment": "Update whenever a new data source is added to the data server. Eventually should pull this bit of schema from the data server.",
+                "pattern": "^(ParaView|Generated|VTK)(:\/\/)([^/]\/*)+$"
+            },
+
+            "Primitive": {
+                "oneOf": [
+                    {
+                        "$comment": "Floating point number",
+                        "pattern": "^\\d+(.\\d+)?$"
+                    },
+                    {
+                        "$comment": "Floating point percentage",
+                        "pattern": "^\\d+.?\\d+?%$"
+                    },
+                    {
+                        "$comment": "Floating point distance (metric units)",
+                        "pattern": "^\\d+(.\\d+)?(mm)|(cm)|(m)$"
+                    },
+                    {
+                        "$comment": "Boolean",
+                        "pattern": "^(true)|(false)$"
+                    }
+                ]
+            }
         },
 
-        "Primitive": {
-            "$comment": "This probably should be replaced with something more useful like a regex for percentages, lengths, etc.",
-            "oneOf": [
-                {"type": "number"},
-                {"type": "boolean"}
-            ]
+        "Plates": {
+            "$comment": "Update these whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
+            "Glyphs": {
+                "type": "object",
+                "description": "Inputs for a field of glyphs",
+                "properties": {
+                    "Key Data": {
+                        "properties": {
+                                "inputType": { "const": "PointData" },
+                                "inputGroup": { "const": "Key Data" }
+                        }
+                    },
+                    "Color Variable": {
+                        "properties": {
+                                "inputType": { "const": "ScalarDataVariable" },
+                                "inputGroup": { "const": "Color" }
+                        }
+                    },
+                    "Colormap": {
+                        "properties": {
+                                "inputType": { "const": "ColormapVisAsset" },
+                                "inputGroup": { "const": "Color" }
+                        }
+                    },
+                    "Glyph Variable": {
+                        "properties": {
+                                "inputType": { "const": "ScalarDataVariable" },
+                                "inputGroup": { "const": "Glyph" }
+                        }
+                    },
+                    "Glyph": {
+                        "properties": {
+                                "inputType": { "const": "GlyphVisAsset" },
+                                "inputGroup": { "const": "Glyph" }
+                        }
+                    },
+                    "Glyph Size": {
+                        "properties": {
+                                "inputType": { "const": "Primitive" },
+                                "inputGroup": { "const": "Glyph Size" }
+                        }
+                    }
+                },
+                "additionalProperties": false
+            }
         }
     }
 }
