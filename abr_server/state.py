@@ -46,17 +46,15 @@ class State():
             return self._get_path(sub_state[root], rest)
 
     def set_path(self, item_path, new_value):
-        print('old state', self._state)
         self._set_path(self._pending_state, item_path, new_value)
         try:
-            print('validating', self._pending_state)
             jsonschema.validate(self._pending_state, self.state_schema)
             with self._state_lock:
                 self._state = deepcopy(self._pending_state)
-            print('new state', self._state)
             return ''
         except jsonschema.ValidationError as e:
-            return 'Failed to validate after setting {}: {}'.format(item_path, e.message)
+            path = '/'.join(e.path)
+            return '{}: {}'.format(path, e.message)
 
     def _set_path(self, sub_state, sub_path_parts, new_value):
         if len(sub_path_parts) == 1:

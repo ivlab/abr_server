@@ -25,7 +25,7 @@ function init() {
                         inputGroup: 'Color',
                         inputValue: '1ad2bed5-b601-47c8-9c43-4ffefec32c00'
                     },
-                    'Glyph Variable': {
+                    'Line Variable': {
                         inputType: 'ScalarDataVariable',
                         inputGroup: 'Glyph',
                         inputValue: 'null'
