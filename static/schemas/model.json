@@ -67,7 +67,7 @@
                     "type": "string",
                     "description": "What type of data impression is it? (one of the plate types specified in the spec)",
                     "$comment": "Change this when adding a new plate type",
-                    "enum": ["Glyphs", "Lines", "Surface"]
+                    "enum": ["Glyphs", "Ribbons", "Surface"]
                 },
                 "uuid": {
                     "format": "uuid",
@@ -99,6 +99,24 @@
                     },
                     "then": {
                         "properties": { "inputValues": { "$ref": "#/definitions/Plates/Glyphs" } }
+                    }
+                },
+                {
+                    "$comment": "Put all plate types here to ensure state validity",
+                    "if": {
+                        "properties": { "impressionType": { "const": "Ribbons" } }
+                    },
+                    "then": {
+                        "properties": { "inputValues": { "$ref": "#/definitions/Plates/Ribbons" } }
+                    }
+                },
+                {
+                    "$comment": "Put all plate types here to ensure state validity",
+                    "if": {
+                        "properties": { "impressionType": { "const": "Surface" } }
+                    },
+                    "then": {
+                        "properties": { "inputValues": { "$ref": "#/definitions/Plates/Surface" } }
                     }
                 }
             ]

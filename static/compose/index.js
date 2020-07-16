@@ -1,74 +1,111 @@
 import { Validator } from '../Validator.js'
+import { uuid } from '../UUID.js'
+
+function makeButton(strat) {
+    console.log(strat);
+    return $('<button>', {
+        text: `Validate ${strat.name}`,
+    }).on('click', (evt) => {
+        fetch(`/api/state/impressions/${strat.uuid}`, {
+            method: 'PUT',
+            body: JSON.stringify(strat),
+            headers: {
+                'X-CSRFToken': csrftoken,
+            }
+        }).catch((err) => console.error(err)).then((resp) => {
+            if (resp.status != 200) {
+                $('#err_responses').append(resp.statusText + '<br>');
+            }
+            fetch(`/api/state/impressions`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                }
+            }).then((data) => data.text()).then((t) => console.log(t));
+        });
+    });
+}
 
 function init() {
-    let state = {
-        version: '0.0.0',
-        impressions: {
-            'dd4d2099-2668-4f75-93bc-06dd167ac3b1': {
-                impressionType: 'Glyphs',
-                uuid: 'dd4d2099-2668-4f75-93bc-06dd167ac3b1',
-                name: 'some glyphs',
-                visible: true,
-                inputValues: {
-                    'Key Data': {
-                        inputType: 'PointData',
-                        inputGroup: 'Key Data',
-                        inputValue: 'ParaView://LANL/GulfOfMexico/KeyData/ChlorophyllPoints'
-                    },
-                    'Color Variable': {
-                        inputType: 'ScalarDataVariable',
-                        inputGroup: 'Color',
-                        inputValue: 'ParaView://LANL/GulfOfMexico/ScalarVars/Temperature'
-                    },
-                    'Colormap': {
-                        inputType: 'ColormapVisAsset',
-                        inputGroup: 'Color',
-                        inputValue: '1ad2bed5-b601-47c8-9c43-4ffefec32c00'
-                    },
-                    'Glyph Variable': {
-                        inputType: 'ScalarDataVariable',
-                        inputGroup: 'Glyph',
-                        inputValue: 'null'
-                    },
-                    'Glyph': {
-                        inputType: 'GlyphVisAsset',
-                        inputGroup: 'Glyph',
-                        inputValue: 'null'
-                    },
-                    'Glyph Size': {
-                        inputType: 'Primitive',
-                        inputGroup: 'Glyph Size',
-                        inputValue: '2cm'
-                    }
-                }
+    $('body').append($('<pre>', {id: 'err_responses', css: {color: 'red'}}));
+    let glyphs = {
+        impressionType: 'Glyphs',
+        uuid: uuid(),
+        name: 'good glyphs',
+        visible: true,
+        inputValues: {
+            'Key Data': {
+                inputType: 'PointData',
+                inputGroup: 'Key Data',
+                inputValue: 'ParaView://LANL/GulfOfMexico/KeyData/ChlorophyllPoints'
+            },
+            'Color Variable': {
+                inputType: 'ScalarDataVariable',
+                inputGroup: 'Color',
+                inputValue: 'ParaView://LANL/GulfOfMexico/ScalarVars/Temperature'
+            },
+            'Colormap': {
+                inputType: 'ColormapVisAsset',
+                inputGroup: 'Color',
+                inputValue: uuid()
             }
         }
     };
 
-    let uuid = 'dd4d2099-2668-4f75-93bc-06dd167ac3b1';
-    let impression = state.impressions[uuid];
+    let ribbons = {
+        impressionType: 'Ribbons',
+        uuid: uuid(),
+        name: 'some streams',
+        visible: true,
+        inputValues: {
+            'Key Data': {
+                inputType: 'LineData',
+                inputGroup: 'Key Data',
+                inputValue: 'ParaView://LANL/GulfOfMexico/KeyData/LouisianaStreamlines'
+            },
+        }
+    };
 
-    fetch(`/api/state/impressions/${uuid}`, {
-        method: 'PUT',
-        body: JSON.stringify(impression),
-        headers: {
-            'X-CSRFToken': csrftoken,
+    let surface =  {
+        impressionType: 'Surface',
+        uuid: uuid(),
+        name: 'bathymetry',
+        visible: true,
+        inputValues: {
+            'Key Data': {
+                inputType: 'SurfaceData',
+                inputGroup: 'Key Data',
+                inputValue: 'ParaView://LANL/GulfOfMexico/KeyData/Bathymetry'
+            },
         }
-    }).catch((err) => console.error(err)).then((resp) => {
-        if (resp.status != 200) {
-            console.error(resp);
-        }
-        fetch(`/api/state/impressions`, {
-            method: 'GET',
-            headers: {
-                'X-CSRFToken': csrftoken,
+    };
+
+    let badsurface =  {
+        impressionType: 'Surface',
+        uuid: uuid(),
+        name: 'bad bathymetry',
+        visible: true,
+        inputValues: {
+            'Key Data': {
+                inputType: 'LineData',
+                inputGroup: 'Key Data',
+                inputValue: 'ParaView://LANL/GulfOfMexico/KeyData/Bathymetry'
+            },
+            'Ribbon Variable': {
+                inputType: 'LineData',
+                inputGroup: 'Ribbon',
+                inputValue: 'ParaView://LANL/GulfOfMexico/ScalarVariables/Temperature'
             }
-        }).then((data) => data.text()).then((t) => console.log(t));
-    });
+        }
+    };
+
+    for (const strat of [glyphs, ribbons, surface, badsurface]) {
+        $('body').append(makeButton(strat));
+    }
 
 
-    let modelValidator = new Validator('model.json');
-    modelValidator.validate(state).then((err) => console.log(err));
+    // let modelValidator = new Validator('model.json');
+    // modelValidator.validate(state).then((err) => console.log(err));
     // fetch(`${STATIC_URL}testModel.json`).then((r) => r.text()).then((text) => {
     //     let j = JSON.parse(text);
     //     modelValidator.validate(j).then((error) => console.log(error));
