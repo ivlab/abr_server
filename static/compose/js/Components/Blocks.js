@@ -110,8 +110,8 @@ function doubleClickToRemap(evt) {
 export function PuzzleConnector(type, addClasses='', background=false) {
     let backgroundClass = background ? 'background' : 'foreground-contrast';
     let $connector = $('<div>', { class: `puzzle-connector ${backgroundClass} ${addClasses}` })
-        .css('mask', `url(${STATIC_URL}composition/puzzle_pieces/${type}.svg)`)
-        .css('-webkit-mask', `url(${STATIC_URL}composition/puzzle_pieces/${type}.svg)`);
+        .css('mask', `url(${STATIC_URL}compose/puzzle_pieces/${type}.svg)`)
+        .css('-webkit-mask', `url(${STATIC_URL}compose/puzzle_pieces/${type}.svg)`);
     return $connector;
 }
 

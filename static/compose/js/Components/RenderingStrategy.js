@@ -13,73 +13,55 @@ import { messenger } from '../AbrMessenger.js';
 import { Component } from './Component.js'
 import { storage } from '../storage.js';
 
-// A list of plates
-export class PlateList extends Component {
-    constructor() {
-        super();
+export function RenderingStrategyList() {
+    let $rss = $('<ul>', {
+        id: 'rendering-strategy-list'
+    });
+    for (const plateType in storage.schema.definitions.Plates) {
+        let strategy = storage.schema.definitions.Plates[plateType];
+        let topology = strategy.properties['Key Data'].properties.inputType;
 
-        this.$ = $('<ul>', {
-            id: 'rendering-strategy-list'
-        });
-        for (const plateType in storage.schema.definitions.Plates) {
-            this.$.append($('<li>').append(
-                (new Plate(plateType)).jQuery()
-            ));
-        }
+        console.log(strategy);
 
-        this.updateAbrComponent();
-    }
-}
-
-// A plate
-export class Plate extends Component {
-    constructor(plateType) {
-        super();
-
-        this.plateType = plateType;
-
-        let $plate = $('<div>', {
-            class: 'rendering-strategy'
-        }).append(
-            $('<div>', {class: 'block-title'}).append(
-                $('<div>', {
-                    text: plateType,
-                })
+        $rss.append($('<li>').append(
+            RenderingStrategySwatch(
+                `New ${plateType} Plate`,
+                generateParameters(strategy.properties),
+                topology,
+                plateType
             )
-        ).append(
-            $('<img>', {
-                class: 'rendering-strategy-preview',
-                src: `${STATIC_URL}compose/rendering_strategy_preview/${plateType}.png`,
-            })
-        );
-
-        this.$ = $plate;
-
-        this.updateAbrComponent();
+        ));
     }
+
+    return $rss;
 }
 
 // Generate a list of artifacts and variables from a render strategy
-function generateParameters(inputs, varTypes, artifactTypes) {
+function generateParameters(inputs) {
+    // Uses the 0.2.0 definition that variables will have a genre of "Variable"
+    // and artifacts will have a genre of "VisAsset"
+    const VAR_NAME = 'Variable';
+    const VISASSET_NAME = 'VisAsset';
+
     // Convert each input of the rendering strategy into a map
     // (parameterName -> {parameterData...})
     let variables = {};
     let artifacts = {};
-    inputs.forEach((input) => {
-        let paramName = input.parameterName;
-        if (varTypes.indexOf(input.inputType) >= 0) {
+    for (const input in inputs) {
+        let paramName = input.inputGroup;
+        if (input.inputGenre == VAR_NAME) {
             variables[paramName] = input;
-        } else if (artifactTypes.indexOf(input.inputType) >= 0) {
+        } else if (input.inputGenre == VISASSET_NAME) {
             artifacts[paramName] = input;
         }
-    });
+    }
 
     // Display the parameters in the order that we find them in the header
     // (which is the order in the ABR Engine code)
     let parameterNames = new Set();
-    inputs.forEach((input) => {
-        parameterNames.add(input.parameterName);
-    });
+    for (const input in inputs) {
+        parameterNames.add(input.inputGroup);
+    }
 
     // Get a list of all unique names
     let parameters = {};
@@ -106,7 +88,7 @@ export function swapConnectionUUIDs(oldUUID, newUUID, rsData) {
 // page (useful for state refreshes)
 export function RenderingStrategy(
     name,
-    inputs,
+    parameters,
     topology,
     type,
     existingUUID,
@@ -114,9 +96,8 @@ export function RenderingStrategy(
     existingConnections,
     uiMetadata,
     label,
-    header,
+    // header,
 ) {
-    let parameters = generateParameters(inputs, header.variableTypes, header.artifactTypes);
     let connectionMap;
     if (!existingConnections) {
         connectionMap = {};
@@ -238,7 +219,7 @@ export function RenderingStrategy(
     ).append(
         $('<img>', {
             class: 'rendering-strategy-preview',
-            src: `${STATIC_URL}composition/rendering_strategy_preview/${name}.png`,
+            src: `${STATIC_URL}compose/rendering_strategy_preview/${type}.png`,
         })
     );
 
@@ -318,10 +299,10 @@ export function RenderingStrategy(
 }
 
 // Rendering strategy block in the sidebar
-export function RenderingStrategySwatch(name, parameters, topology, type, header) {
+export function RenderingStrategySwatch(name, parameters, topology, type) {
     let $swatch = Swatch(
         RenderingStrategy,
-        [name, parameters, topology, type, undefined, undefined, undefined, undefined, undefined, header],
+        [name, parameters, topology, type, undefined, undefined, undefined, undefined, undefined],
         true,
         true,
         $('#composition-loader'), // Instantiated rendering Strategies should be place in the composition loading container
@@ -337,7 +318,7 @@ export function RenderingStrategySwatch(name, parameters, topology, type, header
     $swatch.append(
         $('<img>', {
             class: 'rendering-strategy-preview',
-            src: `${STATIC_URL}composition/rendering_strategy_preview/${name}.png`,
+            src: `${STATIC_URL}compose/rendering_strategy_preview/${type}.png`,
         })
     );
     return $swatch;

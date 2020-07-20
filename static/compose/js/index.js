@@ -12,7 +12,7 @@ import * as Components from './Components/Components.js'
 import { collapsibleUpdate, setCollapsibleDivState, download, downloadPng } from './UiUtils.js'
 import { sendInputUpdate, handleStateMessage } from './MessageUtils.js'
 import { uuid } from './UUID.js'
-import { CollapsibleDiv } from './Components/Components.js'
+import { CollapsibleDiv, RenderingStrategyList } from './Components/Components.js'
 import { storage } from './storage.js'
 
 const ABR_VERSION = '0.2.0';
@@ -120,10 +120,9 @@ function init() {
     initAbrEngineInterface();
     messenger.addMessageCallback(handleStateMessage);
 
-    let plates = new Components.PlateList();
-    plates.jQuery().appendTo('#available-styles-collapser');
+    $('#available-styles-collapser').append(RenderingStrategyList());
 
-    return;
+    return
 
     // Build the list of rendering strategies to choose from
     $('#rendering-strategy-list').on('abrStateUpdate', (evt, state) => {
