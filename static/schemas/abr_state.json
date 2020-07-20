@@ -125,7 +125,7 @@
         "InputValue": {
             "type": "object",
             "description": "A single input value for a data impression",
-            "required": ["inputValue", "inputType", "inputGroup"],
+            "required": ["inputValue", "inputType", "inputGroup", "inputGenre"],
             "properties": {
                 "inputType": {
                     "type": "string",
@@ -136,8 +136,12 @@
                     "description": "Null, UUID, primitive, or resolvable path where the input can be found. Should be a string.",
                     "default": "null",
                     "oneOf": [
-                        { "$ref": "#/definitions/InputStringTypes/NullString" },
-                        { "$ref": "#/definitions/InputStringTypes/Primitive" },
+                        { "$ref": "#/definitions/InputStringTypes/Null" },
+                        { "$ref": "#/definitions/InputStringTypes/PrimitiveFloat" },
+                        { "$ref": "#/definitions/InputStringTypes/PrimitivePercentage" },
+                        { "$ref": "#/definitions/InputStringTypes/PrimitiveDistance" },
+                        { "$ref": "#/definitions/InputStringTypes/PrimitiveBoolean" },
+                        { "$ref": "#/definitions/InputStringTypes/PrimitiveAngle" },
                         { "$ref": "#/definitions/InputStringTypes/UUID" },
                         { "$ref": "#/definitions/InputStringTypes/DataPath" }
                     ]
@@ -145,6 +149,11 @@
                 "inputGroup": {
                     "type": "string",
                     "description": "The group that this input belongs to (e.g. `Colormap` and `Color Variable` belong to the `Color` group)"
+                },
+                "inputGenre": {
+                    "type": "string",
+                    "description": "Which genre of input (e.g. `Variable`, `VisAsset`, or `Primitive`)",
+                    "enum": ["KeyData", "Variable", "VisAsset", "Primitive"]
                 }
             },
             "additionalProperties": false
@@ -201,7 +210,7 @@
         },
 
         "InputStringTypes": {
-            "NullString": {
+            "Null": {
                 "pattern": "^null$"
             },
 
@@ -215,29 +224,25 @@
                 "pattern": "^(ParaView|Generated|VTK)(:\/\/)([^/]\/*)+$"
             },
 
-            "Primitive": {
-                "oneOf": [
-                    {
-                        "description": "Floating point number",
-                        "pattern": "^\\d+(.\\d+)?$"
-                    },
-                    {
-                        "description": "Floating point percentage",
-                        "pattern": "^\\d+.?\\d+?%$"
-                    },
-                    {
-                        "description": "Floating point distance (metric units)",
-                        "pattern": "^\\d+(.\\d+)?(mm)|(cm)|(m)$"
-                    },
-                    {
-                        "description": "Boolean",
-                        "pattern": "^(true)|(false)$"
-                    },
-                    {
-                        "description": "Angle measure in degrees",
-                        "pattern": "^\\d+.?\\d+?deg$"
-                    }
-                ]
+            "PrimitiveFloat": {
+                "description": "Floating point number",
+                "pattern": "^\\d+(.\\d+)?$"
+            },
+            "PrimitivePercentage": {
+                "description": "Floating point percentage",
+                "pattern": "^\\d+.?\\d+?%$"
+            },
+            "PrimitiveDistance": {
+                "description": "Floating point distance (metric units)",
+                "pattern": "^\\d+(.\\d+)?(mm)|(cm)|(m)$"
+            },
+            "PrimitiveBoolean": {
+                "description": "Boolean",
+                "pattern": "^(true)|(false)$"
+            },
+            "PrimitiveAngle": {
+                "description": "Angle measure in degrees",
+                "pattern": "^\\d+.?\\d+?deg$"
             }
         },
 
@@ -250,38 +255,44 @@
                     "Key Data": {
                         "properties": {
                                 "inputType": { "const": "PointData" },
-                                "inputGroup": { "const": "Key Data" }
+                                "inputGroup": { "const": "Key Data" },
+                                "inputGenre": { "const": "KeyData" }
                         }
                     },
                     "Color Variable": {
                         "properties": {
                                 "inputType": { "const": "ScalarDataVariable" },
-                                "inputGroup": { "const": "Color" }
+                                "inputGroup": { "const": "Color" },
+                                "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
                                 "inputType": { "const": "ColormapVisAsset" },
-                                "inputGroup": { "const": "Color" }
+                                "inputGroup": { "const": "Color" },
+                                "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Glyph Variable": {
                         "properties": {
                                 "inputType": { "const": "ScalarDataVariable" },
-                                "inputGroup": { "const": "Glyph" }
+                                "inputGroup": { "const": "Glyph" },
+                                "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Glyph": {
                         "properties": {
                                 "inputType": { "const": "GlyphVisAsset" },
-                                "inputGroup": { "const": "Glyph" }
+                                "inputGroup": { "const": "Glyph" },
+                                "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Glyph Size": {
                         "properties": {
                                 "inputType": { "const": "Primitive" },
                                 "inputGroup": { "const": "Glyph Size" },
-                                "inputValue": { "default": "5cm" }
+                                "inputValue": { "default": "5cm" },
+                                "inputGenre": { "const": "PrimitiveDistance" }
                         }
                     },
                     "Glyph Simplification": {
@@ -289,7 +300,8 @@
                         "properties": {
                                 "inputType": { "const": "Primitive" },
                                 "inputGroup": { "const": "Glyph Simplification" },
-                                "inputValue": { "default": "1" }
+                                "inputValue": { "default": "1" },
+                                "inputGenre": { "const": "PrimitiveFloat" }
                         }
                     }
                 },
@@ -299,70 +311,82 @@
                 "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
                 "properties": {
                     "Key Data": {
-                        "inputType": "LineData",
-                        "inputGroup": "Key Data"
+                        "properties": {
+                            "inputType": "LineData",
+                            "inputGroup": "Key Data",
+                            "inputGenre": { "const": "KeyData" }
+                        }
                     },
                     "Color Variable": {
                         "properties": {
-                                "inputType": { "const": "ScalarDataVariable" },
-                                "inputGroup": { "const": "Color" }
+                            "inputType": { "const": "ScalarDataVariable" },
+                            "inputGroup": { "const": "Color" },
+                            "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
-                                "inputType": { "const": "ColormapVisAsset" },
-                                "inputGroup": { "const": "Color" }
+                            "inputType": { "const": "ColormapVisAsset" },
+                            "inputGroup": { "const": "Color" },
+                            "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Ribbon Variable": {
                         "properties": {
-                                "inputType": { "const": "ScalarDataVariable" },
-                                "inputGroup": { "const": "Ribbon" }
+                            "inputType": { "const": "ScalarDataVariable" },
+                            "inputGroup": { "const": "Ribbon" },
+                            "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Ribbon": {
                         "properties": {
-                                "inputType": { "const": "LineTextureVisAsset" },
-                                "inputGroup": { "const": "Ribbon" }
+                            "inputType": { "const": "LineTextureVisAsset" },
+                            "inputGroup": { "const": "Ribbon" },
+                            "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Ribbon Width": {
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Ribbon Width" },
-                                "inputValue": { "default": "5cm" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Ribbon Width" },
+                            "inputValue": { "default": "5cm" },
+                            "inputGenre": { "const": "PrimitiveDistance" }
                         }
                     },
                     "Ribbon Fill": {
                         "description": "How much of the light part of the line to fill. 0% is black - no fill; 100% is white - fill everything.",
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Ribbon Fill" },
-                                "inputValue": { "default": "50%" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Ribbon Fill" },
+                            "inputValue": { "default": "50%" },
+                            "inputGenre": { "const": "PrimitivePercentage" }
                         }
                     },
                     "Ribbon Rotation": {
                         "description": "How should the ribbons be rotated along their central axis? (degrees)",
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Ribbon Rotation" },
-                                "inputValue": { "default": "0deg" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Ribbon Rotation" },
+                            "inputValue": { "default": "0deg" },
+                            "inputGenre": { "const": "PrimitiveAngle" }
                         }
                     },
                     "Ribbon Curve": {
                         "description": "How much to curve the ribbons (degrees)",
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Ribbon Curve" },
-                                "inputValue": { "default": "0deg" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Ribbon Curve" },
+                            "inputValue": { "default": "0deg" },
+                            "inputGenre": { "const": "PrimitiveAngle" }
                         }
                     },
                     "Ribbon Smoothing": {
                         "description": "How much to smooth the ribbons (percent)",
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Ribbon Smoothing" },
-                                "inputValue": { "default": "0%" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Ribbon Smoothing" },
+                            "inputValue": { "default": "0%" },
+                            "inputGenre": { "const": "PrimitivePercentage" }
                         }
                     }
                 },
@@ -372,62 +396,73 @@
                 "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
                 "properties": {
                     "Key Data": {
-                        "inputType": "SurfaceData",
-                        "inputGroup": "Key Data"
+                        "properties": {
+                            "inputType": "SurfaceData",
+                            "inputGroup": "Key Data",
+                            "inputGenre": { "const": "KeyData" }
+                        }
                     },
                     "Color Variable": {
                         "properties": {
-                                "inputType": { "const": "ScalarDataVariable" },
-                                "inputGroup": { "const": "Color" }
+                            "inputType": { "const": "ScalarDataVariable" },
+                            "inputGroup": { "const": "Color" },
+                            "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
-                                "inputType": { "const": "ColormapVisAsset" },
-                                "inputGroup": { "const": "Color" }
+                            "inputType": { "const": "ColormapVisAsset" },
+                            "inputGroup": { "const": "Color" },
+                            "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Pattern Variable": {
                         "properties": {
-                                "inputType": { "const": "ScalarDataVariable" },
-                                "inputGroup": { "const": "Pattern" }
+                            "inputType": { "const": "ScalarDataVariable" },
+                            "inputGroup": { "const": "Pattern" },
+                            "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Pattern": {
                         "properties": {
-                                "inputType": { "const": "LineTextureVisAsset" },
-                                "inputGroup": { "const": "Pattern" }
+                            "inputType": { "const": "LineTextureVisAsset" },
+                            "inputGroup": { "const": "Pattern" },
+                            "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Pattern Size": {
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Pattern Size" },
-                                "inputValue": { "default": "100%" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Pattern Size" },
+                            "inputValue": { "default": "100%" },
+                            "inputGenre": { "const": "PrimitivePercentage" }
                         }
                     },
                     "Pattern Seam Blend": {
                         "description": "Blend the seams of the texture together (percent)",
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Pattern Blend" },
-                                "inputValue": { "default": "100%" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Pattern Blend" },
+                            "inputValue": { "default": "100%" },
+                            "inputGenre": { "const": "PrimitivePercentage" }
                         }
                     },
                     "Pattern Saturation": {
                         "description": "Saturation of pattern",
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Pattern Saturation" },
-                                "inputValue": { "default": "100%" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Pattern Saturation" },
+                            "inputValue": { "default": "100%" },
+                            "inputGenre": { "const": "PrimitivePercentage" }
                         }
                     },
                     "Pattern Weight": {
                         "description": "How intense to make the pattern (0% = doesn't show up at all, 100% = only the pattern)",
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Pattern Weight" },
-                                "inputValue": { "default": "100%" }
+                            "inputType": { "const": "Primitive" },
+                            "inputGroup": { "const": "Pattern Weight" },
+                            "inputValue": { "default": "100%" },
+                            "inputGenre": { "const": "PrimitivePercentage" }
                         }
                     }
                 },
