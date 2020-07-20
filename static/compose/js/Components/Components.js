@@ -2,7 +2,7 @@
  * Copyright (c) 2020, University of Minnesota
  * Author: Bridger Herman <herma582@umn.edu>
  * 
- * Namespace for components
+ * Namespace for User Interface components
  */
 
 export * from './Generic.js'

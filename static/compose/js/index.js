@@ -6,6 +6,7 @@
  * Main controller for the ABR Design Interface
  */
 
+import { Validator } from '../../Validator.js'
 import { initAbrEngineInterface, messenger } from './AbrMessenger.js'
 import * as Components from './Components/Components.js'
 import { collapsibleUpdate, setCollapsibleDivState, download, downloadPng } from './UiUtils.js'
@@ -13,6 +14,25 @@ import { sendInputUpdate, handleStateMessage } from './MessageUtils.js'
 import { uuid } from './UUID.js'
 import { CollapsibleDiv } from './Components/Components.js'
 import { storage } from './storage.js'
+
+const ABR_VERSION = '0.2.0';
+
+function preInit() {
+    // Make sure the version of the schema matches
+    storage.validator = new Validator('abr_state.json');
+    return storage.validator.schema.then((scm) => {
+        let version = scm.properties.version.const;
+        if (typeof(version) === 'undefined') {
+            throw 'State version is undefined';
+        }
+
+        if (version != ABR_VERSION) {
+            throw `Compose version ${ABR_VERSION} is not compatible with state version ${version}`;
+        }
+
+        storage.schema = scm;
+    });
+}
 
 function init() {
     // Hack to make sure virtual keyboard shows on touch devices
@@ -99,6 +119,11 @@ function init() {
     // communication
     initAbrEngineInterface();
     messenger.addMessageCallback(handleStateMessage);
+
+    let plates = new Components.PlateList();
+    plates.jQuery().appendTo('#available-styles-collapser');
+
+    return;
 
     // Build the list of rendering strategies to choose from
     $('#rendering-strategy-list').on('abrStateUpdate', (evt, state) => {
@@ -719,4 +744,6 @@ function init() {
     });
 }
 
-window.onload = init;
+window.onload = () => {
+    preInit().then(init);
+};

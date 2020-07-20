@@ -10,6 +10,54 @@ import { NumericInput, NumericInputSwatch } from './SourceBlocks.js'
 import { sendInputUpdate, sendRenderStrategyUpdate } from '../MessageUtils.js'
 import { uuid } from '../UUID.js'
 import { messenger } from '../AbrMessenger.js';
+import { Component } from './Component.js'
+import { storage } from '../storage.js';
+
+// A list of plates
+export class PlateList extends Component {
+    constructor() {
+        super();
+
+        this.$ = $('<ul>', {
+            id: 'rendering-strategy-list'
+        });
+        for (const plateType in storage.schema.definitions.Plates) {
+            this.$.append($('<li>').append(
+                (new Plate(plateType)).jQuery()
+            ));
+        }
+
+        this.updateAbrComponent();
+    }
+}
+
+// A plate
+export class Plate extends Component {
+    constructor(plateType) {
+        super();
+
+        this.plateType = plateType;
+
+        let $plate = $('<div>', {
+            class: 'rendering-strategy'
+        }).append(
+            $('<div>', {class: 'block-title'}).append(
+                $('<div>', {
+                    text: plateType,
+                })
+            )
+        ).append(
+            $('<img>', {
+                class: 'rendering-strategy-preview',
+                src: `${STATIC_URL}compose/rendering_strategy_preview/${plateType}.png`,
+            })
+        );
+
+        this.$ = $plate;
+
+        this.updateAbrComponent();
+    }
+}
 
 // Generate a list of artifacts and variables from a render strategy
 function generateParameters(inputs, varTypes, artifactTypes) {

@@ -85,10 +85,9 @@
                 <div class="section-header">Layers</div>
                 <div class="collapsible-header active">Add Layers</div>
                 <div class="collapsible-content" id="available-styles-collapser">
-                    <div id="rendering-strategy-list"
-                    class="abr-state-subscriber">
+                    <!-- <div id="rendering-strategy-list" class="abr-state-subscriber"> -->
                         <!-- auto populated -->
-                    </div>
+                    <!-- </div> -->
                 </div>
 
                 <div class="section-header">Visual Assets</div>
@@ -119,6 +118,10 @@
         integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
 
     <script src="https://cdn.jsdelivr.net/gh/furf/jquery-ui-touch-punch/jquery.ui.touch-punch.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/6.12.3/ajv.min.js"></script>
+
+    <script src="{% static 'csrf.js' %}"></script>
 
     <script>
         // Get the static and media URL from Django and store it for JS use

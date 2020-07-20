@@ -3,16 +3,17 @@ export class Validator {
         this._pendingValidations = [];
 
         this.schemaID = schemaID;
+        this._schema = null;
 
         this._validator = fetch(`/api/schemas/${schemaID}`)
             .then((resp) => resp.text())
             .then((text) => {
-                let schemaObj = JSON.parse(text);
+                this._schema = JSON.parse(text);
                 let ajv = new Ajv({
                     // allErrors: true,
                     // verbose: true,
                 });
-                ajv.addSchema(schemaObj, schemaID);
+                ajv.addSchema(this._schema, schemaID);
                 return ajv;
             });
     }
@@ -25,6 +26,10 @@ export class Validator {
                 return null;
             }
         });
+    }
+
+    get schema() {
+        return this._validator.then((_) => this._schema);
     }
 
     formatErrors(errors) {

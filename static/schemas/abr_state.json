@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "model.json",
-    "title": "ABR Model",
-    "description": "The canonical model for Artifact-Based Rendering operations - the 'state' which is changeable by the user",
+    "$id": "abr_state.json",
+    "title": "ABR State",
+    "description": "A description of the ABR 'state' which is changeable by the user",
     "type": "object",
 
     "required": ["version"],
@@ -11,7 +11,7 @@
         "version": {
             "type": "string",
             "description": "Version of the model (semantic version, update this when updating the model)",
-            "const": "0.0.0"
+            "const": "0.2.0"
         },
 
         "schemaID": {
@@ -242,8 +242,8 @@
         },
 
         "Plates": {
-            "$comment": "Update these whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
             "Glyphs": {
+                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
                 "type": "object",
                 "description": "Inputs for a field of glyphs",
                 "properties": {
@@ -296,6 +296,7 @@
                 "additionalProperties": false
             },
             "Ribbons": {
+                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
                 "properties": {
                     "Key Data": {
                         "inputType": "LineData",
@@ -368,6 +369,7 @@
                 "additionalProperties": false
             },
             "Surface": {
+                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
                 "properties": {
                     "Key Data": {
                         "inputType": "SurfaceData",
