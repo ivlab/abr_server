@@ -6,7 +6,7 @@ from pathlib import Path
 from threading import Lock
 
 SCHEMA_PATH = Path(settings.STATIC_ROOT).joinpath('schemas')
-STATE_SCHEMA = SCHEMA_PATH.joinpath('model.json')
+STATE_SCHEMA = SCHEMA_PATH.joinpath('abr_state.json')
 
 class State():
     def __init__(self):

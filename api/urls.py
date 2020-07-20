@@ -5,5 +5,5 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('schemas/<str:schema_name>/', views.schema),
-    re_path('^state/*', views.impressions),
+    re_path('^state/*', views.modify_state),
 ]

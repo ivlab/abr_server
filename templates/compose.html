@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ABR Compose</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="{% static 'compose/css/renderingStrategy.css' %}">
+    <link rel="stylesheet" href="{% static 'compose/css/blocks.css' %}">
+    <link rel="stylesheet" href="{% static 'compose/css/panels.css' %}">
+    <link rel="stylesheet" href="{% static 'compose/css/puzzlePieces.css' %}">
+    <link rel="stylesheet" href="{% static 'compose/css/loadingSpinner.css' %}">
+</head>
+
+<body>
+
+    <div id="connecting-header">
+        <p>
+            Waiting to connect to ABR Engine...
+        </p>
+        <button onclick="window.location.reload()"><span class="material-icons">refresh</span> Try again</button>
+    </div>
+
+    <div id="action-headers">
+        <div id="file-header" class="action-header">
+            <!-- auto populated with buttons from UI -->
+        </div>
+        <div id="state-header" class="action-header">
+            <!-- auto populated with state information -->
+        </div>
+        <div id="screenshot-header" class="action-header">
+            <!-- auto populated with state information -->
+        </div>
+    </div>
+
+    <div class="design-panels-container">
+
+        <div class="data-panel panel">
+            <div class="panel-header">
+                <div>Data Palette</div>
+            </div>
+            <div class="scrollbox data-scrollbox">
+                <div class="section-header">Paraview Data Server</div>
+                <div class="collapsible-header active">Key Data</div>
+                <div class="collapsible-content" id="keydata-collapser">
+                    <div id="paraview-keydata-list" class="abr-state-subscriber">
+                    </div>
+                </div>
+
+                <div class="collapsible-header">Scalar Variables</div>
+                <div class="collapsible-content" id="scalar-variables-collapser">
+                    <div id="paraview-scalar-list" class="abr-state-subscriber">
+                    </div>
+                </div>
+
+                <div class="collapsible-header">Vector Variables</div>
+                <div class="collapsible-content" id="vector-variables-collapser">
+                    <div id="paraview-vector-list" class="abr-state-subscriber">
+                    </div>
+                </div>
+            </div>
+        </div> <!-- data panel -->
+
+        <div class="composition-panel panel">
+            <div class="panel-header">
+                <div>Composition Panel</div>
+                <!-- <div id="current-state" class="abr-state-subscriber"></div> -->
+            </div>
+            <div class="scrollbox composition-scrollbox">
+                <div id="composition-loader" class="abr-state-subscriber">
+                    <!-- auto populated with widgets from ABR Engine -->
+                </div>
+            </div>
+        </div> <!-- composition panel -->
+
+        <div class="library-panel panel">
+            <div class="panel-header">
+                <div>Design Palette</div>
+            </div>
+            <div class="scrollbox library-scrollbox">
+                <div class="section-header">Layers</div>
+                <div class="collapsible-header active">Add Layers</div>
+                <div class="collapsible-content" id="available-styles-collapser">
+                    <div id="rendering-strategy-list"
+                    class="abr-state-subscriber">
+                        <!-- auto populated -->
+                    </div>
+                </div>
+
+                <div class="section-header">Visual Assets</div>
+                <!-- <div class="collapsible-header">Local Palette</div>
+                <div class="collapsible-content" id="local-library-collapser"> -->
+                <div id="local-library" class="abr-state-subscriber">
+                    <!-- auto populated -->
+                </div>
+                <!-- </div> -->
+
+                <div class="section-header" id="lighting-header">Lighting</div>
+
+                <!-- <div class="collapsible-header">Single Colors</div>
+                <div class="collapsible-content">
+                    <div id="color-input-list" class="abr-state-subscriber">
+                    </div>
+                </div> -->
+            </div>
+        </div> <!-- library panel -->
+
+    </div> <!-- design-panels-container -->
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous">
+        </script>
+
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/gh/furf/jquery-ui-touch-punch/jquery.ui.touch-punch.min.js"></script>
+
+    <script>
+        // Get the static and media URL from Django and store it for JS use
+        // STATIC_URL is for static items (like puzzle piece svgs)
+        var STATIC_URL = "{% get_static_prefix %}";
+
+        // MEDIA_URL is for dynamic items (like states, screenshots, and visassets)
+        let colonIndex = window.location.host.indexOf(':');
+        var MEDIA_URL = 'http://' + window.location.host.slice(0, colonIndex + 1) + '8001/';
+    </script>
+    <script src="{% static 'compose/js/index.js' %}" type="module"></script>
+</body>
+
+</html>

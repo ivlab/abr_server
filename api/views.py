@@ -8,13 +8,13 @@ from abr_server.state import state
 
 # Create your views here.
 def index(request):
-    return render(request, 'abr_server.html')
+    return HttpResponse('Nothing to see here; this URL is for computers')
 
 def schema(request, schema_name):
     return redirect(settings.STATIC_URL + 'schemas/{}'.format(schema_name))
 
 # State access and modification methods
-def impressions(request):
+def modify_state(request):
     # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
     item_path_parts = request.path.split('/')
     item_path_parts = item_path_parts[3:]
