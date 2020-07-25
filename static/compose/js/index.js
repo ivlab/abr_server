@@ -20,7 +20,7 @@ const ABR_VERSION = '0.2.0';
 function preInit() {
     // Make sure the version of the schema matches
     storage.validator = new Validator('abr_state.json');
-    return storage.validator.schema.then((scm) => {
+    let schemaPromise = storage.validator.schema.then((scm) => {
         let version = scm.properties.version.const;
         if (typeof(version) === 'undefined') {
             throw 'State version is undefined';
@@ -32,9 +32,41 @@ function preInit() {
 
         storage.schema = scm;
     });
+
+    // Query the available data
+    let dataPromise = fetch('/api/data').then((resp) => resp.text()).then((txt) => {
+        let dataList = JSON.parse(txt)['data'];
+
+        storage.keyData = dataList.map((name) => name.replace('.json', ''));
+
+        let varListPromises = [];
+        for (const d of dataList) {
+            varListPromises.push(fetch(`/api/data/${d}`)
+                .then((resp) => resp.text())
+                .then((txt) => JSON.parse(txt)['data']));
+        }
+
+        Promise.all(varListPromises).then((vars) => {
+            let scalarVars = new Set();
+            let vectorVars = new Set();
+            for (const v of vars) {
+                scalarVars.add(...v['ScalarDataVariable']);
+                vectorVars.add(...v['VectorDataVariable']);
+            }
+
+            storage.scalarVars = Array.from(scalarVars);
+            storage.vectorVars = Array.from(vectorVars);
+        });
+    });
+
+    return Promise.all([schemaPromise, dataPromise]);
 }
 
 function init() {
+    console.log(storage.keyData);
+    console.log(storage.scalarVars);
+    console.log(storage.vectorVars);
+
     // Hack to make sure virtual keyboard shows on touch devices
     $(document).on('click', (evt) => {
         evt.target.focus();

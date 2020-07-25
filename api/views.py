@@ -9,7 +9,7 @@ from pathlib import Path
 from abr_server.state import state
 
 UNITY_DATA_LOCATIONS = {
-    'linux': Path('~/.config/unity3D/'),
+    'linux': Path('~/.config/unity3d/'),
     'darwin': Path('~/Library/Application Support/'),
     'win32': Path('~/AppData/LocalLow/'),
 }
@@ -18,9 +18,13 @@ DATA_PATH = UNITY_DATA_LOCATIONS[sys.platform] \
     .joinpath('IVLab') \
     .joinpath('ABREngine') \
     .joinpath('media') \
-    .joinpath('datasets')
+    .joinpath('datasets') \
+    .expanduser() \
+    .resolve()
 
 JSON_RESPONSE_NAME = 'data'
+
+DATA_METADATA_CACHE = {}
 
 # Create your views here.
 def index(request):
@@ -49,3 +53,22 @@ def modify_state(request):
 def data_list(request):
     available_data = sorted(os.listdir(DATA_PATH))
     return JsonResponse({JSON_RESPONSE_NAME: list(available_data)})
+def data_metadata(request, key_data):
+    if key_data in DATA_METADATA_CACHE:
+        ret_json = DATA_METADATA_CACHE[key_data]
+    else:
+        key_data_path = DATA_PATH.joinpath(key_data)
+        ret_json = {
+            'ScalarDataVariable': [],
+            'VectorDataVariable': [],
+        }
+        with open(key_data_path) as fin:
+            json_data = json.load(fin)
+            scalar_names = json_data['scalarArrayNames']
+            for _i, name in enumerate(scalar_names):
+                ret_json['ScalarDataVariable'].append(name)
+            vector_names = json_data['vectorArrayNames']
+            for _i, name in enumerate(vector_names):
+                ret_json['VectorDataVariable'].append(name)
+        DATA_METADATA_CACHE[key_data] = ret_json
+    return JsonResponse({JSON_RESPONSE_NAME: ret_json})
