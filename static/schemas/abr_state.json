@@ -61,9 +61,9 @@
         "Impression": {
             "type": "object",
             "description": "A single data impression (ABR layer) - instantiated version of a plate",
-            "required": ["impressionType", "uuid"],
+            "required": ["plateType", "uuid"],
             "properties": {
-                "impressionType": {
+                "plateType": {
                     "type": "string",
                     "description": "What type of data impression is it? (one of the plate types specified in the spec)",
                     "$comment": "Change this when adding a new plate type",
@@ -95,7 +95,7 @@
                 {
                     "$comment": "Put all plate types here to ensure state validity",
                     "if": {
-                        "properties": { "impressionType": { "const": "Glyphs" } }
+                        "properties": { "plateType": { "const": "Glyphs" } }
                     },
                     "then": {
                         "properties": { "inputValues": { "$ref": "#/definitions/Plates/Glyphs" } }
@@ -104,7 +104,7 @@
                 {
                     "$comment": "Put all plate types here to ensure state validity",
                     "if": {
-                        "properties": { "impressionType": { "const": "Ribbons" } }
+                        "properties": { "plateType": { "const": "Ribbons" } }
                     },
                     "then": {
                         "properties": { "inputValues": { "$ref": "#/definitions/Plates/Ribbons" } }
@@ -113,7 +113,7 @@
                 {
                     "$comment": "Put all plate types here to ensure state validity",
                     "if": {
-                        "properties": { "impressionType": { "const": "Surface" } }
+                        "properties": { "plateType": { "const": "Surface" } }
                     },
                     "then": {
                         "properties": { "inputValues": { "$ref": "#/definitions/Plates/Surface" } }
@@ -125,7 +125,7 @@
         "InputValue": {
             "type": "object",
             "description": "A single input value for a data impression",
-            "required": ["inputValue", "inputType", "inputGroup", "inputGenre"],
+            "required": ["inputValue", "inputType", "parameterName", "inputGenre"],
             "properties": {
                 "inputType": {
                     "type": "string",
@@ -146,9 +146,9 @@
                         { "$ref": "#/definitions/InputStringTypes/DataPath" }
                     ]
                 },
-                "inputGroup": {
+                "parameterName": {
                     "type": "string",
-                    "description": "The group that this input belongs to (e.g. `Colormap` and `Color Variable` belong to the `Color` group)"
+                    "description": "Which visual parameter is being affected by this input (e.g. `Colormap` and `Color Variable` both affect to the `Color` parameter)"
                 },
                 "inputGenre": {
                     "type": "string",
@@ -248,49 +248,49 @@
 
         "Plates": {
             "Glyphs": {
-                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
+                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `parameterName`.",
                 "type": "object",
                 "description": "Inputs for a field of glyphs",
                 "properties": {
                     "Key Data": {
                         "properties": {
                                 "inputType": { "const": "PointData" },
-                                "inputGroup": { "const": "Key Data" },
+                                "parameterName": { "const": "Key Data" },
                                 "inputGenre": { "const": "KeyData" }
                         }
                     },
                     "Color Variable": {
                         "properties": {
                                 "inputType": { "const": "ScalarDataVariable" },
-                                "inputGroup": { "const": "Color" },
+                                "parameterName": { "const": "Color" },
                                 "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
                                 "inputType": { "const": "ColormapVisAsset" },
-                                "inputGroup": { "const": "Color" },
+                                "parameterName": { "const": "Color" },
                                 "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Glyph Variable": {
                         "properties": {
                                 "inputType": { "const": "ScalarDataVariable" },
-                                "inputGroup": { "const": "Glyph" },
+                                "parameterName": { "const": "Glyph" },
                                 "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Glyph": {
                         "properties": {
                                 "inputType": { "const": "GlyphVisAsset" },
-                                "inputGroup": { "const": "Glyph" },
+                                "parameterName": { "const": "Glyph" },
                                 "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Glyph Size": {
                         "properties": {
                                 "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Glyph Size" },
+                                "parameterName": { "const": "Glyph Size" },
                                 "inputValue": { "default": "5cm" },
                                 "inputGenre": { "const": "PrimitiveDistance" }
                         }
@@ -299,7 +299,7 @@
                         "description": "Level of Detail for glyphs. 0 is most detailed, 2 is least detailed.",
                         "properties": {
                                 "inputType": { "const": "Primitive" },
-                                "inputGroup": { "const": "Glyph Simplification" },
+                                "parameterName": { "const": "Glyph Simplification" },
                                 "inputValue": { "default": "1" },
                                 "inputGenre": { "const": "PrimitiveFloat" }
                         }
@@ -308,47 +308,47 @@
                 "additionalProperties": false
             },
             "Ribbons": {
-                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
+                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `parameterName`.",
                 "properties": {
                     "Key Data": {
                         "properties": {
                             "inputType": "LineData",
-                            "inputGroup": "Key Data",
+                            "parameterName": "Key Data",
                             "inputGenre": { "const": "KeyData" }
                         }
                     },
                     "Color Variable": {
                         "properties": {
                             "inputType": { "const": "ScalarDataVariable" },
-                            "inputGroup": { "const": "Color" },
+                            "parameterName": { "const": "Color" },
                             "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
                             "inputType": { "const": "ColormapVisAsset" },
-                            "inputGroup": { "const": "Color" },
+                            "parameterName": { "const": "Color" },
                             "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Ribbon Variable": {
                         "properties": {
                             "inputType": { "const": "ScalarDataVariable" },
-                            "inputGroup": { "const": "Ribbon" },
+                            "parameterName": { "const": "Ribbon" },
                             "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Ribbon": {
                         "properties": {
                             "inputType": { "const": "LineTextureVisAsset" },
-                            "inputGroup": { "const": "Ribbon" },
+                            "parameterName": { "const": "Ribbon" },
                             "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Ribbon Width": {
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Ribbon Width" },
+                            "parameterName": { "const": "Ribbon Width" },
                             "inputValue": { "default": "5cm" },
                             "inputGenre": { "const": "PrimitiveDistance" }
                         }
@@ -357,7 +357,7 @@
                         "description": "How much of the light part of the line to fill. 0% is black - no fill; 100% is white - fill everything.",
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Ribbon Fill" },
+                            "parameterName": { "const": "Ribbon Fill" },
                             "inputValue": { "default": "50%" },
                             "inputGenre": { "const": "PrimitivePercentage" }
                         }
@@ -366,7 +366,7 @@
                         "description": "How should the ribbons be rotated along their central axis? (degrees)",
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Ribbon Rotation" },
+                            "parameterName": { "const": "Ribbon Rotation" },
                             "inputValue": { "default": "0deg" },
                             "inputGenre": { "const": "PrimitiveAngle" }
                         }
@@ -375,7 +375,7 @@
                         "description": "How much to curve the ribbons (degrees)",
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Ribbon Curve" },
+                            "parameterName": { "const": "Ribbon Curve" },
                             "inputValue": { "default": "0deg" },
                             "inputGenre": { "const": "PrimitiveAngle" }
                         }
@@ -384,7 +384,7 @@
                         "description": "How much to smooth the ribbons (percent)",
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Ribbon Smoothing" },
+                            "parameterName": { "const": "Ribbon Smoothing" },
                             "inputValue": { "default": "0%" },
                             "inputGenre": { "const": "PrimitivePercentage" }
                         }
@@ -393,47 +393,47 @@
                 "additionalProperties": false
             },
             "Surface": {
-                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `inputGroup`.",
+                "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `parameterName`.",
                 "properties": {
                     "Key Data": {
                         "properties": {
                             "inputType": "SurfaceData",
-                            "inputGroup": "Key Data",
+                            "parameterName": "Key Data",
                             "inputGenre": { "const": "KeyData" }
                         }
                     },
                     "Color Variable": {
                         "properties": {
                             "inputType": { "const": "ScalarDataVariable" },
-                            "inputGroup": { "const": "Color" },
+                            "parameterName": { "const": "Color" },
                             "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
                             "inputType": { "const": "ColormapVisAsset" },
-                            "inputGroup": { "const": "Color" },
+                            "parameterName": { "const": "Color" },
                             "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Pattern Variable": {
                         "properties": {
                             "inputType": { "const": "ScalarDataVariable" },
-                            "inputGroup": { "const": "Pattern" },
+                            "parameterName": { "const": "Pattern" },
                             "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Pattern": {
                         "properties": {
                             "inputType": { "const": "LineTextureVisAsset" },
-                            "inputGroup": { "const": "Pattern" },
+                            "parameterName": { "const": "Pattern" },
                             "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Pattern Size": {
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Pattern Size" },
+                            "parameterName": { "const": "Pattern Size" },
                             "inputValue": { "default": "100%" },
                             "inputGenre": { "const": "PrimitivePercentage" }
                         }
@@ -442,7 +442,7 @@
                         "description": "Blend the seams of the texture together (percent)",
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Pattern Blend" },
+                            "parameterName": { "const": "Pattern Blend" },
                             "inputValue": { "default": "100%" },
                             "inputGenre": { "const": "PrimitivePercentage" }
                         }
@@ -451,7 +451,7 @@
                         "description": "Saturation of pattern",
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Pattern Saturation" },
+                            "parameterName": { "const": "Pattern Saturation" },
                             "inputValue": { "default": "100%" },
                             "inputGenre": { "const": "PrimitivePercentage" }
                         }
@@ -460,7 +460,7 @@
                         "description": "How intense to make the pattern (0% = doesn't show up at all, 100% = only the pattern)",
                         "properties": {
                             "inputType": { "const": "Primitive" },
-                            "inputGroup": { "const": "Pattern Weight" },
+                            "parameterName": { "const": "Pattern Weight" },
                             "inputValue": { "default": "100%" },
                             "inputGenre": { "const": "PrimitivePercentage" }
                         }
