@@ -9,7 +9,8 @@
 import * as Components from './Components.js';
 
 // Items is an array of jQuery objects
-export function SwatchList(items) {
+// Can specify if it should be collapsed or not
+export function SwatchList(items, collapsed=true) {
     let $list = $('<div>', {
         class: 'swatch-list',
     });
@@ -18,5 +19,5 @@ export function SwatchList(items) {
         $list.append($item);
     }
 
-    return Components.CollapsibleDiv('Plates', $list);
+    return Components.CollapsibleDiv('Plates', $list, collapsed);
 }

@@ -37,21 +37,29 @@
 
 #data-panel {
     width: 16rem;
+    z-index: 1;
 }
 
 #design-panel {
     width: 16rem;
+    z-index: 1;
 }
 
 #composition-panel {
     width: calc(100% - 33rem);
     margin: 0 0.5rem 0 0.5rem;
+    overflow: hidden !important;
+}
+
+#composition-scrollbox {
+    overflow: hidden !important;
 }
 
 #composition-loader {
+    z-index: 0;
     /* make it a giant square for scrolling */
-    width: 200vw;
-    height: 200vw;
+    width: 1000rem;
+    height: 1000rem;
 
     /* grid background for composition: https://stackoverflow.com/q/5218927 */
     background-size: 40px 40px;
