@@ -11,8 +11,14 @@ import { globals } from '../../../common/globals.js';
 
 export function DesignPanel() {
     let $designPanel = $('<div>', {
+        class: 'panel',
         id: 'design-panel',
     });
+
+    $designPanel.append($('<p>', {
+        class: 'panel-header',
+        text: 'Design Palette',
+    }));
 
     // Populate the plates
     let plateTypes = Object.keys(globals.schema.definitions.Plates);

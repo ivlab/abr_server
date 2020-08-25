@@ -19,5 +19,9 @@ export function Plate(plateType) {
         plateType: plateType,
     });
 
+    $plate.append($('<div>', {
+        text: plateType,
+    }));
+
     return $plate;
 }

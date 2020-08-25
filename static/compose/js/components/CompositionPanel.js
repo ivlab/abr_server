@@ -8,7 +8,14 @@
 
 export function CompositionPanel() {
     let $compositionPanel = $('<div>', {
+        class: 'panel',
         id: 'composition-panel',
     });
+
+    $compositionPanel.append($('<p>', {
+        class: 'panel-header',
+        text: 'Visualization Composition',
+    }));
+
     return $compositionPanel;
 }

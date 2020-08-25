@@ -8,7 +8,14 @@
 
 export function DataPanel() {
     let $dataPanel = $('<div>', {
+        class: 'panel',
         id: 'data-panel',
     });
+
+    $dataPanel.append($('<p>', {
+        class: 'panel-header',
+        text: 'Data Palette',
+    }));
+
     return $dataPanel;
 }

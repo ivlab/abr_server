@@ -16,8 +16,12 @@ export class ComposeManager {
         this.designPanel = Components.DesignPanel();
 
         $('#compose-manager').append(this.header);
-        $('#compose-manager').append(this.compositionPanel);
-        $('#compose-manager').append(this.dataPanel);
-        $('#compose-manager').append(this.designPanel);
+        $('#compose-manager').append($('<div>', {
+            id: 'panel-container',
+        })
+            .append(this.dataPanel)
+            .append(this.compositionPanel)
+            .append(this.designPanel)
+        );
     }
 }
