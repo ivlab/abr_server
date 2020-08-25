@@ -5,7 +5,7 @@
  */
 
 .plate {
-    background-color: white;
+    background-color: #f8f4f4;
     width: 10rem;
     display: flex;
     flex-direction: column;
@@ -13,9 +13,19 @@
 }
 
 .plate>* {
-    padding: 0.25rem;
+    padding: 0.25rem 0;
 }
 
-.plate-thumbnail {
+.plate .plate-header {
+    width: 100%;
+    background-color: #ceedff;
+    text-align: center;
+}
+
+.plate .plate-header p {
+    margin: 0.25rem;
+}
+
+.plate .plate-thumbnail {
     width: 5rem;
 }

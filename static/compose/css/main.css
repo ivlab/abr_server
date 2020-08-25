@@ -7,7 +7,10 @@
  * Text color: #3d3d3d
  * Background color: #dae1e7
  * Dark background: #928e89
- * Accent 1: #7fb8da
+ * Light background: #f8f4f4
+ * Hover background: #dae1e7
+ * Accent 1 light blue: #7fb8da
+ * Accent 2 lighter blue: #ceedff
  */
 
 html, body {
@@ -27,4 +30,8 @@ html, body {
     -ms-user-select: none; /* Internet Explorer/Edge */
     user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Opera and Firefox */
+}
+
+.rounded {
+   border-radius: 4px;
 }

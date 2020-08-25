@@ -9,15 +9,17 @@
 
 export function Plate(plateType) {
     let $plate = $('<div>', {
-        class: 'plate',
+        class: 'plate rounded',
     }).data({
         plateType: plateType,
     });
 
     $plate.append($('<div>', {
-        class: 'plate-header',
+        class: 'plate-header rounded',
+    }).append($('<p>', {
+        class: 'plate-label',
         text: plateType,
-    }));
+    })));
 
     $plate.append($('<img>', {
         class: 'plate-thumbnail',

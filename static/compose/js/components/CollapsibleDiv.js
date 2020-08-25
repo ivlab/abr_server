@@ -7,13 +7,20 @@
  */
 
 // Wrap the contents with an expandable div
-export function CollapsibleDiv(header, $contents) {
-    return $('<div>').append(
+// Can optionally persist its state through refresh (uses session storage)
+// Defaults to collapsed state
+export function CollapsibleDiv(
+    header,
+    $contents,
+    collapsed=true,
+) {
+    let $collapsibleDiv = $('<div>', {
+        class: 'collapsible-div rounded',
+    }).append(
         $('<div>', {
             class: 'collapsible-header',
             text: header
-        }
-        ).on('click', (evt) => {
+        }).on('click', (evt) => {
             $(evt.target).toggleClass('active');
             let content = evt.target.nextElementSibling;
             if (content.style.maxHeight) {
@@ -25,4 +32,9 @@ export function CollapsibleDiv(header, $contents) {
     ).append(
         $('<div>', { class: 'collapsible-content' }).append($contents)
     );
+
+    if (!collapsed) {
+        $collapsibleDiv.find('.collapsible-header').trigger('click');
+    }
+    return $collapsibleDiv;
 }
