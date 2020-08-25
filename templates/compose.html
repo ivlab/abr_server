@@ -1,10 +1,49 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet">
+
+    <link rel="stylesheet"
+    href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <link rel="stylesheet" href="{% static 'compose/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'compose/css/components/Header.css' %}">
+
+
     <title>ABR Compose</title>
 </head>
 <body>
+    <div id="compose-manager">
+        <!-- the compose UI will go in here -->
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous">
+    </script>
+
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/gh/furf/jquery-ui-touch-punch/jquery.ui.touch-punch.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/6.12.3/ajv.min.js"></script>
+
+    <script src="{% static 'common/csrf.js' %}"></script>
+
+    <script>
+        // Get the static and media URL from Django and store it for JS use
+        // STATIC_URL is for static items (like puzzle piece svgs)
+        var STATIC_URL = "{% get_static_prefix %}";
+        // MEDIA_URL is for dynamic items (like states, screenshots, and visassets)
+        let colonIndex = window.location.host.indexOf(':');
+        var MEDIA_URL = 'http://' + window.location.host.slice(0, colonIndex + 1) + '8001/';
+    </script>
+
+    <script src="{% static 'compose/js/index.js' %}" type="module"></script>
 </body>
 </html>

@@ -67,7 +67,7 @@
                     "type": "string",
                     "description": "What type of data impression is it? (one of the plate types specified in the spec)",
                     "$comment": "Change this when adding a new plate type",
-                    "enum": ["Glyphs", "Ribbons", "Surface"]
+                    "enum": ["Glyphs", "Ribbons", "Surfaces"]
                 },
                 "uuid": {
                     "format": "uuid",
@@ -113,10 +113,10 @@
                 {
                     "$comment": "Put all plate types here to ensure state validity",
                     "if": {
-                        "properties": { "plateType": { "const": "Surface" } }
+                        "properties": { "plateType": { "const": "Surfaces" } }
                     },
                     "then": {
-                        "properties": { "inputValues": { "$ref": "#/definitions/Plates/Surface" } }
+                        "properties": { "inputValues": { "$ref": "#/definitions/Plates/Surfaces" } }
                     }
                 }
             ]
@@ -392,7 +392,7 @@
                 },
                 "additionalProperties": false
             },
-            "Surface": {
+            "Surfaces": {
                 "$comment": "Update Plates whenever you add a new plate type. Inputs should have a `inputType` and `parameterName`.",
                 "properties": {
                     "Key Data": {

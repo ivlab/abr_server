@@ -1,0 +1,20 @@
+/* components/Header.css
+ * 
+ * Copyright (c) 2020, University of Minnesota
+ * Author: Bridger Herman <herma582@umn.edu>
+ */
+ 
+#header {
+    display: flex;
+    background-color: #7fb8da;
+    flex-grow: 1;
+    padding: 0.25rem;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+}
+
+#header button {
+    margin: 0.25rem;
+    height: 1.5em;
+}
