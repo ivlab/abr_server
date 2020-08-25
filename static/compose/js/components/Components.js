@@ -12,4 +12,9 @@ export * from './DataPanel.js';
 export * from './DesignPanel.js';
 export * from './CompositionPanel.js';
 
+// Generic UI helpers
+export * from './SwatchList.js';
+export * from './CollapsibleDiv.js';
+
+// Design panel
 export * from './Plate.js';

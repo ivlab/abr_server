@@ -21,13 +21,12 @@ export function DesignPanel() {
     }));
 
     // Populate the plates
-    let plateTypes = Object.keys(globals.schema.definitions.Plates);
-    let $plateList = $('<div>', {
-        id: 'plate-list'
-    });
-    for (const plateType of plateTypes) {
-        $plateList.append(Components.Plate(plateType));
-    }
+    let plateTypes = Object.keys(globals.schema.definitions.Plates)
+        .map((plt) => Components.Plate(plt));
+
+    let $plateList = Components.SwatchList(plateTypes);
+
+    $designPanel.append($plateList);
 
     return $designPanel;
 }

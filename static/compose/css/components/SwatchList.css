@@ -1,0 +1,16 @@
+/* components/SwatchList.css
+ * 
+ * Copyright (c) 2020, University of Minnesota
+ * Author: Bridger Herman <herma582@umn.edu>
+ */
+
+.swatch-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.swatch-list>* {
+    margin-top: 0.5rem;
+}

@@ -1,0 +1,21 @@
+/* components/Plate.css
+ * 
+ * Copyright (c) 2020, University of Minnesota
+ * Author: Bridger Herman <herma582@umn.edu>
+ */
+
+.plate {
+    background-color: white;
+    width: 10rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.plate>* {
+    padding: 0.25rem;
+}
+
+.plate-thumbnail {
+    width: 5rem;
+}

@@ -7,12 +7,7 @@
  * impression When dragged into the composition panel.
  */
 
-import { globals } from '../../../common/globals.js';
-
-
 export function Plate(plateType) {
-    let plateSchema = globals.schema.definitions.Plates[plateType];
-
     let $plate = $('<div>', {
         class: 'plate',
     }).data({
@@ -20,7 +15,13 @@ export function Plate(plateType) {
     });
 
     $plate.append($('<div>', {
+        class: 'plate-header',
         text: plateType,
+    }));
+
+    $plate.append($('<img>', {
+        class: 'plate-thumbnail',
+        src: `${STATIC_URL}compose/plate_thumbnail/${plateType}.png`,
     }));
 
     return $plate;
