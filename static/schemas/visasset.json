@@ -1,0 +1,50 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "visasset.json",
+    "title": "ABR VisAsset",
+    "description": "A visualization asset (VisAsset) for the Artifact-Based Rendering engine",
+    "type": "object",
+
+    "required": ["artifactData", "class", "family", "preview", "type", "uuid"],
+
+    "properties": {
+        "artifactData": {
+            "type": "object",
+            "description": "File names which store the actual VisAsset's data"
+        },
+        "class": {
+            "type": "string",
+            "description": "High-level descriptor of the artifact (e.g. 'point' glyph or 'divergent' colormap)"
+        },
+        "family": {
+            "type": "string",
+            "description": "Low-level descriptor of the artifact (e.g. 'haiku' glyph or 'Blue' colormap)"
+        },
+        "preview": {
+            "type": "string",
+            "description": "File name for the thumbnail icon for this VisAsset"
+        },
+        "type": {
+            "type": "string",
+            "description": "Type of VisAsset; DOES NOT directly correspond to names in ABR!",
+            "enum": ["colormap", "glyph", "line", "texture"]
+        },
+        "uuid": {
+            "type": "string",
+            "description": "Unique identifier for this VisAsset",
+            "format": "uuid"
+        },
+        "artist": {
+            "type": "string",
+            "description": "Name of the artist who created this VisAsset"
+        },
+        "hidden": {
+            "type": "boolean",
+            "description": "Should this VisAsset be hidden in the Library or not?"
+        },
+        "tags": {
+            "type": "array",
+            "description": "List of tags to associate this VisAsset with"
+        }
+    }
+}
