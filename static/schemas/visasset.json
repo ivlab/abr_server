@@ -10,7 +10,13 @@
     "properties": {
         "artifactData": {
             "type": "object",
-            "description": "File names which store the actual VisAsset's data"
+            "description": "File names which store the actual VisAsset's data",
+            "oneOf": [
+                { "$ref": "#/definitions/ColormapData" },
+                { "$ref": "#/definitions/GlyphData" },
+                { "$ref": "#/definitions/LineData" },
+                { "$ref": "#/definitions/TextureData" }
+            ]
         },
         "class": {
             "type": "string",
@@ -45,6 +51,65 @@
         "tags": {
             "type": "array",
             "description": "List of tags to associate this VisAsset with"
+        }
+    },
+    "definitions": {
+        "ColormapData": {
+            "type": "object",
+            "properties": {
+                "colormap": {
+                    "type": "string",
+                    "description": "Relative path of the colormap definition file, usually 'colormap.xml'"
+                }
+            }
+        },
+        "GlyphData": {
+            "type": "object",
+            "properties": {
+                "lods": {
+                    "type": "array",
+                    "description": "List of levels of detail on this glyph",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "mesh": {
+                                "type": "string",
+                                "description": "Relative path to OBJ mesh for this level of detail"
+                            },
+                            "normal": {
+                                "type": "string",
+                                "description": "Relative path to normal map PNG for this level of detail"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "LineData": {
+            "type": "object",
+            "properties": {
+                "horizontal": {
+                    "type": "string",
+                    "description": "Relative path to the horizontal cutout texture to use (usually 'horizontal.png')"
+                },
+                "vertical": {
+                    "type": "string",
+                    "description": "Relative path to the vertical cutout texture to use (usually 'vertical.png')"
+                }
+            }
+        },
+        "TextureData": {
+            "type": "object",
+            "properties": {
+                "image": {
+                    "type": "string",
+                    "description": "Relative path to the image to use for the texture (usually 'texturemap_0.png')"
+                },
+                "normalmap": {
+                    "type": "string",
+                    "description": "Relative path to the image to use for the normal map (usually 'normalmap_0.png')"
+                }
+            }
         }
     }
 }
