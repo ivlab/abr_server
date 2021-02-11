@@ -6,7 +6,7 @@ from pathlib import Path
 from threading import Lock
 
 SCHEMA_PATH = Path(settings.STATIC_ROOT).joinpath('schemas')
-STATE_SCHEMA = SCHEMA_PATH.joinpath('abr_state.json')
+STATE_SCHEMA = SCHEMA_PATH.joinpath('ABRSchema_0-2-0.json')
 
 class State():
     def __init__(self):
@@ -38,7 +38,9 @@ class State():
                 return None
         
     def _get_path(self, sub_state, sub_path_parts):
-        if len(sub_path_parts) == 1:
+        if len(sub_path_parts) == 0:
+            return sub_state
+        elif len(sub_path_parts) == 1:
             return sub_state[sub_path_parts[0]]
         else:
             root = sub_path_parts[0]
@@ -46,7 +48,10 @@ class State():
             return self._get_path(sub_state[root], rest)
 
     def set_path(self, item_path, new_value):
-        self._set_path(self._pending_state, item_path, new_value)
+        if len(item_path) == 0:
+            self._pending_state = new_value
+        else:
+            self._set_path(self._pending_state, item_path, new_value)
         try:
             jsonschema.validate(self._pending_state, self.state_schema)
             with self._state_lock:

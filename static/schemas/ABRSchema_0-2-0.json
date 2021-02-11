@@ -14,11 +14,6 @@
             "const": "0.2.0"
         },
 
-        "schemaID": {
-            "type": "string",
-            "description": "Version of the spec this model was created with"
-        },
-
         "impressions": {
             "type": "object",
             "description": "The data impressions that a user has created",
@@ -31,8 +26,21 @@
         "scene": {
             "type": "object",
             "description": "Any additional info about the scene (lights, camera, transforms, etc.)",
-            "patternProperties": {
-                ".+": {}
+            "properties": {
+                "datasetTransforms": {
+                    "type": "object",
+                    "description": "Transform of datasets in the scene",
+                    "$comment": "Unfortunately necessary to specify DataPath regex here",
+                    "patternProperties": {
+                        "^(\\w+)\/(\\w+)$": { 
+                            "type": "object",
+                            "properties": {
+                                "position": { "$ref": "#/definitions/UnityObjects/Vector3" },
+                                "rotation": { "$ref": "#/definitions/UnityObjects/Quaternion" }
+                            }
+                        }
+                    }
+                }
             }
         },
 
@@ -78,10 +86,10 @@
                     "description": "User-defined name of the data impression (i.e. 'blue ocean')",
                     "default": "Data Impression"
                 },
-                "visible": {
-                    "type": "boolean",
-                    "description": "Is the layer visible in the rendering engine?",
-                    "default": true
+                "renderingData": {
+                    "type": "object",
+                    "description": "Additional data that can/should be used when rendering, such as visibility of the impression",
+                    "$comment": "TODO"
                 },
                 "inputValues": {
                     "type": "object",
@@ -211,6 +219,7 @@
 
         "InputStringTypes": {
             "Null": {
+                "type": "string",
                 "pattern": "^null$"
             },
 
@@ -220,29 +229,57 @@
             },
 
             "DataPath": {
+                "type": "string",
                 "$comment": "Update whenever a new data source is added to the data server. Eventually should pull this bit of schema from the data server.",
-                "pattern": "^(ParaView|Generated|VTK)(:\/\/)([^/]\/*)+$"
+                "pattern": "^(\\w+)\/(\\w+)\/(KeyData|ScalarVar|VectorVar)\/\\w+$"
             },
 
             "PrimitiveFloat": {
+                "type": "string",
                 "description": "Floating point number",
                 "pattern": "^\\d+(.\\d+)?$"
             },
             "PrimitivePercentage": {
+                "type": "string",
                 "description": "Floating point percentage",
                 "pattern": "^\\d+.?\\d+?%$"
             },
             "PrimitiveDistance": {
+                "type": "string",
                 "description": "Floating point distance (metric units)",
-                "pattern": "^\\d+(.\\d+)?(mm)|(cm)|(m)$"
+                "pattern": "^\\d+(.\\d+)?(m)$"
             },
             "PrimitiveBoolean": {
+                "type": "string",
                 "description": "Boolean",
                 "pattern": "^(true)|(false)$"
             },
             "PrimitiveAngle": {
+                "type": "string",
                 "description": "Angle measure in degrees",
                 "pattern": "^\\d+.?\\d+?deg$"
+            }
+        },
+
+        "UnityObjects": {
+            "Vector3": {
+                "type": "object",
+                "required": ["x", "y", "z"],
+                "properties": {
+                    "x": { "type": "number" },
+                    "y": { "type": "number" },
+                    "z": { "type": "number" }
+                }
+            },
+            "Quaternion": {
+                "type": "object",
+                "required": ["x", "y", "z", "w"],
+                "properties": {
+                    "x": { "type": "number" },
+                    "y": { "type": "number" },
+                    "z": { "type": "number" },
+                    "w": { "type": "number" }
+                }
             }
         },
 
@@ -254,54 +291,45 @@
                 "properties": {
                     "Key Data": {
                         "properties": {
-                                "inputType": { "const": "PointData" },
+                                "inputType": { "const": "IVLab.ABREngine.PointKeyData" },
                                 "parameterName": { "const": "Key Data" },
                                 "inputGenre": { "const": "KeyData" }
                         }
                     },
                     "Color Variable": {
                         "properties": {
-                                "inputType": { "const": "ScalarDataVariable" },
+                                "inputType": { "const": "IVLab.ABREngine.ScalarDataVariable" },
                                 "parameterName": { "const": "Color" },
                                 "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
-                                "inputType": { "const": "ColormapVisAsset" },
+                                "inputType": { "const": "IVLab.ABREngine.ColormapVisAsset" },
                                 "parameterName": { "const": "Color" },
                                 "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Glyph Variable": {
                         "properties": {
-                                "inputType": { "const": "ScalarDataVariable" },
+                                "inputType": { "const": "IVLab.ABREngine.ScalarDataVariable" },
                                 "parameterName": { "const": "Glyph" },
                                 "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Glyph": {
                         "properties": {
-                                "inputType": { "const": "GlyphVisAsset" },
+                                "inputType": { "const": "IVLab.ABREngine.GlyphVisAsset" },
                                 "parameterName": { "const": "Glyph" },
                                 "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Glyph Size": {
                         "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "parameterName": { "const": "Glyph Size" },
-                                "inputValue": { "default": "5cm" },
-                                "inputGenre": { "const": "PrimitiveDistance" }
-                        }
-                    },
-                    "Glyph Simplification": {
-                        "description": "Level of Detail for glyphs. 0 is most detailed, 2 is least detailed.",
-                        "properties": {
-                                "inputType": { "const": "Primitive" },
-                                "parameterName": { "const": "Glyph Simplification" },
-                                "inputValue": { "default": "1" },
-                                "inputGenre": { "const": "PrimitiveFloat" }
+                                "inputType": { "const": "IVLab.ABREngine.LengthPrimitive" },
+                                "parameterName": { "const": "Glyph" },
+                                "inputValue": { "default": "0.05m" },
+                                "inputGenre": { "const": "Primitive" }
                         }
                     }
                 },
@@ -312,81 +340,90 @@
                 "properties": {
                     "Key Data": {
                         "properties": {
-                            "inputType": "LineData",
-                            "parameterName": "Key Data",
+                            "inputType": { "const": "IVLab.ABREngine.LineKeyData" },
+                            "parameterName": { "const": "Key Data"},
                             "inputGenre": { "const": "KeyData" }
                         }
                     },
                     "Color Variable": {
                         "properties": {
-                            "inputType": { "const": "ScalarDataVariable" },
+                            "inputType": { "const": "IVLab.ABREngine.ScalarDataVariable" },
                             "parameterName": { "const": "Color" },
                             "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
-                            "inputType": { "const": "ColormapVisAsset" },
+                            "inputType": { "const": "IVLab.ABREngine.ColormapVisAsset" },
                             "parameterName": { "const": "Color" },
                             "inputGenre": { "const": "VisAsset" }
                         }
                     },
-                    "Ribbon Variable": {
+                    "Texture Variable": {
                         "properties": {
-                            "inputType": { "const": "ScalarDataVariable" },
-                            "parameterName": { "const": "Ribbon" },
+                            "inputType": { "const": "IVLab.ABREngine.ScalarDataVariable" },
+                            "parameterName": { "const": "Texture" },
                             "inputGenre": { "const": "Variable" }
                         }
                     },
-                    "Ribbon": {
+                    "Texture": {
                         "properties": {
-                            "inputType": { "const": "LineTextureVisAsset" },
-                            "parameterName": { "const": "Ribbon" },
+                            "inputType": { "const": "IVLab.ABREngine.LineTextureVisAsset" },
+                            "parameterName": { "const": "Texture" },
                             "inputGenre": { "const": "VisAsset" }
+                        }
+                    },
+                    "Texture Cutoff": {
+                        "description": "How much of the light part of the line to fill. 0% is black - no fill; 100% is white - fill everything.",
+                        "properties": {
+                            "inputType": { "const": "IVLab.ABREngine.PercentPrimitive" },
+                            "parameterName": { "const": "Texture Cutoff" },
+                            "inputValue": { "default": "50%" },
+                            "inputGenre": { "const": "Primitive" }
                         }
                     },
                     "Ribbon Width": {
                         "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Ribbon Width" },
-                            "inputValue": { "default": "5cm" },
-                            "inputGenre": { "const": "PrimitiveDistance" }
-                        }
-                    },
-                    "Ribbon Fill": {
-                        "description": "How much of the light part of the line to fill. 0% is black - no fill; 100% is white - fill everything.",
-                        "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Ribbon Fill" },
-                            "inputValue": { "default": "50%" },
-                            "inputGenre": { "const": "PrimitivePercentage" }
+                            "inputType": { "const": "IVLab.ABREngine.LengthPrimitive" },
+                            "parameterName": { "const": "Ribbon" },
+                            "inputValue": { "default": "0.01m" },
+                            "inputGenre": { "const": "Primitive" }
                         }
                     },
                     "Ribbon Rotation": {
                         "description": "How should the ribbons be rotated along their central axis? (degrees)",
                         "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Ribbon Rotation" },
+                            "inputType": { "const": "IVLab.ABREngine.AnglePrimitive" },
+                            "parameterName": { "const": "Ribbon" },
                             "inputValue": { "default": "0deg" },
-                            "inputGenre": { "const": "PrimitiveAngle" }
+                            "inputGenre": { "const": "Primitive" }
                         }
                     },
                     "Ribbon Curve": {
                         "description": "How much to curve the ribbons (degrees)",
                         "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Ribbon Curve" },
+                            "inputType": { "const": "IVLab.ABREngine.AnglePrimitive" },
+                            "parameterName": { "const": "Ribbon" },
                             "inputValue": { "default": "0deg" },
-                            "inputGenre": { "const": "PrimitiveAngle" }
+                            "inputGenre": { "const": "Primitive" }
                         }
                     },
-                    "Ribbon Smoothing": {
-                        "description": "How much to smooth the ribbons (percent)",
+                    "Ribbon Brightness": {
+                        "description": "Manual brightness adjustment for the ribbons",
                         "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Ribbon Smoothing" },
-                            "inputValue": { "default": "0%" },
-                            "inputGenre": { "const": "PrimitivePercentage" }
+                            "inputType": { "const": "IVLab.ABREngine.PercentPrimitive" },
+                            "parameterName": { "const": "Ribbon" },
+                            "inputValue": { "default": "50%" },
+                            "inputGenre": { "const": "Primitive" }
+                        }
+                    },
+                    "Ribbon Smooth": {
+                        "description": "How much to smooth the ribbons",
+                        "properties": {
+                            "inputType": { "const": "IVLab.ABREngine.IntegerPrimitive" },
+                            "parameterName": { "const": "Ribbon" },
+                            "inputValue": { "default": "5" },
+                            "inputGenre": { "const": "Primitive" }
                         }
                     }
                 },
@@ -397,72 +434,72 @@
                 "properties": {
                     "Key Data": {
                         "properties": {
-                            "inputType": "SurfaceData",
-                            "parameterName": "Key Data",
+                            "inputType": { "const": "IVLab.ABREngine.SurfaceKeyData" },
+                            "parameterName": { "const": "Key Data" },
                             "inputGenre": { "const": "KeyData" }
                         }
                     },
                     "Color Variable": {
                         "properties": {
-                            "inputType": { "const": "ScalarDataVariable" },
+                            "inputType": { "const": "IVLab.ABREngine.ScalarDataVariable" },
                             "parameterName": { "const": "Color" },
                             "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Colormap": {
                         "properties": {
-                            "inputType": { "const": "ColormapVisAsset" },
+                            "inputType": { "const": "IVLab.ABREngine.ColormapVisAsset" },
                             "parameterName": { "const": "Color" },
                             "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Pattern Variable": {
                         "properties": {
-                            "inputType": { "const": "ScalarDataVariable" },
+                            "inputType": { "const": "IVLab.ABREngine.ScalarDataVariable" },
                             "parameterName": { "const": "Pattern" },
                             "inputGenre": { "const": "Variable" }
                         }
                     },
                     "Pattern": {
                         "properties": {
-                            "inputType": { "const": "LineTextureVisAsset" },
+                            "inputType": { "const": "IVLab.ABREngine.SurfaceTextureVisAsset" },
                             "parameterName": { "const": "Pattern" },
                             "inputGenre": { "const": "VisAsset" }
                         }
                     },
                     "Pattern Size": {
                         "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Pattern Size" },
-                            "inputValue": { "default": "100%" },
-                            "inputGenre": { "const": "PrimitivePercentage" }
+                            "inputType": { "const": "IVLab.ABREngine.LengthPrimitive" },
+                            "parameterName": { "const": "Pattern" },
+                            "inputValue": { "default": "1m" },
+                            "inputGenre": { "const": "Primitive" }
                         }
                     },
                     "Pattern Seam Blend": {
                         "description": "Blend the seams of the texture together (percent)",
                         "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Pattern Blend" },
+                            "inputType": { "const": "IVLab.ABREngine.PercentPrimitive" },
+                            "parameterName": { "const": "Pattern" },
                             "inputValue": { "default": "100%" },
-                            "inputGenre": { "const": "PrimitivePercentage" }
+                            "inputGenre": { "const": "Primitive" }
                         }
                     },
                     "Pattern Saturation": {
                         "description": "Saturation of pattern",
                         "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Pattern Saturation" },
+                            "inputType": { "const": "IVLab.ABREngine.PercentPrimitive" },
+                            "parameterName": { "const": "Pattern" },
                             "inputValue": { "default": "100%" },
-                            "inputGenre": { "const": "PrimitivePercentage" }
+                            "inputGenre": { "const": "Primitive" }
                         }
                     },
-                    "Pattern Weight": {
+                    "Pattern Intensity": {
                         "description": "How intense to make the pattern (0% = doesn't show up at all, 100% = only the pattern)",
                         "properties": {
-                            "inputType": { "const": "Primitive" },
-                            "parameterName": { "const": "Pattern Weight" },
+                            "inputType": { "const": "IVLab.ABREngine.PercentPrimitive" },
+                            "parameterName": { "const": "Pattern" },
                             "inputValue": { "default": "100%" },
-                            "inputGenre": { "const": "PrimitivePercentage" }
+                            "inputGenre": { "const": "Primitive" }
                         }
                     }
                 },
