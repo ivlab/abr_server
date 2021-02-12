@@ -10,6 +10,8 @@
     <div style="display: inline;">
         <textarea rows="50" cols="80" id="editor"></textarea>
         <button id="update" style="vertical-align: top;" onclick="updateState()">Update state</button>
+        <button id="undo" style="vertical-align: top;" onclick="undo()">Undo</button>
+        <button id="redo" style="vertical-align: top;" onclick="redo()">Redo</button>
     </div>
 
     <script src="{% static 'common/csrf.js' %}"></script>
@@ -36,6 +38,38 @@
                     alert(resp.statusText);
                 }
                 document.getElementById('update').disabled = false;
+            });
+        }
+        function undo() {
+            document.getElementById('undo').disabled = true;
+            fetch('/api/undo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                mode: 'same-origin',
+            }).then((resp) => {
+                if (resp.status != 200) {
+                    alert(resp.statusText);
+                }
+                document.getElementById('undo').disabled = false;
+            });
+        }
+        function redo() {
+            document.getElementById('redo').disabled = true;
+            fetch('/api/redo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                mode: 'same-origin',
+            }).then((resp) => {
+                if (resp.status != 200) {
+                    alert(resp.statusText);
+                }
+                document.getElementById('redo').disabled = false;
             });
         }
     </script>

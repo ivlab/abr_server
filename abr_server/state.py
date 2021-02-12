@@ -3,7 +3,7 @@ import sys
 import jsonschema
 import json
 import time
-from jsondiff import diff, patch
+import jsondiff
 from copy import deepcopy
 from django.conf import settings
 from pathlib import Path
@@ -28,9 +28,9 @@ BACKUP_DELETE_INTERVAL = 3600
 class State():
     def __init__(self):
         # Make sure the backup location exists
-        if not BACKUP_PATH.exists():
+        if not BACKUP_PATH.parent.exists():
             os.makedirs(BACKUP_PATH.parent)
-            BACKUP_PATH.touch()
+        BACKUP_PATH.touch()
         self.backup_path = BACKUP_PATH.resolve()
 
         with open(STATE_SCHEMA) as scm:
@@ -50,6 +50,10 @@ class State():
 
         # Make the temporary state for pending modifications
         self._pending_state = deepcopy(self._state)
+
+        # JSON diffs for undoing/redoing
+        self.undo_stack = []
+        self.redo_stack = []
 
 
     # CRUD operations
@@ -79,10 +83,17 @@ class State():
             jsonschema.validate(self._pending_state, self.state_schema)
 
             # If we've successfully validated the state, make a backup. Keep
-            # up to a certain amount of backups so we can undo if necessary
+            # up to a certain amount of backups if something crashes
             self.make_backup()
 
+            # Save the new state
+            # Also store a stack of undos, based on json diff
+            # Clear the redo stack, because if we made a change to the state all
+            # the previous redos are invalid
             with self._state_lock:
+                state_diff = jsondiff.diff(self._pending_state, self._state, syntax='symmetric')
+                self.undo_stack.append(state_diff)
+                self.redo_stack.clear()
                 self._state = deepcopy(self._pending_state)
 
             return ''
@@ -106,10 +117,8 @@ class State():
 
     def make_backup(self):
         '''
-            Save a backup of the state using json-diff to the backup file.
-            Discard backups more than 2 hours old. The diff is backwards-facing,
-            for instance if we've just added an impression to 'impressions', the
-            diff will be {delete: 'impressions'}.
+            Save a backup of the state to the backup file. Discard backups more
+            than a certain amount.
         '''
         try:
             with open(self.backup_path, 'r') as backup_file:
@@ -117,17 +126,56 @@ class State():
         except FileNotFoundError:
             backup_json = {}
 
-        with self._state_lock:
-            state_diff = diff(self._pending_state, self._state, dump=True)
-
+        to_delete = set()
         for time_key in backup_json:
             t = float(time_key)
             if time.time() - t > BACKUP_DELETE_INTERVAL:
-                del backup_json[time_key]
+                to_delete.add(time_key)
+        for time_key in to_delete:
+            del backup_json[time_key]
 
-        backup_json[time.time()] = json.dumps(state_diff)
+        with self._state_lock:
+            backup_json[time.time()] = json.dumps(self._state)
 
         with open(self.backup_path, 'w') as backup_file:
             json.dump(backup_json, backup_file)
+
+    def restore_backup(self):
+        '''
+            Restore a backup from a file
+        '''
+        # Sort the backup entries and obtain the first (newest) one
+        # backup_entries = list(sorted(map(lambda d: (float(d[0]), d[1]), backup_json.items()), key=lambda d: d[0]))
+        # key_time, most_recent_diff = backup_entries[-1]
+        raise NotImplementedError()
+
+    def undo(self):
+        '''
+            Obtain the previous state diff and apply it. Uses JSON diff to
+            minimize memory usage.
+        '''
+
+        diff_w_previous = self.undo_stack.pop()
+        with self._state_lock:
+            undone_state = jsondiff.patch(self._state, diff_w_previous, syntax='symmetric')
+            self._state = undone_state
+        self.redo_stack.append(diff_w_previous)
+
+        return ''
+
+    def redo(self):
+        '''
+            "Undo the undo" by unpatching with the latest item in the redo
+            stack. jsondiff doesn't explicitly support unpatching so we go to
+            the internals here
+        '''
+
+        diff_w_next = self.redo_stack.pop()
+        with self._state_lock:
+            undone_state = jsondiff.JsonDiffer(syntax='symmetric').unpatch(self._state, diff_w_next)
+            self._state = undone_state
+        self.undo_stack.append(diff_w_next)
+
+        return ''
 
 state = State()

@@ -32,3 +32,23 @@ def modify_state(request):
             return HttpResponse(reason=err_message, status=400)
         else:
             return HttpResponse()
+
+def undo(request):
+    if request.method == 'POST':
+        err_message = state.undo()
+        if len(err_message) > 0:
+            return HttpResponse(reason=err_message, status=400)
+        else:
+            return HttpResponse()
+    else:
+        return HttpResponse(reason='Method for undo must be PUT', status=400)
+
+def redo(request):
+    if request.method == 'POST':
+        err_message = state.redo()
+        if len(err_message) > 0:
+            return HttpResponse(reason=err_message, status=400)
+        else:
+            return HttpResponse()
+    else:
+        return HttpResponse(reason='Method for undo must be PUT', status=400)
