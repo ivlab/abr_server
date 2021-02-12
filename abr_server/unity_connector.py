@@ -25,6 +25,7 @@ class UnityConnector:
         self.listener_thread = None
         self.unity_socket = None
         self.running = True
+        self.dead = False
 
         self.connections_lock = Lock()
         self.connections = []
@@ -111,8 +112,12 @@ class UnityConnector:
 
                 except BlockingIOError:
                     pass
-                except Exception as e:
-                    logger.error('Did not receive from Unity: {}'.format(e))
+                except OSError as e:
+                    if e.errno == 32: # Broken pipe, remove from subscribers
+                        self.running = False
+                        self.dead = True
+                except Exception:
+                    logger.error('Did not send to Unity: {}'.format(e))
 
             time.sleep(1)
         
@@ -141,7 +146,11 @@ class UnityConnector:
 
                     except BlockingIOError:
                         pass
-                    except Exception as e:
+                    except OSError as e:
+                        if e.errno == 32: # Broken pipe, remove from subscribers
+                            self.running = False
+                            self.dead = True
+                    except Exception:
                         logger.error('Did not send to Unity: {}'.format(e))
 
             time.sleep(1)

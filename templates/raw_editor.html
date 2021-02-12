@@ -17,6 +17,26 @@
     <script src="{% static 'common/csrf.js' %}"></script>
 
     <script>
+        let ws = new WebSocket(`ws://${window.location.host}/ws/`);
+        let initialized = false;
+        // Once the WS is open, tell the ABR Engine to send us the state since
+        // we're connected
+        ws.onopen = (_evt) => {
+            let data = 'Web client connected';
+            ws.send(data);
+            initialized = true;
+        }
+        // When a message is received, forward it to all of the subscribers
+        ws.onmessage = (evt) => {
+            let data = evt.data;
+            console.log(data);
+            fetch('/api/state').then((resp) => resp.text())
+                .then((state) => {
+                    let t = JSON.parse(state)['state'];
+                    editor.value = JSON.stringify(t, null, 5);
+            });
+        }
+
         let editor = document.getElementById('editor');
         fetch('/api/state').then((resp) => resp.text())
             .then((state) => {

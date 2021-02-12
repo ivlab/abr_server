@@ -162,7 +162,11 @@ class State():
             minimize memory usage.
         '''
 
-        diff_w_previous = self.undo_stack.pop()
+        try:
+            diff_w_previous = self.undo_stack.pop()
+        except IndexError:
+            return 'Nothing to undo'
+
         with self._state_lock:
             undone_state = jsondiff.patch(self._state, diff_w_previous, syntax='symmetric')
             self._state = undone_state
@@ -180,7 +184,11 @@ class State():
             the internals here
         '''
 
-        diff_w_next = self.redo_stack.pop()
+        try:
+            diff_w_next = self.redo_stack.pop()
+        except IndexError:
+            return 'Nothing to redo'
+
         with self._state_lock:
             undone_state = jsondiff.JsonDiffer(syntax='symmetric').unpatch(self._state, diff_w_next)
             self._state = undone_state

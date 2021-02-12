@@ -16,8 +16,8 @@ class StateNotifier:
     def __init__(self):
         self._subscriber_lock = Lock()
 
-        with self._subscriber_lock:
-            self.socket_subscribers = {}
+        self.socket_subscribers = {}
+        self.ws_subscribers = {}
 
     def subscribe_socket(self):
         '''
@@ -37,12 +37,35 @@ class StateNotifier:
             'uuid': sub_id
         }
 
-    def unsubscribe_socket(self, uuid):
+    def subscribe_ws(self, ws):
+        sub_id = uuid.uuid4()
         with self._subscriber_lock:
-            del self.socket_subscribers[str(uuid)]
+            self.ws_subscribers[str(sub_id)] = ws
+        return sub_id
+
+    def unsubscribe_ws(self, sub_id):
+        with self._subscriber_lock:
+            del self.ws_subscribers[str(sub_id)]
+        print('Unsubscribed notifier ws')
+
+    def unsubscribe_socket(self, sub_id):
+        with self._subscriber_lock:
+            del self.socket_subscribers[str(sub_id)]
+        print('Unsubscribed notifier socket')
 
     def notify(self, message='{"updated": true}'):
-        for _id, connector in self.socket_subscribers.items():
-            connector.send(message)
+        '''
+            Send out a message to all connected parties
+        '''
+        remove_conns = set()
+        for uid, connector in self.socket_subscribers.items():
+            if not connector.dead:
+                connector.send(message)
+            else:
+                remove_conns.add(uid)
+        for sid in remove_conns:
+            self.unsubscribe_socket(sid)
+        for _id, ws in self.ws_subscribers.items():
+            ws.send(message)
 
 notifier = StateNotifier()
