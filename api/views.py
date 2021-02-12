@@ -9,6 +9,7 @@ from django.conf import settings
 from pathlib import Path
 
 from abr_server.state import state
+from abr_server.notifier import notifier
 
 # Create your views here.
 def index(request):
@@ -41,7 +42,7 @@ def undo(request):
         else:
             return HttpResponse()
     else:
-        return HttpResponse(reason='Method for undo must be PUT', status=400)
+        return HttpResponse(reason='Method for undo must be POST', status=400)
 
 def redo(request):
     if request.method == 'POST':
@@ -51,4 +52,20 @@ def redo(request):
         else:
             return HttpResponse()
     else:
-        return HttpResponse(reason='Method for undo must be PUT', status=400)
+        return HttpResponse(reason='Method for redo must be POST', status=400)
+
+@csrf_exempt
+def subscribe(request):
+    if request.method == 'POST':
+        resp = notifier.subscribe_socket()
+        return JsonResponse(resp)
+    else:
+        return HttpResponse(reason='Method for subscribe must be POST', status=400)
+
+@csrf_exempt
+def unsubscribe(request, uuid):
+    if request.method == 'POST':
+        notifier.unsubscribe_socket()
+        return HttpResponse('OK')
+    else:
+        return HttpResponse(reason='Method for subscribe must be POST', status=400)

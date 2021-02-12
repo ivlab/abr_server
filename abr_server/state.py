@@ -9,6 +9,8 @@ from django.conf import settings
 from pathlib import Path
 from threading import Lock
 
+from .notifier import notifier
+
 SCHEMA_PATH = Path(settings.STATIC_ROOT).joinpath('schemas')
 STATE_SCHEMA = SCHEMA_PATH.joinpath('ABRSchema_0-2-0.json')
 
@@ -96,6 +98,9 @@ class State():
                 self.redo_stack.clear()
                 self._state = deepcopy(self._pending_state)
 
+            # Tell any connected clients that we've updated the state
+            notifier.notify()
+
             return ''
         except jsonschema.ValidationError as e:
             path = '/'.join(e.path)
@@ -124,6 +129,8 @@ class State():
             with open(self.backup_path, 'r') as backup_file:
                 backup_json = json.load(backup_file)
         except FileNotFoundError:
+            backup_json = {}
+        except json.decoder.JSONDecodeError:
             backup_json = {}
 
         to_delete = set()
@@ -161,6 +168,9 @@ class State():
             self._state = undone_state
         self.redo_stack.append(diff_w_previous)
 
+        # Tell any connected clients that we've updated the state
+        notifier.notify()
+
         return ''
 
     def redo(self):
@@ -175,6 +185,9 @@ class State():
             undone_state = jsondiff.JsonDiffer(syntax='symmetric').unpatch(self._state, diff_w_next)
             self._state = undone_state
         self.undo_stack.append(diff_w_next)
+
+        # Tell any connected clients that we've updated the state
+        notifier.notify()
 
         return ''
 
