@@ -22,6 +22,9 @@ BACKUP_PATH = BACKUP_LOCATIONS[sys.platform] \
     .joinpath('abr_backup.json') \
     .expanduser()
 
+# Delete backup entries after a certain amount of time
+BACKUP_DELETE_INTERVAL = 3600
+
 class State():
     def __init__(self):
         # Make sure the backup location exists
@@ -116,6 +119,12 @@ class State():
 
         with self._state_lock:
             state_diff = diff(self._pending_state, self._state, dump=True)
+
+        for time_key in backup_json:
+            t = float(time_key)
+            if time.time() - t > BACKUP_DELETE_INTERVAL:
+                del backup_json[time_key]
+
         backup_json[time.time()] = json.dumps(state_diff)
 
         with open(self.backup_path, 'w') as backup_file:
