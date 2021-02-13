@@ -65,7 +65,7 @@ def subscribe(request):
 @csrf_exempt
 def unsubscribe(request, uuid):
     if request.method == 'POST':
-        notifier.unsubscribe_socket()
+        notifier.unsubscribe_socket(uuid)
         return HttpResponse('OK')
     else:
         return HttpResponse(reason='Method for subscribe must be POST', status=400)

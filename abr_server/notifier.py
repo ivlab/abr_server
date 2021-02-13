@@ -45,12 +45,14 @@ class StateNotifier:
 
     def unsubscribe_ws(self, sub_id):
         with self._subscriber_lock:
-            del self.ws_subscribers[str(sub_id)]
+            if str(sub_id) in self.ws_subscribers:
+                del self.ws_subscribers[str(sub_id)]
         print('Unsubscribed notifier ws')
 
     def unsubscribe_socket(self, sub_id):
         with self._subscriber_lock:
-            del self.socket_subscribers[str(sub_id)]
+            if str(sub_id) in self.socket_subscribers:
+                del self.socket_subscribers[str(sub_id)]
         print('Unsubscribed notifier socket')
 
     def notify(self, message='{"updated": true}'):

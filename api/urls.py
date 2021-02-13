@@ -9,5 +9,5 @@ urlpatterns = [
     path('redo', views.redo),
     re_path('^state/*', views.modify_state),
     path('subscribe', views.subscribe),
-    path('unsubscribe', views.unsubscribe),
+    path('unsubscribe/<str:uuid>', views.unsubscribe),
 ]

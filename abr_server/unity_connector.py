@@ -95,7 +95,7 @@ class UnityConnector:
                 try:
                     # Receive the length of the next message (an Int32, assumed to be
                     # little endian)
-                    length = int.from_bytes(conn.recv(4), 'little')
+                    length = int.from_bytes(conn.recv(4), 'big')
 
                     # Construct the whole message from the socket
                     bytes_read = 0
@@ -138,7 +138,7 @@ class UnityConnector:
                         length = len(message)
                         total_bytes = 0
                         while total_bytes < 4:
-                            total_bytes += conn.send(int.to_bytes(length, 4, 'little'))
+                            total_bytes += conn.send(int.to_bytes(length, 4, 'big'))
 
                         total_bytes = 0
                         while total_bytes < length:
