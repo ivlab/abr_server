@@ -53,6 +53,7 @@
 
 #composition-scrollbox {
     overflow: hidden !important;
+    background-color: black;
 }
 
 #composition-loader {
@@ -65,7 +66,7 @@
     background-size: 40px 40px;
     background-image:
         linear-gradient(to right, grey 1px, transparent 1px),
-        linear-gradient(to bottom, grey 1px, transparent 1px);
+        linear-gradient(to bottom, grey 1px, #928e89ff 1px);
 }
 
 /* .panel-header p {

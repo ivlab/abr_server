@@ -8,6 +8,7 @@
 
 import { globals } from "../../../common/globals.js";
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
+import { PuzzlePiece } from "./PuzzlePiece.js";
 
 export function DataImpression(plateType, uuid, name, impressionData) {
     let $element = $('<div>', { class: 'data-impression rounded' })
@@ -31,9 +32,26 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     //     src: `${STATIC_URL}compose/plate_thumbnail/${plateType}.png`,
     // }));
 
-    let plateSchema = globals.schema.definitions.Plates[plateType];
-    for (const propName in plateSchema.properties) {
-        $element.append(Parameter(propName, plateSchema.properties[propName]));
+    let plateSchema = globals.schema.definitions.Plates[plateType].properties;
+
+    // Separate out all the inputs into their individual parameters
+    let parameterMapping = {};
+    for (const inputName in plateSchema) {
+        let parameterName = plateSchema[inputName].properties.parameterName.const;
+        if (parameterName in parameterMapping) {
+            parameterMapping[parameterName].push(inputName);
+        } else {
+            parameterMapping[parameterName] = [inputName];
+        }
+    }
+
+    // Add a new row of inputs for each parameter
+    for (const parameter in parameterMapping) {
+        let $param = Parameter(parameter);
+        for (const inputName of parameterMapping[parameter]) {
+            $param.append(InputSocket(inputName, plateSchema[inputName].properties));
+        }
+        $element.append($param);
     }
 
     // Only need to update the UI position when dragging, not the whole impression
@@ -49,10 +67,20 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     return $element;
 }
 
-export function InputSocket(inputName, inputType, parameterName, inputGenre, inputValue) {
-
+function InputSocket(inputName, inputProps) {
+    let leftConnector = inputProps.inputGenre.const == 'VisAsset';
+    let addClasses = inputProps.inputGenre.const == 'KeyData' ? 'keydata' : '';
+    let $socket;
+    if (inputProps.inputGenre.const != 'Primitive') {
+        $socket = PuzzlePiece(inputName, inputProps.inputType.const, leftConnector, addClasses);
+    } else {
+        $socket = $('<p>', {text: inputName});
+    }
+    return $socket;
 }
 
-function Parameter(propName, prop) {
-    return $('<p>', {text:propName});
+function Parameter(parameterName) {
+    return $('<div>', { class: 'parameter' }).append(
+        $('<p>', { class: "parameter-label", text: parameterName})
+    );
 }

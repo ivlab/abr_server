@@ -24,16 +24,19 @@ export function CompositionPanel() {
     let initPos = {left: 0, top: 0};
     let $loader = $('<div>', {
         id: COMPOSITION_LOADER_ID,
-    // }).draggable({
-    //     stop: (evt, _ui) => {
-    //         let pos = $(evt.target).position();
-    //         if (pos.left > initPos.left) {
-    //             $(evt.target).css('left', 0);
-    //         }
-    //         if (pos.top > initPos.top) {
-    //             $(evt.target).css('top', 0);
-    //         }
-    //     }
+    }).draggable({
+        stop: (evt, _ui) => {
+            // Snap back into place if we've scrolled off to the left or top
+            // let pos = $(evt.target).position();
+            // console.log(pos);
+            // console.log(initPos);
+            // if (pos.left > initPos.left) {
+            //     $(evt.target).css('left', 0);
+            // }
+            // if (pos.top > initPos.top) {
+            //     $(evt.target).css('top', 0);
+            // }
+        }
     });
 
     $compositionPanel.append($('<div>', {

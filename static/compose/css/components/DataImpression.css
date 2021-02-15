@@ -1,6 +1,6 @@
 .data-impression {
-    background-color: #f8f4f4;
-    width: 10rem;
+    background-color: #53505070;
+    width: 13rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -22,4 +22,18 @@
 
 .data-impression .data-impression-thumbnail {
     width: 5rem;
+}
+
+.data-impression .parameter {
+    font-size: smaller;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.data-impression .parameter .parameter-label {
+    text-align: center;
+    flex-basis: 100%;
+    font-size: x-small;
+    color: #f8f4f4;
 }
