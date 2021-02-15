@@ -30,7 +30,7 @@ export function CollapsibleDiv(
             }
         })
     ).append(
-        $('<div>', { class: 'collapsible-content' }).append($contents)
+        $('<div>', { class: 'collapsible-content rounded' }).append($contents)
     );
 
     if (!collapsed) {

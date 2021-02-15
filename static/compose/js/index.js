@@ -9,20 +9,31 @@
 import { Validator } from '../../common/Validator.js';
 import { globals } from '../../common/globals.js';
 import { ComposeManager } from './ComposeManager.js';
+import { Notifier } from '../../common/Notifier.js';
+import { StateManager } from '../../common/StateManager.js';
 
 // globals.validator and globals.schema are guaranteed to be defined after this
 // finishes
 async function initValidator() {
-    globals.validator = new Validator('abr_state.json');
+    globals.validator = new Validator('ABRSchema_0-2-0.json');
 
     let scm = await globals.validator.schema;
     globals.schema = scm;
+}
+
+// globals.notifier is guaranteed to be initialized after this
+async function initNotifier() {
+    let notifier = new Notifier();
+    await notifier.ready();
+    globals.notifier = notifier;
 }
 
 function init() {
     let toInit = [];
 
     toInit.push(initValidator());
+    toInit.push(initNotifier());
+    globals.stateManager = new StateManager();
 
     // Wait for all pre-fetching to finish before loading the UI
     Promise.all(toInit).then(() => {

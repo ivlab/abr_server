@@ -1,3 +1,10 @@
+/* Validator.js
+ *
+ * Copyright (c) 2021, University of Minnesota
+ * Author: Bridger Herman <herma582@umn.edu>
+ * 
+ */
+
 export class Validator {
     constructor(schemaID) {
         this._pendingValidations = [];

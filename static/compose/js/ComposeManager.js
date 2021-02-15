@@ -6,6 +6,8 @@
  * Manage the UI for ABR compose
  */
 
+import { globals } from '../../common/globals.js';
+import { STATE_UPDATE_EVENT } from '../../common/StateManager.js';
 import * as Components from './components/Components.js';
 
 export class ComposeManager {
@@ -14,14 +16,20 @@ export class ComposeManager {
         this.compositionPanel = Components.CompositionPanel();
         this.dataPanel = Components.DataPanel();
         this.designPanel = Components.DesignPanel();
+        this.$element = $('#compose-manager');
 
-        $('#compose-manager').append(this.header);
-        $('#compose-manager').append($('<div>', {
+        this.$element.append(this.header);
+        this.$element.append($('<div>', {
             id: 'panel-container',
         })
             .append(this.dataPanel)
             .append(this.compositionPanel)
             .append(this.designPanel)
         );
+
+        globals.stateManager.subscribe(this.$element);
+        this.$element.on(STATE_UPDATE_EVENT, (evt) => {
+            console.log(globals.stateManager.state);
+        })
     }
 }

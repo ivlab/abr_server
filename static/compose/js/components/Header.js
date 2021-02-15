@@ -19,7 +19,7 @@ export function Header() {
     // Load a state
     // TODO: dialog
     $fileHeader.append($('<button>', {
-        class: 'material-icons',
+        class: 'material-icons rounded',
         html: 'folder_open',
         title: 'Load state...',
         id: 'load-state',
@@ -28,7 +28,7 @@ export function Header() {
     // Save a state
     // TODO
     $fileHeader.append($('<button>', {
-        class: 'material-icons',
+        class: 'material-icons rounded',
         html: 'bookmark',
         title: 'Save state', 
     }));
@@ -36,7 +36,7 @@ export function Header() {
     // Save as
     // TODO
     $fileHeader.append($('<button>', {
-        class: 'material-icons',
+        class: 'material-icons rounded',
         html: 'bookmarks',
         title: 'Save state as...', 
     }));
@@ -44,7 +44,7 @@ export function Header() {
     // More settings
     // TODO
     $fileHeader.append($('<button>', {
-        class: 'material-icons',
+        class: 'material-icons rounded',
         html: 'settings',
         title: 'More options...', 
     }));
@@ -78,14 +78,14 @@ export function Header() {
     // Capture a screenshot
     // TODO
     $screenshotHeader.append($('<button>', {
-        class: 'material-icons',
+        class: 'material-icons rounded',
         html: 'camera_alt', 
     }));
 
     // Screenshot gallery
     // TODO
     $screenshotHeader.append($('<button>', {
-        class: 'material-icons',
+        class: 'material-icons rounded',
         html: 'collections', 
     }));
 
