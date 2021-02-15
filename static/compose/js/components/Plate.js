@@ -9,7 +9,8 @@
 
 import { COMPOSITION_LOADER_ID } from "./CompositionPanel.js";
 import { DataImpression } from "./DataImpression.js";
-import { uuid } from '../../../common/UUID.js'
+import { uuid } from '../../../common/UUID.js';
+import { globals } from '../../../common/globals.js';
 
 export function Plate(plateType) {
     let $plate = $('<div>', {
@@ -36,20 +37,22 @@ export function Plate(plateType) {
         stop: (evt, ui) => {
             let $composition = $('#' + COMPOSITION_LOADER_ID);
             let pos = ui.helper.position();
-            let compTop = $composition.position().top;
-            let compLeft = $composition.position().left;
-            pos.left = pos.left - compLeft;
-            pos.top = pos.top - compTop;
 
             // Instantiate a new data impression in the UI
-            let $instance = DataImpression(plateType, uuid(), plateType, {
+            let imprId = uuid();
+            let $instance = DataImpression(plateType, imprId, plateType, {
                 position: pos,
             });
-            $instance.css('position', 'absolute');
-            $instance.css('top', pos.top);
-            $instance.css('left', pos.left);
 
             $instance.appendTo($composition);
+
+            let impression = {
+                plateType,
+                uuid: imprId,
+                name: globals.schema.definitions?.Impression?.properties?.name?.default ?? "Data Impression",
+            };
+            globals.stateManager.update('impressions/' + imprId, impression);
+            globals.stateManager.update('uiData/compose/impressionData/' + imprId + '/position', pos);
         }
     });
 

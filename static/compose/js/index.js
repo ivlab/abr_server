@@ -28,13 +28,18 @@ async function initNotifier() {
     globals.notifier = notifier;
 }
 
+async function initState() {
+    let stateManager = new StateManager();
+    await stateManager.refreshState();
+    globals.stateManager = stateManager;
+}
+
 function init() {
     let toInit = [];
 
     toInit.push(initValidator());
     toInit.push(initNotifier());
-    globals.stateManager = new StateManager();
-    toInit.push(globals.stateManager.updateState());
+    toInit.push(initState());
 
     // Wait for all pre-fetching to finish before loading the UI
     Promise.all(toInit).then(() => {

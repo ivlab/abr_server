@@ -22,8 +22,8 @@ export class Notifier {
         }
 
         // When a message is received, update the state
-        this.ws.onmessage = (evt) => {
-            globals.stateManager.updateState(evt.data).then(() => console.log('State Updated'));
+        this.ws.onmessage = (_evt) => {
+            globals.stateManager.refreshState();
         }
     }
 

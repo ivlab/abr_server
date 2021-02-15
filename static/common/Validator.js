@@ -47,7 +47,7 @@ export class Validator {
                 params.push(`${k}: '${e.params[k]}'`);
             }
             params = params.join(', ');
-            fmtErrs.push(`${e.dataPath}: ${e.message} (${params})`);
+            fmtErrs.push(`${e.message} (${params})`);
         }
         return fmtErrs.join(', ');
     }

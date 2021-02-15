@@ -6,6 +6,8 @@
  * Header going across the top of the ABR Compose UI
  */
 
+import { globals } from "../../../common/globals.js";
+
 export function Header() {
     let $header = $('<header>', {
         id: 'header',
@@ -23,6 +25,31 @@ export function Header() {
         html: 'folder_open',
         title: 'Load state...',
         id: 'load-state',
+    }).on('click', (_evt) => {
+        // Create a fake element to handle the actual upload
+        let $fileInput = $('<input>', {
+            type: 'file',
+        }).on('change', (evt) => {
+            if (!evt.target.files || !evt.target.files[0]) {
+                alert('No files uploaded!');
+                return;
+            }
+
+            let stateFileName = evt.target.files[0].name;
+            // get rid of file extension
+            let stateName = stateFileName.replace(/\.[^/.]+$/, ""); // https://stackoverflow.com/a/4250408
+
+            let reader = new FileReader();
+            $(reader).on('load', (loadEvt) => {
+                // Update the state with the stateManager
+                globals.stateManager.updateState(loadEvt.target.result);
+            });
+            reader.readAsText(evt.target.files[0]);
+
+            $fileInput.remove();
+        });
+        $('body').append($fileInput);
+        $fileInput.click();
     }));
 
     // Save a state

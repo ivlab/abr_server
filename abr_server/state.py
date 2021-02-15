@@ -57,7 +57,6 @@ class State():
         self.undo_stack = []
         self.redo_stack = []
 
-
     # CRUD operations
     def get_path(self, item_path):
         with self._state_lock:
