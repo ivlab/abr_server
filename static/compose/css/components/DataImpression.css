@@ -1,0 +1,25 @@
+.data-impression {
+    background-color: #f8f4f4;
+    width: 10rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.data-impression>* {
+    padding: 0.25rem 0;
+}
+
+.data-impression .data-impression-header {
+    width: 100%;
+    background-color: #ceedff;
+    text-align: center;
+}
+
+.data-impression .data-impression-header p {
+    margin: 0.25rem;
+}
+
+.data-impression .data-impression-thumbnail {
+    width: 5rem;
+}

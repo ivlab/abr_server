@@ -34,6 +34,7 @@ function init() {
     toInit.push(initValidator());
     toInit.push(initNotifier());
     globals.stateManager = new StateManager();
+    toInit.push(globals.stateManager.updateState());
 
     // Wait for all pre-fetching to finish before loading the UI
     Promise.all(toInit).then(() => {

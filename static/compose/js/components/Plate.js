@@ -7,6 +7,10 @@
  * impression When dragged into the composition panel.
  */
 
+import { COMPOSITION_LOADER_ID } from "./CompositionPanel.js";
+import { DataImpression } from "./DataImpression.js";
+import { uuid } from '../../../common/UUID.js'
+
 export function Plate(plateType) {
     let $plate = $('<div>', {
         class: 'plate rounded',
@@ -25,6 +29,29 @@ export function Plate(plateType) {
         class: 'plate-thumbnail',
         src: `${STATIC_URL}compose/plate_thumbnail/${plateType}.png`,
     }));
+
+
+    $plate.draggable({
+        helper: 'clone',
+        stop: (evt, ui) => {
+            let $composition = $('#' + COMPOSITION_LOADER_ID);
+            let pos = ui.helper.position();
+            let compTop = $composition.position().top;
+            let compLeft = $composition.position().left;
+            pos.left = pos.left - compLeft;
+            pos.top = pos.top - compTop;
+
+            // Instantiate a new data impression in the UI
+            let $instance = DataImpression(plateType, uuid(), plateType, {
+                position: pos,
+            });
+            $instance.css('position', 'absolute');
+            $instance.css('top', pos.top);
+            $instance.css('left', pos.left);
+
+            $instance.appendTo($composition);
+        }
+    });
 
     return $plate;
 }

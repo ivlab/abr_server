@@ -6,10 +6,13 @@
  * Composition panel (Center of the ABR Compose UI)
  */
 
+export const COMPOSITION_ID = 'composition-panel';
+export const COMPOSITION_LOADER_ID = 'composition-loader';
+
 export function CompositionPanel() {
     let $compositionPanel = $('<div>', {
         class: 'panel',
-        id: 'composition-panel',
+        id: COMPOSITION_ID,
     });
 
     $compositionPanel.append($('<p>', {
@@ -20,17 +23,17 @@ export function CompositionPanel() {
     // The composition data impressions are loaded here
     let initPos = {left: 0, top: 0};
     let $loader = $('<div>', {
-        id: 'composition-loader',
-    }).draggable({
-        stop: (evt, _ui) => {
-            let pos = $(evt.target).position();
-            if (pos.left > initPos.left) {
-                $(evt.target).css('left', 0);
-            }
-            if (pos.top > initPos.top) {
-                $(evt.target).css('top', 0);
-            }
-        }
+        id: COMPOSITION_LOADER_ID,
+    // }).draggable({
+    //     stop: (evt, _ui) => {
+    //         let pos = $(evt.target).position();
+    //         if (pos.left > initPos.left) {
+    //             $(evt.target).css('left', 0);
+    //         }
+    //         if (pos.top > initPos.top) {
+    //             $(evt.target).css('top', 0);
+    //         }
+    //     }
     });
 
     $compositionPanel.append($('<div>', {

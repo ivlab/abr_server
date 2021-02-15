@@ -15,6 +15,22 @@ export class StateManager {
         this._subscribers = [];
     }
 
+    async updateState() {
+        await fetch('/api/state')
+            .then((resp) => resp.text())
+            .then((newState) => {
+                let stateJson = JSON.parse(newState);
+                return globals.validator.validate(stateJson.state)
+            })
+            .then((stateJson) => {
+                this._state = stateJson;
+                for (const sub of this._subscribers) {
+                    $(sub).trigger(STATE_UPDATE_EVENT);
+                }
+            })
+            .catch((errs) => console.error(errs));
+    }
+
     get state() {
         return this._state;
     }
@@ -25,20 +41,5 @@ export class StateManager {
 
     unsubscribe($element) {
         this._subscribers.remove($element);
-    }
-
-    updateState(newState) {
-        let stateJson = JSON.parse(newState);
-        globals.validator.validate(stateJson.state)
-            .then((errs) => {
-                if (errs !== null) {
-                    console.error(errs);
-                } else {
-                    this._state = stateJson.state;
-                    for (const sub of this._subscribers) {
-                        $(sub).trigger(STATE_UPDATE_EVENT);
-                    }
-                }
-            });
     }
 }

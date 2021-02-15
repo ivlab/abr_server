@@ -21,12 +21,9 @@ export class Notifier {
             $(this).trigger('notifierReady');
         }
 
-        // When a message is received, forward it to all of the subscribers
+        // When a message is received, update the state
         this.ws.onmessage = (evt) => {
-            let data = evt.data;
-            console.log(data);
-            fetch('/api/state').then((resp) => resp.text())
-                .then((state) => globals.stateManager.updateState(state) );
+            globals.stateManager.updateState(evt.data).then(() => console.log('State Updated'));
         }
     }
 

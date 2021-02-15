@@ -28,9 +28,9 @@ export class Validator {
     async validate(data) {
         return await this._validator.then((v) => {
             if (!v.validate(this.schemaID, data)) {
-                return this.formatErrors(v.errors);
+                throw this.formatErrors(v.errors);
             } else {
-                return null;
+                return data;
             }
         });
     }
