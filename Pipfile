@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+whitenoise = "==5.0.1"
+channels = "==2.4.0"
+jsonschema = "==3.2.0"
+jsondiff = "==1.2.0"
+Django = "==3.0.2"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

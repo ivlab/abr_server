@@ -7,10 +7,15 @@ For more information on this file, see
 https://docs.djangoproject.com/en/3.0/howto/deployment/asgi/
 """
 
+# https://stackoverflow.com/a/59909118
 import os
 
-from django.core.asgi import get_asgi_application
+# from django.core.asgi import get_asgi_application
+import django
+from channels.routing import get_default_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'abr_server.settings')
+django.setup()
 
-application = get_asgi_application()
+# application = get_asgi_application()
+application = get_default_application()
