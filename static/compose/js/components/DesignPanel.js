@@ -63,7 +63,9 @@ export function DesignPanel() {
                     'texture': 'contain',
                     'glyph': 'contain',
                 }
-                visassetsByType[type].push(Components.PuzzlePieceWithThumbnail(thumbUrl, typeMap[type], true, '', cssObjectFitMap[type]));
+                let $puzzlePiece = Components.PuzzlePieceWithThumbnail(thumbUrl, typeMap[type], true, '', cssObjectFitMap[type]);
+                $puzzlePiece.data('uuid', va);
+                visassetsByType[type].push($puzzlePiece);
             }
 
             for (const t in visassetsByType) {
