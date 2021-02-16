@@ -37,6 +37,8 @@ export function Plate(plateType) {
         stop: (evt, ui) => {
             let $composition = $('#' + COMPOSITION_LOADER_ID);
             let pos = ui.helper.position();
+            pos.left -= $composition.position().left;
+            pos.top -= $composition.position().top;
 
             // Instantiate a new data impression in the UI
             let imprId = uuid();
