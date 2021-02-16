@@ -14,15 +14,22 @@ export function CollapsibleDiv(
     $contents,
     collapsed=true,
 ) {
+    let $header;
+    if (header instanceof jQuery) {
+        $header = header;
+    } else {
+        $header = $('<div>', {
+            text: header
+        });
+    }
+    $header.addClass('collapsible-header');
+
     let $collapsibleDiv = $('<div>', {
         class: 'collapsible-div rounded',
-    }).append(
-        $('<div>', {
-            class: 'collapsible-header',
-            text: header
-        }).on('click', (evt) => {
-            $(evt.target).toggleClass('active');
-            let content = evt.target.nextElementSibling;
+    }).append($header.on('click', (evt) => {
+            let $target = $(evt.target).closest('.collapsible-header');
+            $target.toggleClass('active');
+            let content = $target[0].nextElementSibling;
             if (content.style.maxHeight) {
                 content.style.maxHeight = null;
             } else {

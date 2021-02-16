@@ -10,4 +10,5 @@ urlpatterns = [
     re_path('^state/*', views.modify_state),
     path('subscribe', views.subscribe),
     path('unsubscribe/<str:uuid>', views.unsubscribe),
+    path('visassets', views.list_visassets),
 ]

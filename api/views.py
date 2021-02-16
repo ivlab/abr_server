@@ -11,6 +11,8 @@ from pathlib import Path
 from abr_server.state import state
 from abr_server.notifier import notifier, DEFAULT_ADDRESS
 
+VISASSET_CACHE = {}
+
 # Create your views here.
 def index(request):
     return HttpResponse('Nothing to see here; this URL is for computers')
@@ -82,3 +84,13 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+def list_visassets(request):
+    va_path = Path(settings.MEDIA_ROOT).joinpath('visassets')
+    visasset_list = os.listdir(va_path)
+    visasset_list.sort()
+    for va in visasset_list:
+        if va not in VISASSET_CACHE:
+            with open(va_path.joinpath(va).joinpath('artifact.json')) as fin:
+                VISASSET_CACHE[va] = json.load(fin)
+    return JsonResponse(VISASSET_CACHE)

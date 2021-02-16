@@ -15,10 +15,10 @@
 }
 
 .collapsible-header {
-    /* margin: 0.5rem auto 0 auto; */
     padding: 0.5rem;
-    /* width: 100%; */
-    /* width: calc(100% - 2rem); */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border: none;
     outline: none;
     text-align: left;
