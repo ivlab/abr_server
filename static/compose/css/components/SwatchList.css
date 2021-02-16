@@ -6,11 +6,15 @@
 
 .swatch-list {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: wrap;
 }
 
 .swatch-list>* {
     margin-top: 0.5rem;
+}
+
+.swatch-list .puzzle-piece {
+    flex-basis: 40%;
 }

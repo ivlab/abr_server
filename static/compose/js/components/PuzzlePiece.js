@@ -26,6 +26,17 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     return $element;
 }
 
+export function PuzzlePieceWithThumbnail(thumbUrl, inputType, leftConnector, addClasses, cssObjectFit) {
+    let $thumb = $('<img>', {
+        class: 'artifact-thumbnail rounded',
+        src: thumbUrl,
+    });
+    if (cssObjectFit) {
+        $thumb.css('object-fit', cssObjectFit);
+    }
+    return PuzzlePiece($thumb, inputType, leftConnector, addClasses);
+}
+
 // A connector for a puzzle piece
 export function PuzzleConnector(type, addClasses='', background=false) {
     let backgroundClass = background ? 'background' : 'foreground-contrast';
@@ -36,10 +47,10 @@ export function PuzzleConnector(type, addClasses='', background=false) {
 }
 
 // A puzzle piece label
-function PuzzleLabel(name, useHtml=false) {
-    if (!useHtml) {
-        return $('<div>', { class: 'puzzle-label rounded' }).append($('<p>', { text: name }));
+function PuzzleLabel(name) {
+    if (name instanceof jQuery) {
+        return $('<div>', { class: 'puzzle-label rounded' }).append(name);
     } else {
-        return $('<div>', { class: 'puzzle-label rounded', html: name });
+        return $('<div>', { class: 'puzzle-label rounded' }).append($('<p>', { text: name }));
     }
 }

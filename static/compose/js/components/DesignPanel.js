@@ -56,7 +56,14 @@ export function DesignPanel() {
                     console.warn('Use of VisAsset field `artifactType` is deprecated, use `type` instead');
                 }
                 type = type ?? artifactType;
-                visassetsByType[type].push(Components.PuzzlePiece(va, typeMap[type], true))
+                let thumbUrl = `/media/visassets/${va}/${visassets[va].preview}`;
+                const cssObjectFitMap = {
+                    'colormap': 'fill',
+                    'line': 'cover',
+                    'texture': 'contain',
+                    'glyph': 'contain',
+                }
+                visassetsByType[type].push(Components.PuzzlePieceWithThumbnail(thumbUrl, typeMap[type], true, '', cssObjectFitMap[type]));
             }
 
             for (const t in visassetsByType) {

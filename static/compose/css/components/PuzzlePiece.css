@@ -102,4 +102,5 @@ div.inline {
     object-fit: contain;
     overflow: hidden;
     margin: 0.25em;
+    height: 100%;
 }
