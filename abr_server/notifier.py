@@ -7,8 +7,11 @@
 # Both Unity sockets and WebSockets must register themselves.
 
 import uuid
+import socket
 from threading import Lock
 from .unity_connector import UnityConnector
+from django.conf import settings
+import os
 
 DEFAULT_ADDRESS = '127.0.0.1'
 
@@ -19,7 +22,7 @@ class StateNotifier:
         self.socket_subscribers = {}
         self.ws_subscribers = {}
 
-    def subscribe_socket(self):
+    def subscribe_socket(self, local=False):
         '''
             Socket (usually Unity) connection for sending notifications that the
             state was updated. We assign an address/port and return it over HTTP
@@ -31,11 +34,15 @@ class StateNotifier:
         sub_id = uuid.uuid4()
         with self._subscriber_lock:
             self.socket_subscribers[str(sub_id)] = subscriber
-        return {
+        ret = {
             'address': DEFAULT_ADDRESS,
             'port': port,
-            'uuid': sub_id
+            'uuid': sub_id,
         }
+        # If we're on the same machine, add the local data path
+        if local:
+            ret['localDataPath'] = os.path.realpath(settings.MEDIA_ROOT)
+        return ret
 
     def subscribe_ws(self, ws):
         sub_id = uuid.uuid4()

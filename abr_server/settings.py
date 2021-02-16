@@ -122,3 +122,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, os.path.join('..', 'static'))
 STATICFILES_DIRS = [os.path.join('static')]
+
+# Serve media files in media dir (using cors_server.py)
+MEDIA_ROOT = os.path.join(BASE_DIR, os.path.join('..', 'media'))
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT)

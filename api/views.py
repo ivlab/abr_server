@@ -9,7 +9,7 @@ from django.conf import settings
 from pathlib import Path
 
 from abr_server.state import state
-from abr_server.notifier import notifier
+from abr_server.notifier import notifier, DEFAULT_ADDRESS
 
 # Create your views here.
 def index(request):
@@ -56,8 +56,12 @@ def redo(request):
 
 @csrf_exempt
 def subscribe(request):
+    # TODO: add authentication
+    # https://en.wikipedia.org/wiki/Basic_access_authentication
     if request.method == 'POST':
-        resp = notifier.subscribe_socket()
+        client_ip = get_client_ip(request)
+        same_machine = client_ip == DEFAULT_ADDRESS
+        resp = notifier.subscribe_socket(same_machine)
         return JsonResponse(resp)
     else:
         return HttpResponse(reason='Method for subscribe must be POST', status=400)
@@ -69,3 +73,12 @@ def unsubscribe(request, uuid):
         return HttpResponse('OK')
     else:
         return HttpResponse(reason='Method for subscribe must be POST', status=400)
+
+# https://stackoverflow.com/a/4581997
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
