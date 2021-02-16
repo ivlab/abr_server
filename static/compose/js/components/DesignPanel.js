@@ -64,7 +64,12 @@ export function DesignPanel() {
                     'glyph': 'contain',
                 }
                 let $puzzlePiece = Components.PuzzlePieceWithThumbnail(thumbUrl, typeMap[type], true, '', cssObjectFitMap[type]);
-                $puzzlePiece.data('uuid', va);
+                $puzzlePiece.data('inputValue', va);
+                $puzzlePiece.data('inputType', typeMap[type]);
+                $puzzlePiece.draggable({
+                    helper: 'clone',
+                    cursor: 'grabbing'
+                });
                 visassetsByType[type].push($puzzlePiece);
             }
 

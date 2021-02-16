@@ -14,6 +14,10 @@
     margin: 0.1rem 0;
 }
 
+.puzzle-piece.tentative {
+    opacity: 50%;
+}
+
 .keydata.puzzle-piece {
     width: 8rem;
 }

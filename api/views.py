@@ -91,6 +91,8 @@ def list_visassets(request):
     visasset_list.sort()
     for va in visasset_list:
         if va not in VISASSET_CACHE:
-            with open(va_path.joinpath(va).joinpath('artifact.json')) as fin:
-                VISASSET_CACHE[va] = json.load(fin)
+            artifact_json_path = va_path.joinpath(va).joinpath('artifact.json')
+            if artifact_json_path.exists():
+                with open(artifact_json_path) as fin:
+                    VISASSET_CACHE[va] = json.load(fin)
     return JsonResponse(VISASSET_CACHE)

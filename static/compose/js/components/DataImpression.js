@@ -12,7 +12,10 @@ import { PuzzlePiece } from "./PuzzlePiece.js";
 
 export function DataImpression(plateType, uuid, name, impressionData) {
     let $element = $('<div>', { class: 'data-impression rounded' })
-        .data({ uuid });
+        .data({
+            uuid,
+            plateType,
+        });
 
     let $composition = $('#' + COMPOSITION_LOADER_ID);
     $element.css({
@@ -76,6 +79,57 @@ function InputSocket(inputName, inputProps) {
     } else {
         $socket = $('<p>', {text: inputName});
     }
+    $socket.data('inputName', inputName);
+    $socket.data('inputType', inputProps.inputType.const);
+    $socket.addClass('input-socket');
+
+    $socket.droppable({
+        drop: (evt, ui) => {
+            // Get the impression that this input is a part of
+            let $impression = $(evt.target).closest('.data-impression');
+            let impressionId = $impression.data('uuid');
+            let plateType = $impression.data('plateType');
+
+            // Get the default values for this input, in case there's nothing
+            // there already
+            let defaultInputsSchema = globals.schema.definitions.Plates[plateType].properties[inputName].properties;
+            let defaultInputs = {};
+            for (const p in defaultInputsSchema) {
+                defaultInputs[p] = defaultInputsSchema[p].const;
+            }
+
+            // See if there's an input there already, if not assign the defaults
+            let impressionState = globals.stateManager.state['impressions'][impressionId];
+            let inputState;
+            if (impressionState?.inputValues) {
+                inputState = impressionState.inputValues[inputName];
+            } else {
+                inputState = defaultInputs;
+            }
+
+            // Ensure the dropped type matches the actual type
+            let droppedType = ui.draggable.data('inputType');
+            if (droppedType == inputProps.inputType.const) {
+                // Update the inputState
+                let droppedValue = ui.draggable.data('inputValue');
+                inputState['inputValue'] = droppedValue;
+
+                // Send the update to the server
+                globals.stateManager.update(`impressions/${impressionId}/inputValues/${inputName}`, inputState);
+                
+                // Append a temp version that will be replaced when we get an
+                // update back from the server
+                let $tmp = ui.draggable.clone();
+                $tmp.addClass('tentative');
+                let pos = $socket.position();
+                $tmp.css('position', 'absolute');
+                $tmp.css('top', pos.top);
+                $tmp.css('left', pos.left);
+                $tmp.appendTo($socket);
+            }
+        }
+    });
+
     return $socket;
 }
 
