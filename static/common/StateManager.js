@@ -99,6 +99,7 @@ export class StateManager {
 
     // Remove something at a particular path
     async removePath(path) {
+        path = path ?? '';
         await fetch('/api/remove-path/' + path, {
             method: 'DELETE',
             headers: {

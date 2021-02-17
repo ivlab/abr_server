@@ -174,6 +174,18 @@ export function Header() {
         ));
     }));
 
+    // Clear the state
+    // TODO
+    $fileHeader.append($('<button>', {
+        class: 'material-icons rounded',
+        html: 'backspace',
+        title: 'Clear the state', 
+    }).on('click', (_evt) => {
+        if (window.confirm('Are you sure you want to clear the state?')) {
+            globals.stateManager.removePath('');
+        }
+    }));
+
     // More settings
     // TODO
     $fileHeader.append($('<button>', {

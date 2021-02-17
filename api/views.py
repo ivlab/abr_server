@@ -39,9 +39,10 @@ def modify_state(request):
             return HttpResponse()
 
 def remove_path(request):
-    # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
+    # Parse the URL into its sub-components (we know it'll be /remove-path/* that gets us here)
     item_path_parts = request.path.split('/')
     item_path_parts = item_path_parts[3:]
+    item_path_parts = [p for p in item_path_parts if len(p) > 0]
 
     if request.method == 'DELETE':
         state.remove_path(item_path_parts)

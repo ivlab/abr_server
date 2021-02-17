@@ -38,14 +38,16 @@ class State():
         with open(STATE_SCHEMA) as scm:
             self.state_schema = json.load(scm)
 
-        # Initialize a blank starting state
-        self._state = {}
 
         # Lock around state modifications
         self._state_lock = Lock()
 
-        # Populate the required fields
-        self._state['version'] = self.state_schema['properties']['version']['const']
+        self._default_state = {
+            'version': self.state_schema['properties']['version']['const']
+        }
+
+        # Initialize a blank starting state
+        self._state = deepcopy(self._default_state)
 
         with self._state_lock:
             jsonschema.validate(self._state, self.state_schema)
@@ -126,7 +128,7 @@ class State():
 
     def remove_path(self, item_path):
         if len(item_path) == 0:
-            self._pending_state = {}
+            self._pending_state = self._default_state
         else:
             self._remove_path(self._pending_state, item_path)
         return self.validate_and_backup()
