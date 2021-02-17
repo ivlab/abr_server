@@ -90,7 +90,6 @@ export class StateManager {
         await fetch('/api/remove/' + value, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
@@ -103,7 +102,26 @@ export class StateManager {
         await fetch('/api/remove-path/' + path, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            mode: 'same-origin'
+        }).catch((errs) => alert(errs));
+    }
+
+    async undo() {
+        await fetch('/api/undo', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            mode: 'same-origin'
+        }).catch((errs) => alert(errs));
+    }
+
+    async redo() {
+        await fetch('/api/redo', {
+            method: 'POST',
+            headers: {
                 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'

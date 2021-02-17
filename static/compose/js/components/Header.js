@@ -175,7 +175,6 @@ export function Header() {
     }));
 
     // Clear the state
-    // TODO
     $fileHeader.append($('<button>', {
         class: 'material-icons rounded',
         html: 'backspace',
@@ -184,6 +183,22 @@ export function Header() {
         if (window.confirm('Are you sure you want to clear the state?')) {
             globals.stateManager.removePath('');
         }
+    }));
+
+    // Undo/Redo
+    $fileHeader.append($('<button>', {
+        class: 'material-icons rounded',
+        html: 'undo',
+        title: 'Undo', 
+    }).on('click', (_evt) => {
+        globals.stateManager.undo();
+    }));
+    $fileHeader.append($('<button>', {
+        class: 'material-icons rounded',
+        html: 'redo',
+        title: 'Redo', 
+    }).on('click', (_evt) => {
+        globals.stateManager.redo();
     }));
 
     // More settings
