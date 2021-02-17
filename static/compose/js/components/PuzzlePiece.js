@@ -26,7 +26,8 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     return $element;
 }
 
-export function PuzzlePieceWithThumbnail(thumbUrl, inputType, leftConnector, addClasses, cssObjectFit) {
+export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClasses, cssObjectFit) {
+    let thumbUrl = `/media/visassets/${uuid}/thumbnail.png`;
     let $thumb = $('<img>', {
         class: 'artifact-thumbnail rounded',
         src: thumbUrl,
@@ -35,6 +36,44 @@ export function PuzzlePieceWithThumbnail(thumbUrl, inputType, leftConnector, add
         $thumb.css('object-fit', cssObjectFit);
     }
     return PuzzlePiece($thumb, inputType, leftConnector, addClasses);
+}
+
+// Can be either something waiting for an input or the input itself
+export function InputPuzzlePiece(inputName, inputProps) {
+    let $el;
+    if (inputProps.inputGenre.const == 'VisAsset') {
+        if (!inputProps?.inputValue) {
+            $el = PuzzlePiece(inputName, inputProps.inputType.const, true, '');
+        } else {
+            const cssObjectFitMap = {
+                'IVLab.ABREngine.ColormapVisAsset': 'fill',
+                'IVLab.ABREngine.LineTextureVisAsset': 'cover',
+                'IVLab.ABREngine.SurfaceTextureVisAsset': 'contain',
+                'IVLab.ABREngine.GlyphVisAsset': 'contain',
+            }
+            $el = PuzzlePieceWithThumbnail(
+                inputProps.inputValue.const,
+                inputProps.inputType.const,
+                true,
+                '',
+                cssObjectFitMap[inputProps.inputType.const]
+            );
+        }
+    } else if (inputProps.inputGenre.const == 'Variable') {
+        $el = PuzzlePiece(inputName, inputProps.inputType.const, false, '');
+    } else if (inputProps.inputGenre.const == 'KeyData') {
+        $el = PuzzlePiece(inputName, inputProps.inputType.const, false, 'keydata');
+    } else if (inputProps.inputGenre.const == 'Primitive') {
+        $el = $('<p>', {text: inputName});
+    }
+
+    // Assign the constant data (NOTHING from state)
+    $el.data('inputName', inputName);
+    $el.data('parameterName', inputProps?.parameterName?.const);
+    $el.data('inputGenre', inputProps?.inputGenre?.const);
+    $el.data('inputType', inputProps?.inputType?.const);
+    $el.data('inputValue', inputProps?.inputValue?.const);
+    return $el;
 }
 
 // A connector for a puzzle piece

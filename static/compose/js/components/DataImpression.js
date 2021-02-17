@@ -8,7 +8,7 @@
 
 import { globals } from "../../../common/globals.js";
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
-import { PuzzlePiece } from "./PuzzlePiece.js";
+import { InputPuzzlePiece, PuzzlePiece, PuzzlePieceWithThumbnail } from "./PuzzlePiece.js";
 
 export function DataImpression(plateType, uuid, name, impressionData) {
     let $element = $('<div>', { class: 'data-impression rounded' })
@@ -30,11 +30,6 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         text: name,
     })));
 
-    // $element.append($('<img>', {
-    //     class: 'plate-thumbnail',
-    //     src: `${STATIC_URL}compose/plate_thumbnail/${plateType}.png`,
-    // }));
-
     let plateSchema = globals.schema.definitions.Plates[plateType].properties;
 
     // Separate out all the inputs into their individual parameters
@@ -48,11 +43,22 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         }
     }
 
+    let inputValues = null;
+    if (globals.stateManager.state?.impressions)
+    {
+        inputValues = globals.stateManager.state.impressions[uuid]?.inputValues;
+    }
+
     // Add a new row of inputs for each parameter
     for (const parameter in parameterMapping) {
         let $param = Parameter(parameter);
+        // Construct each input, and overlay the value puzzle piece if it exists
         for (const inputName of parameterMapping[parameter]) {
-            $param.append(InputSocket(inputName, plateSchema[inputName].properties));
+            let $socket = InputSocket(inputName, plateSchema[inputName].properties);
+            // if (inputValues && inputValues[inputName]) {
+            //     $socket.append(PuzzlePieceWithThumbnail())
+            // }
+            $param.append($socket);
         }
         $element.append($param);
     }
@@ -71,16 +77,7 @@ export function DataImpression(plateType, uuid, name, impressionData) {
 }
 
 function InputSocket(inputName, inputProps) {
-    let leftConnector = inputProps.inputGenre.const == 'VisAsset';
-    let addClasses = inputProps.inputGenre.const == 'KeyData' ? 'keydata' : '';
-    let $socket;
-    if (inputProps.inputGenre.const != 'Primitive') {
-        $socket = PuzzlePiece(inputName, inputProps.inputType.const, leftConnector, addClasses);
-    } else {
-        $socket = $('<p>', {text: inputName});
-    }
-    $socket.data('inputName', inputName);
-    $socket.data('inputType', inputProps.inputType.const);
+    let $socket = InputPuzzlePiece(inputName, inputProps);
     $socket.addClass('input-socket');
 
     $socket.droppable({

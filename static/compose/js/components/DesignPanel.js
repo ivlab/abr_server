@@ -8,6 +8,7 @@
 
 import * as Components from './Components.js';
 import { globals } from '../../../common/globals.js';
+import { InputPuzzlePiece } from './PuzzlePiece.js';
 
 export function DesignPanel() {
     let $designPanel = $('<div>', {
@@ -56,16 +57,12 @@ export function DesignPanel() {
                     console.warn('Use of VisAsset field `artifactType` is deprecated, use `type` instead');
                 }
                 type = type ?? artifactType;
-                let thumbUrl = `/media/visassets/${va}/${visassets[va].preview}`;
-                const cssObjectFitMap = {
-                    'colormap': 'fill',
-                    'line': 'cover',
-                    'texture': 'contain',
-                    'glyph': 'contain',
+                let mockInput = {
+                    inputGenre: { const: 'VisAsset' },
+                    inputValue: { const: va },
+                    inputType: { const: typeMap[type] }
                 }
-                let $puzzlePiece = Components.PuzzlePieceWithThumbnail(thumbUrl, typeMap[type], true, '', cssObjectFitMap[type]);
-                $puzzlePiece.data('inputValue', va);
-                $puzzlePiece.data('inputType', typeMap[type]);
+                let $puzzlePiece = InputPuzzlePiece(typeMap[type], mockInput);
                 $puzzlePiece.draggable({
                     helper: 'clone',
                     cursor: 'grabbing'
