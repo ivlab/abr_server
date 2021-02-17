@@ -26,3 +26,17 @@
 #state-header p {
     margin: auto;
 }
+
+.state-list {
+    display: flex;
+    flex-wrap: wrap;
+}
+.state-list .state-selector {
+    width: 5rem;
+    border: 1px solid gray;
+    margin: 1rem;
+    padding: 1rem;
+}
+.state-list .state-selector.selected-state {
+    background-color: #ceedff;
+}
