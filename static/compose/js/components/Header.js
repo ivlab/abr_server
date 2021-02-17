@@ -67,12 +67,16 @@ export function Header() {
             buttons: {
                 "Load": function () {
                     let stateName = $(this).find('.selected-state .state-name').text();
-                    localStorage.currentStateName = stateName;
-                    $('#state-header #state-name').text(stateName);
+                    if (stateName) {
+                        localStorage.currentStateName = stateName;
+                        $('#state-header #state-name').text(stateName);
 
-                    // Tell the server to update
-                    globals.stateManager.updateState(localStorage.getItem(STORAGE_STATE_PREFIX + stateName));
-                    $(this).dialog('close');
+                        // Tell the server to update
+                        globals.stateManager.updateState(localStorage.getItem(STORAGE_STATE_PREFIX + stateName));
+                        $(this).dialog('close');
+                    } else {
+                        alert('Please select a state to load');
+                    }
                 },
                 "Cancel": function () {
                     $(this).dialog('close');
@@ -98,6 +102,18 @@ export function Header() {
                         class: 'state-name',
                         text: stateName
                     })
+                ).append(
+                    $('<div>', {
+                        class: 'state-hover-controls'
+                    }).append(
+                        $('<button>', {
+                            class: 'rounded',
+                            text: 'Delete'
+                        }).on('click', (evt) => {
+                            localStorage.removeItem(item);
+                            $(evt.target).closest('.state-selector').remove();
+                        })
+                    )
                 ))
             }
         }
