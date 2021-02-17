@@ -11,4 +11,5 @@ urlpatterns = [
     path('subscribe', views.subscribe),
     path('unsubscribe/<str:uuid>', views.unsubscribe),
     path('visassets', views.list_visassets),
+    path('datasets', views.list_datasets),
 ]

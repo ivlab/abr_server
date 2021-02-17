@@ -10,6 +10,14 @@ import * as Components from './Components.js';
 import { globals } from '../../../common/globals.js';
 import { InputPuzzlePiece } from './PuzzlePiece.js';
 
+const typeMap = {
+    'colormap': 'IVLab.ABREngine.ColormapVisAsset',
+    'glyph': 'IVLab.ABREngine.GlyphVisAsset',
+    'line': 'IVLab.ABREngine.LineTextureVisAsset',
+    'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
+};
+
+
 export function DesignPanel() {
     let $designPanel = $('<div>', {
         class: 'panel',
@@ -37,13 +45,6 @@ export function DesignPanel() {
     fetch('/api/visassets')
         .then((resp) => resp.json())
         .then((visassets) => {
-            const typeMap = {
-                'colormap': 'IVLab.ABREngine.ColormapVisAsset',
-                'glyph': 'IVLab.ABREngine.GlyphVisAsset',
-                'line': 'IVLab.ABREngine.LineTextureVisAsset',
-                'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
-            };
-
             // Break up by type
             let visassetsByType = {};
             for (const t in typeMap) {

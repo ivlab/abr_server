@@ -64,9 +64,17 @@ export function InputPuzzlePiece(inputName, inputProps) {
             );
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
-        $el = PuzzlePiece(inputName, resolvedProps.inputType, false, '');
+        if (resolvedProps?.inputValue) {
+            $el = PuzzlePiece(resolvedProps.inputValue, resolvedProps.inputType, false, '');
+        } else {
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, '');
+        }
     } else if (resolvedProps.inputGenre == 'KeyData') {
-        $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata');
+        if (resolvedProps?.inputValue) {
+            $el = PuzzlePiece(resolvedProps.inputValue, resolvedProps.inputType, false, 'keydata');
+        } else {
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata');
+        }
     } else if (resolvedProps.inputGenre == 'Primitive') {
         $el = PrimitiveInput(inputName, resolvedProps);
     }

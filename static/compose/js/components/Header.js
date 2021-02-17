@@ -8,7 +8,7 @@
 
 import { globals } from "../../../common/globals.js";
 
-const DEFAULT_STATE_NAME = 'Untitled';
+export const DEFAULT_STATE_NAME = 'Untitled';
 const STORAGE_STATE_PREFIX = '_state_';
 
 export function Header() {
