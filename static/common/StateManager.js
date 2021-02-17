@@ -25,6 +25,8 @@ export function resolveSchemaConsts(data) {
     for (const field in data) {
         if (typeof(data[field]) === 'object' && data[field]?.const) {
             resolvedData[field] = data[field].const;
+        } else if (typeof(data[field]) === 'object' && data[field]?.default) {
+            resolvedData[field] = data[field].default;
         } else {
             resolvedData[field] = data[field];
         }

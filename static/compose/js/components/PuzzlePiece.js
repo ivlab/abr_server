@@ -6,6 +6,7 @@
  */
 
 import { resolveSchemaConsts } from "../../../common/StateManager.js";
+import { PrimitiveInput } from "./Primitives.js";
 
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     let $element = $('<div>', {
@@ -67,7 +68,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
     } else if (resolvedProps.inputGenre == 'KeyData') {
         $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata');
     } else if (resolvedProps.inputGenre == 'Primitive') {
-        $el = $('<p>', {text: inputName});
+        $el = PrimitiveInput(inputName, resolvedProps);
     }
 
     // Assign the constant data (NOTHING from state)

@@ -39,11 +39,6 @@
 }
 .puzzle-piece .puzzle-label p {
     text-align: center;
-    margin: 0 0.5em 0 0;
-}
-.puzzle-piece .puzzle-label input[type='text'] {
-    width: 90%;
-    padding: 0.4em;
 }
 
 /* The connector of the puzzle piece (svgs) */
@@ -75,31 +70,17 @@
     font-size: 11px;
 }
 
-.puzzle-piece-input {
-    padding: 0 0.5em;
-    width: calc(100% - 1em);
-    height: 100%;
-    background-color: inherit;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: space-evenly;
-    background: #bbb;
-}
-.puzzle-piece-input input {
+.puzzle-piece p.primitive-name {
     text-align: center;
-    width: 80%;
 }
-.puzzle-piece-input button {
-    width: 100%;
+.puzzle-piece input.primitive-input {
+    width: 50%;
+    align-self: center;
+    text-align: center;
 }
 
 div.inline {
     display: inline-block;
-}
-
-.artifact.numeric-input .puzzle-label {
-    width: 5rem;
 }
 
 .artifact-thumbnail {

@@ -19,3 +19,4 @@ export * from './CollapsibleDiv.js';
 // Design panel
 export * from './Plate.js';
 export * from './PuzzlePiece.js';
+export * from './Primitives.js';

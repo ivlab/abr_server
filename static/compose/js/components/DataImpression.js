@@ -80,6 +80,7 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     return $element;
 }
 
+// A socket that can be dropped into
 function InputSocket(inputName, inputProps) {
     let $socket = $('<div>', {
         class: 'input-socket',
