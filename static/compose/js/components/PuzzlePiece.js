@@ -5,6 +5,8 @@
  * 
  */
 
+import { resolveSchemaConsts } from "../../../common/StateManager.js";
+
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     let $element = $('<div>', {
         class: 'puzzle-piece rounded ' + addClasses,
@@ -41,9 +43,10 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 // Can be either something waiting for an input or the input itself
 export function InputPuzzlePiece(inputName, inputProps) {
     let $el;
-    if (inputProps.inputGenre.const == 'VisAsset') {
-        if (!inputProps?.inputValue) {
-            $el = PuzzlePiece(inputName, inputProps.inputType.const, true, '');
+    let resolvedProps = resolveSchemaConsts(inputProps);
+    if (resolvedProps.inputGenre == 'VisAsset') {
+        if (!resolvedProps?.inputValue) {
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, true, '');
         } else {
             const cssObjectFitMap = {
                 'IVLab.ABREngine.ColormapVisAsset': 'fill',
@@ -52,27 +55,27 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 'IVLab.ABREngine.GlyphVisAsset': 'contain',
             }
             $el = PuzzlePieceWithThumbnail(
-                inputProps.inputValue.const,
-                inputProps.inputType.const,
+                resolvedProps.inputValue,
+                resolvedProps.inputType,
                 true,
                 '',
-                cssObjectFitMap[inputProps.inputType.const]
+                cssObjectFitMap[resolvedProps.inputType]
             );
         }
-    } else if (inputProps.inputGenre.const == 'Variable') {
-        $el = PuzzlePiece(inputName, inputProps.inputType.const, false, '');
-    } else if (inputProps.inputGenre.const == 'KeyData') {
-        $el = PuzzlePiece(inputName, inputProps.inputType.const, false, 'keydata');
-    } else if (inputProps.inputGenre.const == 'Primitive') {
+    } else if (resolvedProps.inputGenre == 'Variable') {
+        $el = PuzzlePiece(inputName, resolvedProps.inputType, false, '');
+    } else if (resolvedProps.inputGenre == 'KeyData') {
+        $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata');
+    } else if (resolvedProps.inputGenre == 'Primitive') {
         $el = $('<p>', {text: inputName});
     }
 
     // Assign the constant data (NOTHING from state)
     $el.data('inputName', inputName);
-    $el.data('parameterName', inputProps?.parameterName?.const);
-    $el.data('inputGenre', inputProps?.inputGenre?.const);
-    $el.data('inputType', inputProps?.inputType?.const);
-    $el.data('inputValue', inputProps?.inputValue?.const);
+    $el.data('parameterName', resolvedProps?.parameterName);
+    $el.data('inputGenre', resolvedProps?.inputGenre);
+    $el.data('inputType', resolvedProps?.inputType);
+    $el.data('inputValue', resolvedProps?.inputValue);
     return $el;
 }
 

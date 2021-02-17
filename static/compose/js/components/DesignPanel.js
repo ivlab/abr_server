@@ -58,9 +58,9 @@ export function DesignPanel() {
                 }
                 type = type ?? artifactType;
                 let mockInput = {
-                    inputGenre: { const: 'VisAsset' },
-                    inputValue: { const: va },
-                    inputType: { const: typeMap[type] }
+                    inputGenre: 'VisAsset',
+                    inputValue: va ,
+                    inputType: typeMap[type]
                 }
                 let $puzzlePiece = InputPuzzlePiece(typeMap[type], mockInput);
                 $puzzlePiece.draggable({

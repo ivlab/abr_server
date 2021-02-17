@@ -37,3 +37,7 @@
     font-size: x-small;
     color: #f8f4f4;
 }
+
+.data-impression .input-socket {
+    position: relative;
+}

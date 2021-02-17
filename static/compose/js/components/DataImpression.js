@@ -55,9 +55,13 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         // Construct each input, and overlay the value puzzle piece if it exists
         for (const inputName of parameterMapping[parameter]) {
             let $socket = InputSocket(inputName, plateSchema[inputName].properties);
-            // if (inputValues && inputValues[inputName]) {
-            //     $socket.append(PuzzlePieceWithThumbnail())
-            // }
+            if (inputValues && inputValues[inputName]) {
+                let $input = InputPuzzlePiece(inputName, inputValues[inputName]);
+                $input.css('position', 'absolute');
+                $input.css('top', 0);
+                $input.css('left', 0);
+                $input.appendTo($socket);
+            }
             $param.append($socket);
         }
         $element.append($param);
@@ -77,10 +81,12 @@ export function DataImpression(plateType, uuid, name, impressionData) {
 }
 
 function InputSocket(inputName, inputProps) {
-    let $socket = InputPuzzlePiece(inputName, inputProps);
-    $socket.addClass('input-socket');
+    let $socket = $('<div>', {
+        class: 'input-socket',
+    });
+    let $dropZone = InputPuzzlePiece(inputName, inputProps);
 
-    $socket.droppable({
+    $dropZone.droppable({
         drop: (evt, ui) => {
             // Get the impression that this input is a part of
             let $impression = $(evt.target).closest('.data-impression');
@@ -98,7 +104,7 @@ function InputSocket(inputName, inputProps) {
             // See if there's an input there already, if not assign the defaults
             let impressionState = globals.stateManager.state['impressions'][impressionId];
             let inputState;
-            if (impressionState?.inputValues) {
+            if (impressionState?.inputValues && impressionState?.inputValues[inputName]) {
                 inputState = impressionState.inputValues[inputName];
             } else {
                 inputState = defaultInputs;
@@ -118,14 +124,15 @@ function InputSocket(inputName, inputProps) {
                 // update back from the server
                 let $tmp = ui.draggable.clone();
                 $tmp.addClass('tentative');
-                let pos = $socket.position();
                 $tmp.css('position', 'absolute');
-                $tmp.css('top', pos.top);
-                $tmp.css('left', pos.left);
+                $tmp.css('top', 0);
+                $tmp.css('left', 0);
                 $tmp.appendTo($socket);
             }
         }
     });
+
+    $socket.append($dropZone);
 
     return $socket;
 }

@@ -9,6 +9,29 @@ import { globals } from "./globals.js";
 
 export const STATE_UPDATE_EVENT = 'ABRStateUpdate';
 
+// Resolve schema consts to values, if there are any values contained within
+// consts
+// For example: {
+//      "inputValue": { "const": "4m" },
+//      "inputType": { "const": "IVLab.ABREngine.LengthPrimitive" }
+// }
+// resolves to {
+//      "inputValue": "4m",
+//      "inputType": "IVLab.ABREngine.LengthPrimitive"
+// }
+// This assumes that no input value will be an object!!
+export function resolveSchemaConsts(data) {
+    let resolvedData = {};
+    for (const field in data) {
+        if (typeof(data[field]) === 'object' && data[field]?.const) {
+            resolvedData[field] = data[field].const;
+        } else {
+            resolvedData[field] = data[field];
+        }
+    }
+    return resolvedData;
+}
+
 export class StateManager {
     constructor() {
         this._state = {};
