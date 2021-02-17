@@ -11,7 +11,12 @@
         <textarea rows="50" cols="80" id="editor"></textarea>
         <button id="update" style="vertical-align: top;" onclick="updateState()">Update state</button>
         <button id="undo" style="vertical-align: top;" onclick="undo()">Undo</button>
-        <button id="redo" style="vertical-align: top;" onclick="redo()">Redo</button>
+        <button id="redo" style="vertical-align: top;"
+        onclick="redo()">Redo</button>
+        <input type="text" name="" id="remove-value" placeholder="value">
+        <button id="remove-value-button" onclick="remove()">Remove Element</button>
+        <input type="text" name="" id="remove-path" placeholder="value">
+        <button id="remove-path-button" onclick="removePath()">Remove Path</button>
     </div>
 
     <script src="{% static 'common/csrf.js' %}"></script>
@@ -90,6 +95,44 @@
                     alert(resp.statusText);
                 }
                 document.getElementById('redo').disabled = false;
+            });
+        }
+        function remove() {
+            document.getElementById('remove-value-button').disabled = true;
+            document.getElementById('remove-value').disabled = true;
+            let value = document.getElementById('remove-value').value;
+            fetch('/api/remove/' + value, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                mode: 'same-origin',
+            }).then((resp) => {
+                if (resp.status != 200) {
+                    alert(resp.statusText);
+                }
+                document.getElementById('remove-value-button').disabled = false;
+                document.getElementById('remove-value').disabled = false;
+            });
+        }
+        function removePath() {
+            document.getElementById('remove-path-button').disabled = true;
+            document.getElementById('remove-path').disabled = true;
+            let path = document.getElementById('remove-path').value;
+            fetch('/api/remove-path/' + path, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                mode: 'same-origin',
+            }).then((resp) => {
+                if (resp.status != 200) {
+                    alert(resp.statusText);
+                }
+                document.getElementById('remove-path-button').disabled = false;
+                document.getElementById('remove-path').disabled = false;
             });
         }
     </script>

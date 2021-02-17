@@ -38,6 +38,24 @@ def modify_state(request):
         else:
             return HttpResponse()
 
+def remove_path(request):
+    # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
+    item_path_parts = request.path.split('/')
+    item_path_parts = item_path_parts[3:]
+
+    if request.method == 'DELETE':
+        state.remove_path(item_path_parts)
+        return HttpResponse('OK')
+    else:
+        return HttpResponse(reason='Method for remove must be DELETE', status=400)
+
+def remove(request, value):
+    if request.method == 'DELETE':
+        state.remove_all(value)
+        return HttpResponse('OK')
+    else:
+        return HttpResponse(reason='Method for remove must be DELETE', status=400)
+
 def undo(request):
     if request.method == 'POST':
         err_message = state.undo()

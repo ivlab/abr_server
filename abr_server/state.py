@@ -57,29 +57,9 @@ class State():
         self.undo_stack = []
         self.redo_stack = []
 
-    # CRUD operations
-    def get_path(self, item_path):
-        with self._state_lock:
-            try:
-                return self._get_path(self._state, item_path)
-            except KeyError:
-                return None
-        
-    def _get_path(self, sub_state, sub_path_parts):
-        if len(sub_path_parts) == 0:
-            return sub_state
-        elif len(sub_path_parts) == 1:
-            return sub_state[sub_path_parts[0]]
-        else:
-            root = sub_path_parts[0]
-            rest = sub_path_parts[1:]
-            return self._get_path(sub_state[root], rest)
-
-    def set_path(self, item_path, new_value):
-        if len(item_path) == 0:
-            self._pending_state = new_value
-        else:
-            self._set_path(self._pending_state, item_path, new_value)
+    # Validate the pending state, back it up, populate the undo stack, etc.
+    # Returns a string of any validation errors
+    def validate_and_backup(self):
         try:
             jsonschema.validate(self._pending_state, self.state_schema)
 
@@ -105,6 +85,31 @@ class State():
             path = '/'.join(e.path)
             return '{}: {}'.format(path, e.message)
 
+    # CRUD operations
+    def get_path(self, item_path):
+        with self._state_lock:
+            try:
+                return self._get_path(self._state, item_path)
+            except KeyError:
+                return None
+        
+    def _get_path(self, sub_state, sub_path_parts):
+        if len(sub_path_parts) == 0:
+            return sub_state
+        elif len(sub_path_parts) == 1:
+            return sub_state[sub_path_parts[0]]
+        else:
+            root = sub_path_parts[0]
+            rest = sub_path_parts[1:]
+            return self._get_path(sub_state[root], rest)
+
+    def set_path(self, item_path, new_value):
+        if len(item_path) == 0:
+            self._pending_state = new_value
+        else:
+            self._set_path(self._pending_state, item_path, new_value)
+        return self.validate_and_backup()
+
     def _set_path(self, sub_state, sub_path_parts, new_value):
         if len(sub_path_parts) == 1:
             # Relies on dicts being mutable
@@ -118,6 +123,38 @@ class State():
                 sub_state[root] = {}
 
             self._set_path(sub_state[root], rest, new_value)
+
+    def remove_path(self, item_path):
+        if len(item_path) == 0:
+            self._pending_state = {}
+        else:
+            self._remove_path(self._pending_state, item_path)
+        return self.validate_and_backup()
+
+    def _remove_path(self, sub_state, sub_path_parts):
+        if len(sub_path_parts) == 1:
+            # Relies on dicts being mutable
+            del sub_state[sub_path_parts[0]]
+        else:
+            root = sub_path_parts[0]
+            rest = sub_path_parts[1:]
+            if root in sub_state:
+                self._remove_path(sub_state[root], rest)
+
+    def remove_all(self, value):
+        self._pending_state = self._remove_all(value, deepcopy(self._state))
+        self.validate_and_backup()
+
+    def _remove_all(self, value, sub_state):
+        if len(sub_state) == 0:
+            return sub_state
+        else:
+            if value in sub_state:
+                del sub_state[value]
+            for sub_value in sub_state:
+                if isinstance(sub_state[sub_value], dict):
+                    sub_state[sub_value] = self._remove_all(value, sub_state[sub_value])
+            return sub_state
 
     def make_backup(self):
         '''

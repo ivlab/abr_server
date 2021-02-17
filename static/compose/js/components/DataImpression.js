@@ -60,6 +60,13 @@ export function DataImpression(plateType, uuid, name, impressionData) {
                 $input.css('position', 'absolute');
                 $input.css('top', 0);
                 $input.css('left', 0);
+                $input.draggable({
+                    cursor: 'grabbing',
+                    stop: (_evt, _ui) => {
+                        // Unassign this input
+                        globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+                    }
+                });
                 $input.appendTo($socket);
             }
             $param.append($socket);
@@ -71,9 +78,12 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     $element.draggable({
         handle: '.data-impression-header',
         stop: (evt, ui) => {
-            let pos = ui.helper.position();
-            let imprId = $(evt.target).data('uuid');
-            globals.stateManager.update('uiData/compose/impressionData/' + imprId + '/position', pos);
+            // If we're not hovering over the trash, send the update
+            if (!$(ui.helper).hasClass('removing')) {
+                let pos = ui.helper.position();
+                let imprId = $(evt.target).data('uuid');
+                globals.stateManager.update('uiData/compose/impressionData/' + imprId + '/position', pos);
+            }
         }
     });
 

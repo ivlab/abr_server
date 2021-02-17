@@ -84,6 +84,31 @@ export class StateManager {
         }).catch((errs) => alert(errs));
     }
 
+    // Remove all instances of a particular value from the state
+    // Particularly useful when deleting data impressions
+    async removeAll(value) {
+        await fetch('/api/remove/' + value, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            mode: 'same-origin'
+        }).catch((errs) => alert(errs));
+    }
+
+    // Remove something at a particular path
+    async removePath(path) {
+        await fetch('/api/remove-path/' + path, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            mode: 'same-origin'
+        }).catch((errs) => alert(errs));
+    }
+
     get state() {
         return this._state;
     }

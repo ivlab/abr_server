@@ -89,3 +89,12 @@
     text-align: left;
     font-size: 1rem;
 }
+
+.trash {
+    position: fixed;
+    bottom: 0;
+    height: 3rem;
+    width: 3rem;
+    margin: 1rem;
+    padding: 0.5rem;
+}
