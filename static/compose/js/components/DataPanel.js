@@ -59,8 +59,12 @@ export function DataPanel() {
 
                         // Vars may be shared between KeyData, so make sure only
                         // one of each appears in the panel
-                        scalarVarNames.add(...metadata.scalarArrayNames);
-                        vectorVarNames.add(...metadata.vectorArrayNames);
+                        for (const name of metadata.scalarArrayNames) {
+                            scalarVarNames.add(name);
+                        }
+                        for (const name of metadata.vectorArrayNames) {
+                            vectorVarNames.add(name);
+                        }
                     }
 
                     let scalarVarList = [...scalarVarNames]
