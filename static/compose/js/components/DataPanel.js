@@ -6,8 +6,8 @@
  * Data panel (left side of the ABR Compose UI)
  */
 
-import { CollapsibleDiv } from "./CollapsibleDiv.js";
-import { InputPuzzlePiece, PuzzlePiece, PuzzlePieceWithThumbnail } from "./PuzzlePiece.js";
+import { DataPath } from "../../../common/DataPath.js";
+import { InputPuzzlePiece } from "./PuzzlePiece.js";
 import { SwatchList } from "./SwatchList.js";
 
 // https://docs.unity3d.com/ScriptReference/MeshTopology.html
@@ -36,47 +36,60 @@ export function DataPanel() {
     fetch('/api/datasets')
         .then((resp) => resp.json())
         .then((datasets) => {
+            console.log(datasets);
             for (const org in datasets) {
                 for (const dataset in datasets[org]) {
                     let keydataList = [];
-                    let scalarVarList = [];
-                    let vectorVarList = [];
+                    let scalarVarNames = new Set();
+                    let vectorVarNames = new Set();
                     for (const keydata in datasets[org][dataset]) {
                         let metadata = datasets[org][dataset][keydata]
                         let keyDataInput = {
                             inputType: MESH_TOPOLOGY_MAP[metadata.meshTopology],
                             inputGenre: 'KeyData',
-                            inputValue: `${org}/${dataset}/KeyData/${keydata}`,
+                            inputValue: DataPath.makePath(org, dataset, 'KeyData', keydata),
                         };
+
                         keydataList.push(
                             InputPuzzlePiece(keydata, keyDataInput).draggable({
                                 helper: 'clone',
                                 cursor: 'grabbing',
                             })
                         );
-                        scalarVarList.push(...metadata.scalarArrayNames.map((n) => {
+
+                        // Vars may be shared between KeyData, so make sure only
+                        // one of each appears in the panel
+                        scalarVarNames.add(...metadata.scalarArrayNames);
+                        vectorVarNames.add(...metadata.vectorArrayNames);
+                    }
+
+                    let scalarVarList = [...scalarVarNames]
+                        .filter((n) => n && n.length > 0)
+                        .map((n) => {
                             let scalarVarInput = {
                                 inputType: 'IVLab.ABREngine.ScalarDataVariable',
                                 inputGenre: 'Variable',
-                                inputValue: `${org}/${dataset}/ScalarVar/${n}`,
+                                inputValue: DataPath.makePath(org, dataset, 'ScalarVar', n),
                             };
                             return InputPuzzlePiece(n, scalarVarInput).draggable({
                                 helper: 'clone',
                                 cursor: 'grabbing',
-                            })
-                        }));
-                        vectorVarList.push(...metadata.vectorArrayNames.map((n) => {
+                        })
+                    });
+                    let vectorVarList = [...vectorVarNames]
+                        .filter((n) => n && n.length > 0)
+                        .map((n) => {
                             let vectorVarInput = {
                                 inputType: 'IVLab.ABREngine.VectorDataVariable',
                                 inputGenre: 'Variable',
-                                inputValue: `${org}/${dataset}/VectorVar/${n}`,
+                                inputValue: DataPath.makePath(org, dataset, 'VectorVar', n),
                             };
                             return InputPuzzlePiece(n, vectorVarInput).draggable({
                                 helper: 'clone',
                                 cursor: 'grabbing',
-                            })
-                        }));
-                    }
+                        })
+                    });
+
                     let $keydata = SwatchList('Key Data', keydataList);
                     let $scalarVars = SwatchList('Scalar Variables', scalarVarList);
                     let $vectorVars = SwatchList('Vector Variables', vectorVarList);
@@ -86,7 +99,7 @@ export function DataPanel() {
                         .append($vectorVars);
                     $dataPanel.append($('<p>', {
                         class: 'section-header',
-                        text: `${org}/${dataset}`,
+                        text: DataPath.makePath(org, dataset),
                     }))
                     $dataPanel.append($dataset);
                 }

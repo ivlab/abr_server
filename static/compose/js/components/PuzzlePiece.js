@@ -5,6 +5,7 @@
  * 
  */
 
+import { DataPath } from "../../../common/DataPath.js";
 import { resolveSchemaConsts } from "../../../common/StateManager.js";
 import { PrimitiveInput } from "./Primitives.js";
 
@@ -42,7 +43,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 }
 
 // Can be either something waiting for an input or the input itself
-export function InputPuzzlePiece(inputName, inputProps) {
+export function InputPuzzlePiece(inputName, inputProps, shortInputName) {
     let $el;
     let resolvedProps = resolveSchemaConsts(inputProps);
     if (resolvedProps.inputGenre == 'VisAsset') {
@@ -65,16 +66,18 @@ export function InputPuzzlePiece(inputName, inputProps) {
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
         if (resolvedProps?.inputValue) {
-            $el = PuzzlePiece(resolvedProps.inputValue, resolvedProps.inputType, false, '');
+            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, '');
         } else {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, false, '');
         }
+        $el.attr('title', resolvedProps?.inputValue ?? null);
     } else if (resolvedProps.inputGenre == 'KeyData') {
         if (resolvedProps?.inputValue) {
-            $el = PuzzlePiece(resolvedProps.inputValue, resolvedProps.inputType, false, 'keydata');
+            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, 'keydata');
         } else {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata');
         }
+        $el.attr('title', resolvedProps?.inputValue ?? null);
     } else if (resolvedProps.inputGenre == 'Primitive') {
         $el = PrimitiveInput(inputName, resolvedProps);
     }
