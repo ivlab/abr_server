@@ -208,6 +208,7 @@ class State():
         with self._state_lock:
             undone_state = jsondiff.patch(self._state, diff_w_previous, syntax='symmetric')
             self._state = undone_state
+            self._pending_state = undone_state
         self.redo_stack.append(diff_w_previous)
 
         # Tell any connected clients that we've updated the state
@@ -230,6 +231,7 @@ class State():
         with self._state_lock:
             undone_state = jsondiff.JsonDiffer(syntax='symmetric').unpatch(self._state, diff_w_next)
             self._state = undone_state
+            self._pending_state = undone_state
         self.undo_stack.append(diff_w_next)
 
         # Tell any connected clients that we've updated the state
