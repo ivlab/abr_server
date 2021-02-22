@@ -6,6 +6,7 @@
  */
 
 import { globals } from "./globals.js";
+import { CACHE_UPDATE } from "./StateManager.js";
 
 export class Notifier {
     constructor() {
@@ -22,8 +23,14 @@ export class Notifier {
         }
 
         // When a message is received, update the state
-        this.ws.onmessage = (_evt) => {
-            globals.stateManager.refreshState();
+        this.ws.onmessage = (evt) => {
+            let target = JSON.parse(evt.data)['target'];
+            if (target == 'state') {
+                globals.stateManager.refreshState();
+            } else if (target?.startsWith(CACHE_UPDATE)) {
+                let cacheName = target.replace(CACHE_UPDATE, '');
+                globals.stateManager.refreshCache(cacheName);
+            }
         }
     }
 

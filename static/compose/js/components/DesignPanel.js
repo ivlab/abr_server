@@ -8,7 +8,7 @@
 
 import * as Components from './Components.js';
 import { globals } from '../../../common/globals.js';
-import { InputPuzzlePiece } from './PuzzlePiece.js';
+import { CACHE_UPDATE } from '../../../common/StateManager.js';
 
 const typeMap = {
     'colormap': 'IVLab.ABREngine.ColormapVisAsset',
@@ -16,13 +16,6 @@ const typeMap = {
     'line': 'IVLab.ABREngine.LineTextureVisAsset',
     'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
 };
-
-export function refreshDesignPanel() {
-    let $panel = $('#design-panel');
-    let $parent = $panel.parent();
-    $panel.remove();
-    $parent.append(DesignPanel());
-}
 
 export function DesignPanel() {
     let $designPanel = $('<div>', {
@@ -48,44 +41,41 @@ export function DesignPanel() {
     }));
 
     // Populate the VisAssets
-    fetch('/api/visassets')
-        .then((resp) => resp.json())
-        .then((visassets) => {
-            globals.visassetCache = visassets;
-            // Break up by type
-            let visassetsByType = {};
-            for (const t in typeMap) {
-                visassetsByType[t] = [];
-            }
-            
-            for (const va in visassets) {
-                let type = visassets[va].type;
-                let artifactType = visassets[va].artifactType;
-                if (typeof(artifactType) !== 'undefined') {
-                    console.warn('Use of VisAsset field `artifactType` is deprecated, use `type` instead');
-                }
-                type = type ?? artifactType;
-                let mockInput = {
-                    inputGenre: 'VisAsset',
-                    inputValue: va ,
-                    inputType: typeMap[type]
-                }
-                let $puzzlePiece = InputPuzzlePiece(typeMap[type], mockInput);
-                $puzzlePiece.draggable({
-                    helper: 'clone',
-                    cursor: 'grabbing'
-                });
-                visassetsByType[type].push($puzzlePiece);
-            }
+    let visassets = globals.stateManager.getCache('visassets');
+    let visassetsByType = {};
 
-            for (const t in visassetsByType) {
-                let typeCap = t[0].toUpperCase() + t.slice(1);
-                let $title = $('<span>');
-                $title.append(Components.PuzzleConnector(typeMap[t]))
-                $title.append($('<p>', { text: typeCap }))
-                $designPanel.append(Components.SwatchList($title, visassetsByType[t]));
-            }
+    // Break up by type
+    for (const t in typeMap) {
+        visassetsByType[t] = [];
+    }
+    
+    for (const va in visassets) {
+        let type = visassets[va].type;
+        let artifactType = visassets[va].artifactType;
+        if (typeof(artifactType) !== 'undefined') {
+            console.warn('Use of VisAsset field `artifactType` is deprecated, use `type` instead');
+        }
+        type = type ?? artifactType;
+        let mockInput = {
+            inputGenre: 'VisAsset',
+            inputValue: va ,
+            inputType: typeMap[type]
+        }
+        let $puzzlePiece = Components.InputPuzzlePiece(typeMap[type], mockInput);
+        $puzzlePiece.draggable({
+            helper: 'clone',
+            cursor: 'grabbing'
         });
+        visassetsByType[type].push($puzzlePiece);
+    }
+
+    for (const t in visassetsByType) {
+        let typeCap = t[0].toUpperCase() + t.slice(1);
+        let $title = $('<span>');
+        $title.append(Components.PuzzleConnector(typeMap[t]))
+        $title.append($('<p>', { text: typeCap }))
+        $designPanel.append(Components.SwatchList($title, visassetsByType[t]));
+    }
 
     return $designPanel;
 }

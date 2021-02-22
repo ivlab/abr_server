@@ -8,6 +8,7 @@
 import { globals } from "./globals.js";
 
 export const STATE_UPDATE_EVENT = 'ABRStateUpdate';
+export const CACHE_UPDATE = 'CacheUpdate-';
 
 // Resolve schema consts to values, if there are any values contained within
 // consts
@@ -39,6 +40,8 @@ export class StateManager {
         this._state = {};
         this._previousState = {};
         this._subscribers = [];
+        this._cacheSubscribers = {};
+        this._caches = {};
     }
 
     async refreshState() {
@@ -55,7 +58,7 @@ export class StateManager {
                     $(sub).trigger(STATE_UPDATE_EVENT);
                 }
             })
-            .catch((errs) => alert(errs));
+            .catch((errs) => alert('Error refreshing state:\n' + errs));
     }
 
     async updateState(newState) {
@@ -67,7 +70,7 @@ export class StateManager {
             },
             mode: 'same-origin',
             body: newState,
-        }).catch((errs) => alert(errs));
+        }).catch((errs) => alert('Error updating state:\n' + errs));
     }
 
     // Send an update to a particular object in the state. updateValue MUST be
@@ -81,7 +84,7 @@ export class StateManager {
             },
             mode: 'same-origin',
             body: JSON.stringify(updateValue),
-        }).catch((errs) => alert(errs));
+        }).catch((errs) => alert('Error updating state:\n' + errs));
     }
 
     // Remove all instances of a particular value from the state
@@ -93,7 +96,7 @@ export class StateManager {
                 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-        }).catch((errs) => alert(errs));
+        }).catch((errs) => alert('Error removing:\n' + errs));
     }
 
     // Remove something at a particular path
@@ -105,7 +108,7 @@ export class StateManager {
                 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-        }).catch((errs) => alert(errs));
+        }).catch((errs) => alert('Error removing:\n' + errs));
     }
 
     async undo() {
@@ -115,7 +118,7 @@ export class StateManager {
                 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-        }).catch((errs) => alert(errs));
+        }).catch((errs) => alert('Error undoing:\n' + errs));
     }
 
     async redo() {
@@ -125,7 +128,7 @@ export class StateManager {
                 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-        }).catch((errs) => alert(errs));
+        }).catch((errs) => alert('Error redoing:\n' + errs));
     }
 
     get state() {
@@ -142,5 +145,37 @@ export class StateManager {
 
     unsubscribe($element) {
         this._subscribers.remove($element);
+    }
+
+    async refreshCache(cacheName) {
+        await fetch('/api/' + cacheName)
+            .then((resp) => resp.json())
+            .then((json) => {
+                this._caches[cacheName] = json;
+                if (this._cacheSubscribers[cacheName]) {
+                    for (const sub of this._cacheSubscribers[cacheName]) {
+                        $(sub).trigger(CACHE_UPDATE + cacheName);
+                    }
+                }
+            })
+            .catch((errs) => alert('Error refreshing cache:\n' + errs));
+    }
+
+    getCache(cacheName) {
+        return this._caches[cacheName] ?? {};
+    }
+
+    // Subscribe to when a particular cache is updated
+    subscribeCache(cacheName, $element) {
+        if (this._cacheSubscribers[cacheName]) {
+            this._cacheSubscribers[cacheName].push($element);
+        } else {
+            this._cacheSubscribers[cacheName] = [$element];
+        }
+    }
+    unsubscribeCache(cacheName, $element) {
+        if (this._cacheSubscribers[cacheName]) {
+            this._cacheSubscribers[cacheName].remove($element);
+        }
     }
 }

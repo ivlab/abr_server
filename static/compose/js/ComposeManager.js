@@ -7,7 +7,7 @@
  */
 
 import { globals } from '../../common/globals.js';
-import { STATE_UPDATE_EVENT } from '../../common/StateManager.js';
+import { STATE_UPDATE_EVENT, CACHE_UPDATE } from '../../common/StateManager.js';
 import * as Components from './components/Components.js';
 import { COMPOSITION_LOADER_ID } from './components/Components.js';
 import { DataImpression } from './components/DataImpression.js';
@@ -15,23 +15,57 @@ import { DataImpression } from './components/DataImpression.js';
 export class ComposeManager {
     constructor() {
         this.header = Components.Header();
-        this.compositionPanel = Components.CompositionPanel();
-        this.dataPanel = Components.DataPanel();
-        this.designPanel = Components.DesignPanel();
         this.$element = $('#compose-manager');
 
         this.$element.append(this.header);
         this.$element.append($('<div>', {
             id: 'panel-container',
         })
-            .append(this.dataPanel)
-            .append(this.compositionPanel)
-            .append(this.designPanel)
+            .append(Components.DataPanel())
+            .append(Components.CompositionPanel())
+            .append(Components.DesignPanel())
         );
 
         globals.stateManager.subscribe(this.$element);
         this.$element.on(STATE_UPDATE_EVENT, (_evt) =>  this.syncWithState() );
         this.syncWithState();
+
+        // Prepare the Design Panel to be refreshed when new visassets come in
+        globals.stateManager.subscribeCache('visassets', this.$element);
+        this.$element.on(CACHE_UPDATE + 'visassets', (evt) => {
+            evt.stopPropagation();
+            $('#design-panel').remove();
+            this.$element.children('#panel-container').append(Components.DesignPanel());
+        });
+
+        // Allow the page to receive drag/dropped VisAssets from the library, then tell
+        // the server to download them
+        this.$element.on('dragover', (evt) => {
+            evt.preventDefault();
+        });
+        this.$element.on('drop', (evt) => {
+            if (!$(evt.target).hasClass('ui-droppable')) {
+                evt.preventDefault();
+                evt.originalEvent.dataTransfer.items[0].getAsString((url) => {
+                    let uuidRegex = /[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/;
+                    let matches = uuidRegex.exec(url);
+
+                    if (matches[0]) {
+                        $('.loading-spinner').css('visibility', 'visible');
+                        fetch('/api/download-visasset/' + matches[0], {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrftoken,
+                            },
+                            mode: 'same-origin',
+                        }).then(() => {
+                            $('.loading-spinner').css('visibility', 'hidden');
+                        });
+                    }
+                });
+            }
+        });
+
     }
 
     syncWithState() {
@@ -39,7 +73,7 @@ export class ComposeManager {
         let impressions = globals.stateManager.state['impressions'];
         let uiData = globals.stateManager.state?.uiData?.compose?.impressionData ?? {};
 
-        let $compositionLoader = this.compositionPanel.find('#' + COMPOSITION_LOADER_ID);
+        let $compositionLoader = $('#composition-panel').find('#' + COMPOSITION_LOADER_ID);
         $compositionLoader.empty();
 
         for (const imprId in impressions) {

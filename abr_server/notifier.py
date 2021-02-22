@@ -6,6 +6,7 @@
 # Notifies Unity sockets and WebSockets when the state has been updated!
 # Both Unity sockets and WebSockets must register themselves.
 
+import json
 import uuid
 import socket
 from threading import Lock
@@ -62,10 +63,11 @@ class StateNotifier:
                 del self.socket_subscribers[str(sub_id)]
         print('Unsubscribed notifier socket')
 
-    def notify(self, message='{"updated": true}'):
+    def notify(self, message):
         '''
             Send out a message to all connected parties
         '''
+        message = json.dumps(message)
         remove_conns = set()
         for uid, connector in self.socket_subscribers.items():
             if not connector.dead:

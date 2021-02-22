@@ -7,7 +7,7 @@
 
 import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
-import { resolveSchemaConsts } from "../../../common/StateManager.js";
+import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { PrimitiveInput } from "./Primitives.js";
 
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
@@ -32,8 +32,14 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
 }
 
 export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClasses, cssObjectFit) {
-    let previewImg = globals.visassetCache[uuid]['preview'];
-    let thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
+    let thumbUrl;
+    let visassets = globals.stateManager.getCache('visassets');
+    if (visassets && visassets[uuid]) {
+        let previewImg = visassets[uuid]['preview'];
+        thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
+    } else {
+        thumbUrl = `${STATIC_URL}compose/${inputType}_default.png`;
+    }
     let $thumb = $('<img>', {
         class: 'artifact-thumbnail rounded',
         src: thumbUrl,
@@ -41,6 +47,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
     if (cssObjectFit) {
         $thumb.css('object-fit', cssObjectFit);
     }
+
     return PuzzlePiece($thumb, inputType, leftConnector, addClasses);
 }
 
@@ -58,13 +65,27 @@ export function InputPuzzlePiece(inputName, inputProps, shortInputName) {
                 'IVLab.ABREngine.SurfaceTextureVisAsset': 'contain',
                 'IVLab.ABREngine.GlyphVisAsset': 'contain',
             }
-            $el = PuzzlePieceWithThumbnail(
+            let args = [
                 resolvedProps.inputValue,
                 resolvedProps.inputType,
                 true,
                 '',
                 cssObjectFitMap[resolvedProps.inputType]
-            );
+            ];
+
+            $el = PuzzlePieceWithThumbnail(...args);
+
+            // Prime it to be reloaded and replaced when visassets get updated
+            globals.stateManager.subscribeCache('visassets', $el);
+            $el.on(CACHE_UPDATE + 'visassets', (evt) => {
+                evt.stopPropagation();
+                let $reloaded = PuzzlePieceWithThumbnail(...args);
+                // Make sure the puzzle piece is in the same place as the original
+                for (const attr of ['position', 'top', 'left']) {
+                    $reloaded.css(attr, $(evt.target).css(attr));
+                }
+                $(evt.target).replaceWith($reloaded);
+            });
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
         if (resolvedProps?.inputValue) {

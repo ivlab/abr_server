@@ -182,6 +182,7 @@ export function Header() {
     }).on('click', (_evt) => {
         if (window.confirm('Are you sure you want to clear the state?')) {
             globals.stateManager.removePath('');
+            localStorage.currentStateName = DEFAULT_STATE_NAME;
         }
     }));
 

@@ -10,6 +10,7 @@ from pathlib import Path
 from threading import Lock
 
 from .notifier import notifier
+from .visasset_manager import download_visasset
 
 SCHEMA_PATH = Path(settings.STATIC_ROOT).joinpath('schemas')
 STATE_SCHEMA = SCHEMA_PATH.joinpath('ABRSchema_0-2-0.json')
@@ -80,7 +81,7 @@ class State():
                 self._state = deepcopy(self._pending_state)
 
             # Tell any connected clients that we've updated the state
-            notifier.notify()
+            notifier.notify({ 'target': 'state' })
 
             return ''
         except jsonschema.ValidationError as e:
@@ -110,7 +111,23 @@ class State():
             self._pending_state = new_value
         else:
             self._set_path(self._pending_state, item_path, new_value)
-        return self.validate_and_backup()
+
+        final_result = self.validate_and_backup()
+
+        # If there aren't any errors and DOWNLOAD_VISASSETS is set, download the
+        # visassets
+        if len(final_result) == 0 and settings.DOWNLOAD_VISASSETS:
+            all_visassets = self._find_all(
+                lambda v: 'inputValue' in v and 'inputGenre' in v and v['inputGenre'] == 'VisAsset',
+                self._state,
+                []
+            )
+            for input_value_object in all_visassets:
+                failed = download_visasset(input_value_object['inputValue'])
+                final_result += ' ' + str(failed) if len(failed) > 0 else ''
+            notifier.notify({ 'target': 'CacheUpdate-visassets' })
+
+        return final_result
 
     def _set_path(self, sub_state, sub_path_parts, new_value):
         if len(sub_path_parts) == 1:
@@ -157,6 +174,18 @@ class State():
                 if isinstance(sub_state[sub_value], dict):
                     sub_state[sub_value] = self._remove_all(value, sub_state[sub_value])
             return sub_state
+
+    def _find_all(self, condition, sub_state, out_items):
+        if len(sub_state) == 0:
+            return sub_state
+        else:
+            if condition(sub_state):
+                out_items.append(sub_state)
+            for sub_value in sub_state:
+                if isinstance(sub_state[sub_value], dict):
+                    self._find_all(condition, sub_state[sub_value], out_items)
+            return out_items
+
 
     def make_backup(self):
         '''
@@ -212,7 +241,7 @@ class State():
         self.redo_stack.append(diff_w_previous)
 
         # Tell any connected clients that we've updated the state
-        notifier.notify()
+        notifier.notify({ 'target': 'state' })
 
         return ''
 
@@ -235,7 +264,7 @@ class State():
         self.undo_stack.append(diff_w_next)
 
         # Tell any connected clients that we've updated the state
-        notifier.notify()
+        notifier.notify({ 'target': 'state' })
 
         return ''
 

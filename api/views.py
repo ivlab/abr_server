@@ -153,6 +153,7 @@ def download_visasset(request, uuid):
     if request.method == 'POST':
         failed_downloads = visasset_manager.download_visasset(uuid)
         if len(failed_downloads) == 0:
+            notifier.notify({ 'target': 'CacheUpdate-visassets' })
             return HttpResponse('Downloaded files', status=200)
         else:
             return HttpResponse('Failed to download files: {}'.format(failed_downloads), status=500)
