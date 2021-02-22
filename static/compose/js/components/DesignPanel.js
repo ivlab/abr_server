@@ -17,6 +17,12 @@ const typeMap = {
     'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
 };
 
+export function refreshDesignPanel() {
+    let $panel = $('#design-panel');
+    let $parent = $panel.parent();
+    $panel.remove();
+    $parent.append(DesignPanel());
+}
 
 export function DesignPanel() {
     let $designPanel = $('<div>', {
@@ -45,6 +51,7 @@ export function DesignPanel() {
     fetch('/api/visassets')
         .then((resp) => resp.json())
         .then((visassets) => {
+            globals.visassetCache = visassets;
             // Break up by type
             let visassetsByType = {};
             for (const t in typeMap) {

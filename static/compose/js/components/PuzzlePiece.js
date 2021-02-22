@@ -6,6 +6,7 @@
  */
 
 import { DataPath } from "../../../common/DataPath.js";
+import { globals } from "../../../common/globals.js";
 import { resolveSchemaConsts } from "../../../common/StateManager.js";
 import { PrimitiveInput } from "./Primitives.js";
 
@@ -31,7 +32,8 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
 }
 
 export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClasses, cssObjectFit) {
-    let thumbUrl = `/media/visassets/${uuid}/thumbnail.png`;
+    let previewImg = globals.visassetCache[uuid]['preview'];
+    let thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
     let $thumb = $('<img>', {
         class: 'artifact-thumbnail rounded',
         src: thumbUrl,

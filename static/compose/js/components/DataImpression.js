@@ -8,7 +8,7 @@
 
 import { globals } from "../../../common/globals.js";
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
-import { InputPuzzlePiece, PuzzlePiece, PuzzlePieceWithThumbnail } from "./PuzzlePiece.js";
+import { InputPuzzlePiece } from "./PuzzlePiece.js";
 
 export function DataImpression(plateType, uuid, name, impressionData) {
     let $element = $('<div>', { class: 'data-impression rounded' })

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from pathlib import Path
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -127,3 +128,12 @@ STATICFILES_DIRS = [os.path.join('static')]
 MEDIA_ROOT = os.path.join(BASE_DIR, os.path.join('..', 'media'))
 if not os.path.exists(MEDIA_ROOT):
     os.makedirs(MEDIA_ROOT)
+
+
+# ABR-Specific settings
+VISASSET_PATH = Path(MEDIA_ROOT).joinpath('visassets')
+DATASET_PATH = Path(MEDIA_ROOT).joinpath('datasets')
+VISASSET_JSON = 'artifact.json'
+VISASSET_LIBRARIES = [
+    'http://sculptingvis.tacc.utexas.edu/static/Artifacts/',
+]

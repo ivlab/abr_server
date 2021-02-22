@@ -7,6 +7,7 @@
  */
 
 import { DataPath } from "../../../common/DataPath.js";
+import { globals } from "../../../common/globals.js";
 import { InputPuzzlePiece } from "./PuzzlePiece.js";
 import { SwatchList } from "./SwatchList.js";
 
@@ -36,7 +37,7 @@ export function DataPanel() {
     fetch('/api/datasets')
         .then((resp) => resp.json())
         .then((datasets) => {
-            console.log(datasets);
+            globals.dataCache = datasets;
             for (const org in datasets) {
                 for (const dataset in datasets[org]) {
                     let keydataList = [];
