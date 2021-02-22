@@ -2,8 +2,6 @@ import os
 import sys
 import json
 import fnmatch
-import urllib3
-from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse, Http404
@@ -13,11 +11,10 @@ from pathlib import Path
 
 from abr_server.state import state
 from abr_server.notifier import notifier, DEFAULT_ADDRESS
+from abr_server import visasset_manager
 
 VISASSET_CACHE = {}
 DATA_CACHE = {}
-
-POOL_MANAGER = urllib3.PoolManager()
 
 # Create your views here.
 def index(request):
@@ -154,60 +151,10 @@ def list_datasets(request):
 
 def download_visasset(request, uuid):
     if request.method == 'POST':
-        va_path = settings.VISASSET_PATH.joinpath(uuid)
-        artifact_json_path = va_path.joinpath(settings.VISASSET_JSON)
-
-        successfully_downloaded = []
-        for library in settings.VISASSET_LIBRARIES:
-            va_url = library + uuid + '/'
-            artifact_json_url = va_url + settings.VISASSET_JSON
-
-            # Download the Artifact JSON
-            success = download_file(artifact_json_url, artifact_json_path)
-            if success:
-                successfully_downloaded.append(artifact_json_path)
-
-            with open(artifact_json_path) as fin:
-                artifact_json = json.load(fin)
-
-            # Download the Thumbnail
-            preview_img = artifact_json['preview']
-            success = download_file(va_url + preview_img, va_path.joinpath(preview_img))
-            if success:
-                successfully_downloaded.append(va_path.joinpath(preview_img))
-
-            # Get all of the files specified in artifactData
-            all_files = []
-            get_all_strings_from_json(artifact_json['artifactData'], all_files)
-
-            # Download all files in a threaded form
-            with ThreadPoolExecutor(max_workers=8) as executor:
-                for f in all_files:
-                    executor.submit(download_file, va_url + f, va_path.joinpath(f))
-
-        return HttpResponse('Downloaded files', status=200)
+        failed_downloads = visasset_manager.download_visasset(uuid)
+        if len(failed_downloads) == 0:
+            return HttpResponse('Downloaded files', status=200)
+        else:
+            return HttpResponse('Failed to download files: {}'.format(failed_downloads), status=500)
     else:
         return HttpResponse(reason='Method for download must be POST', status=400)
-
-def download_file(url, output_path):
-    resp = POOL_MANAGER.request('GET', url)
-    if resp.status == 200:
-        if not output_path.parent.exists():
-            os.makedirs(output_path.parent)
-        with open(output_path, 'wb') as fout:
-            fout.write(resp.data)
-        return True
-    else:
-        return False
-
-# Recursively obtains all the string values from a JSON object
-# Relies on lists being mutable
-def get_all_strings_from_json(json_object, string_list):
-    if isinstance(json_object, str):
-        string_list.append(json_object)
-    elif isinstance(json_object, list):
-        for j in json_object:
-            get_all_strings_from_json(j, string_list)
-    elif isinstance(json_object, dict):
-        for j in json_object.values():
-            get_all_strings_from_json(j, string_list)

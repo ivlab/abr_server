@@ -131,9 +131,8 @@ if not os.path.exists(MEDIA_ROOT):
 
 
 # ABR-Specific settings
+DOWNLOAD_VISASSETS = True # Download visassets from a particular state if they don't exist
 VISASSET_PATH = Path(MEDIA_ROOT).joinpath('visassets')
 DATASET_PATH = Path(MEDIA_ROOT).joinpath('datasets')
 VISASSET_JSON = 'artifact.json'
-VISASSET_LIBRARIES = [
-    'http://sculptingvis.tacc.utexas.edu/static/Artifacts/',
-]
+VISASSET_LIBRARY = 'http://sculptingvis.tacc.utexas.edu/static/Artifacts/'
