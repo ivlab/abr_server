@@ -152,11 +152,9 @@ export class StateManager {
             .then((resp) => resp.json())
             .then((json) => {
                 this._caches[cacheName] = json;
-                if (this._cacheSubscribers[cacheName]) {
-                    for (const sub of this._cacheSubscribers[cacheName]) {
-                        $(sub).trigger(CACHE_UPDATE + cacheName);
-                    }
-                }
+                $(`.cache-subscription-${cacheName}`).each((_i, el) => {
+                    $(el).trigger(CACHE_UPDATE + cacheName);
+                })
             })
             .catch((errs) => alert('Error refreshing cache:\n' + errs));
     }
@@ -167,15 +165,9 @@ export class StateManager {
 
     // Subscribe to when a particular cache is updated
     subscribeCache(cacheName, $element) {
-        if (this._cacheSubscribers[cacheName]) {
-            this._cacheSubscribers[cacheName].push($element);
-        } else {
-            this._cacheSubscribers[cacheName] = [$element];
-        }
+        $element.addClass(`cache-subscription-${cacheName}`);
     }
     unsubscribeCache(cacheName, $element) {
-        if (this._cacheSubscribers[cacheName]) {
-            this._cacheSubscribers[cacheName].remove($element);
-        }
+        $element.removeClass(`cache-subscription-${cacheName}`);
     }
 }

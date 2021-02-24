@@ -61,11 +61,7 @@ export function DesignPanel() {
             inputValue: va ,
             inputType: typeMap[type]
         }
-        let $puzzlePiece = Components.InputPuzzlePiece(typeMap[type], mockInput);
-        $puzzlePiece.draggable({
-            helper: 'clone',
-            cursor: 'grabbing'
-        });
+        let $puzzlePiece = Components.SwatchInputPuzzlePiece(typeMap[type], mockInput);
         visassetsByType[type].push($puzzlePiece);
     }
 

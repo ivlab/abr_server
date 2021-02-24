@@ -8,7 +8,7 @@
 
 import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
-import { InputPuzzlePiece } from "./PuzzlePiece.js";
+import { SwatchInputPuzzlePiece } from "./PuzzlePiece.js";
 import { SwatchList } from "./SwatchList.js";
 
 // https://docs.unity3d.com/ScriptReference/MeshTopology.html
@@ -52,10 +52,7 @@ export function DataPanel() {
                         };
 
                         keydataList.push(
-                            InputPuzzlePiece(keydata, keyDataInput).draggable({
-                                helper: 'clone',
-                                cursor: 'grabbing',
-                            })
+                            SwatchInputPuzzlePiece(keydata, keyDataInput)
                         );
 
                         // Vars may be shared between KeyData, so make sure only
@@ -76,10 +73,7 @@ export function DataPanel() {
                                 inputGenre: 'Variable',
                                 inputValue: DataPath.makePath(org, dataset, 'ScalarVar', n),
                             };
-                            return InputPuzzlePiece(n, scalarVarInput).draggable({
-                                helper: 'clone',
-                                cursor: 'grabbing',
-                        })
+                            return SwatchInputPuzzlePiece(n, scalarVarInput)
                     });
                     let vectorVarList = [...vectorVarNames]
                         .filter((n) => n && n.length > 0)
@@ -89,10 +83,7 @@ export function DataPanel() {
                                 inputGenre: 'Variable',
                                 inputValue: DataPath.makePath(org, dataset, 'VectorVar', n),
                             };
-                            return InputPuzzlePiece(n, vectorVarInput).draggable({
-                                helper: 'clone',
-                                cursor: 'grabbing',
-                        })
+                            return SwatchInputPuzzlePiece(n, vectorVarInput);
                     });
 
                     let $keydata = SwatchList('Key Data', keydataList);

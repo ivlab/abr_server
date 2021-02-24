@@ -7,8 +7,9 @@
  */
 
 import { globals } from "../../../common/globals.js";
+import { CACHE_UPDATE } from '../../../common/StateManager.js';
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
-import { InputPuzzlePiece } from "./PuzzlePiece.js";
+import { InputPuzzlePiece, AssignedInputPuzzlePiece } from "./PuzzlePiece.js";
 
 export function DataImpression(plateType, uuid, name, impressionData) {
     let $element = $('<div>', { class: 'data-impression rounded' })
@@ -56,18 +57,17 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         for (const inputName of parameterMapping[parameter]) {
             let $socket = InputSocket(inputName, plateSchema[inputName].properties);
             if (inputValues && inputValues[inputName]) {
-                let $input = InputPuzzlePiece(inputName, inputValues[inputName]);
-                $input.css('position', 'absolute');
-                $input.css('top', 0);
-                $input.css('left', 0);
-                $input.draggable({
-                    cursor: 'grabbing',
-                    stop: (_evt, _ui) => {
-                        // Unassign this input
-                        globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
-                    }
-                });
+                let $input = AssignedInputPuzzlePiece(inputName, inputValues[inputName]);
                 $input.appendTo($socket);
+
+                // Prime the input to be reloaded and replaced when visassets
+                // get updated
+                globals.stateManager.subscribeCache('visassets', $socket);
+                $socket.on(CACHE_UPDATE + 'visassets', (evt) => {
+                    evt.stopPropagation();
+                    let $reloaded = AssignedInputPuzzlePiece(inputName, inputValues[inputName]);
+                    $input.replaceWith($reloaded);
+                });
             }
             $param.append($socket);
         }
@@ -95,6 +95,7 @@ function InputSocket(inputName, inputProps) {
     let $socket = $('<div>', {
         class: 'input-socket',
     });
+    // It's an input, but we can't drag it
     let $dropZone = InputPuzzlePiece(inputName, inputProps);
 
     $dropZone.droppable({

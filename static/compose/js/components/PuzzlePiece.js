@@ -52,7 +52,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 }
 
 // Can be either something waiting for an input or the input itself
-export function InputPuzzlePiece(inputName, inputProps, shortInputName) {
+export function InputPuzzlePiece(inputName, inputProps) {
     let $el;
     let resolvedProps = resolveSchemaConsts(inputProps);
     if (resolvedProps.inputGenre == 'VisAsset') {
@@ -74,18 +74,6 @@ export function InputPuzzlePiece(inputName, inputProps, shortInputName) {
             ];
 
             $el = PuzzlePieceWithThumbnail(...args);
-
-            // Prime it to be reloaded and replaced when visassets get updated
-            globals.stateManager.subscribeCache('visassets', $el);
-            $el.on(CACHE_UPDATE + 'visassets', (evt) => {
-                evt.stopPropagation();
-                let $reloaded = PuzzlePieceWithThumbnail(...args);
-                // Make sure the puzzle piece is in the same place as the original
-                for (const attr of ['position', 'top', 'left']) {
-                    $reloaded.css(attr, $(evt.target).css(attr));
-                }
-                $(evt.target).replaceWith($reloaded);
-            });
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
         if (resolvedProps?.inputValue) {
@@ -112,6 +100,31 @@ export function InputPuzzlePiece(inputName, inputProps, shortInputName) {
     $el.data('inputType', resolvedProps?.inputType);
     $el.data('inputValue', resolvedProps?.inputValue);
     return $el;
+}
+
+// A puzzle piece that's already assigned on a data impression; when it's
+// removed it will send a message to the server telling it that it's removed
+export function AssignedInputPuzzlePiece(inputName, inputProps) {
+    let $input = InputPuzzlePiece(inputName, inputProps);
+    $input.draggable({
+        cursor: 'grabbing',
+        stop: (_evt, _ui) => {
+            // Unassign this input
+            globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+        }
+    });
+    $input.css('position', 'absolute');
+    $input.css('top', 0);
+    $input.css('left', 0);
+    return $input;
+}
+
+// A "swatch"; a puzzle piece that lives in a palette
+export function SwatchInputPuzzlePiece(inputName, inputProps) {
+    return InputPuzzlePiece(inputName, inputProps).draggable({
+        helper: 'clone',
+        cursor: 'grabbing',
+    })
 }
 
 // A connector for a puzzle piece
