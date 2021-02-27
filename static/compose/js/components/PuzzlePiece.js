@@ -108,8 +108,9 @@ export function AssignedInputPuzzlePiece(inputName, inputProps) {
     let $input = InputPuzzlePiece(inputName, inputProps);
     $input.draggable({
         cursor: 'grabbing',
-        stop: (_evt, _ui) => {
+        stop: (evt, _ui) => {
             // Unassign this input
+            let uuid = $(evt.target).parents('.data-impression').data('uuid');
             globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
         }
     });
