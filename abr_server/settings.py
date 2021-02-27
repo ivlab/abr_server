@@ -26,7 +26,7 @@ SECRET_KEY = 'x=$0ckn%%(3&z4f8c357p^^wh2$=8v_sci$5$n=oqca^^67f*8'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -134,5 +134,16 @@ if not os.path.exists(MEDIA_ROOT):
 DOWNLOAD_VISASSETS = True # Download visassets from a particular state if they don't exist
 VISASSET_PATH = Path(MEDIA_ROOT).joinpath('visassets')
 DATASET_PATH = Path(MEDIA_ROOT).joinpath('datasets')
+
+if not DATASET_PATH.exists():
+    DATASET_PATH.mkdir()
+if not VISASSET_PATH.exists():
+    VISASSET_PATH.mkdir()
+
 VISASSET_JSON = 'artifact.json'
 VISASSET_LIBRARY = 'http://sculptingvis.tacc.utexas.edu/static/Artifacts/'
+
+# Issue for windows loading .js files
+if DEBUG:
+    import mimetypes
+    mimetypes.add_type("application/javascript", ".js",True)

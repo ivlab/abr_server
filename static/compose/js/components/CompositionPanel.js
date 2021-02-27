@@ -49,7 +49,7 @@ export function CompositionPanel() {
     // Add the trash can functionality
     let $trash = $('<div>', {class: 'trash'}).append(
         $('<img>', {
-            src: `${STATIC_URL}/compose/trash.svg`,
+            src: `${STATIC_URL}compose/trash.svg`,
         })
     ).droppable({
         tolerance: 'pointer',
