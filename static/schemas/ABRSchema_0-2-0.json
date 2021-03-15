@@ -52,6 +52,28 @@
             }
         },
 
+        "dataRanges": {
+            "type": "object",
+            "description": "Ranges for variables in the state (scalar, vector, etc.)",
+            "properties": {
+                "scalarRanges": {
+                    "type": "object",
+                    "description": "Ranges for scalar variables",
+                    "$comment": "Unfortunately must explicitly specify DataPath key here",
+                    "patternProperties": { 
+                        "^([^/]+)\/([^/]+)\/(ScalarVar)\/([^/]+)$": {
+                            "type": "object",
+                            "description": "Minimum and maximum for a scalar variable",
+                            "properties": {
+                                "min": { "type": "number" },
+                                "max": { "type": "number" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
         "uiData": {
             "type": "object",
             "description": "Any additional info about user interfaces (artist UI, legend UI, physician UI, ...)",
@@ -74,6 +96,35 @@
                                             }
                                         }
                                     }
+                                }
+                            }
+                        }
+                    }
+                },
+                "dataQuery": {
+                    "type": "object",
+                    "description": "Data for the data querying UI",
+                    "properties": {
+                        "mode": {
+                            "type": "object",
+                            "properties": {
+                                "modeName": {
+                                    "type": "string",
+                                    "enum": ["Slices", "Streams"]
+                                },
+                                "modeContext": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        },
+                        "slices": {
+                            "type": "object",
+                            "patternProperties": {
+                                "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}){1}$": {
+                                    "inputDataPath": { "$ref": "#/definitions/InputStringTypes/DataPath" },
+                                    "point1": { "$ref": "#/definitions/UnityObjects/Vector3" },
+                                    "point2": { "$ref": "#/definitions/UnityObjects/Vector3" }
                                 }
                             }
                         }
@@ -116,7 +167,7 @@
                     "description": "User-defined name of the data impression (i.e. 'blue ocean')",
                     "default": "Data Impression"
                 },
-                "renderingData": {
+                "renderHints": {
                     "type": "object",
                     "description": "Additional data that can/should be used when rendering, such as visibility of the impression",
                     "$comment": "TODO"
@@ -261,23 +312,23 @@
             "DataPath": {
                 "type": "string",
                 "$comment": "Update whenever a new data source is added to the data server. Eventually should pull this bit of schema from the data server.",
-                "pattern": "^(\\w+)\/(\\w+)\/(KeyData|ScalarVar|VectorVar)\/\\w+$"
+                "pattern": "^([^/]+)\/([^/]+)\/(KeyData|ScalarVar|VectorVar)\/([^/]+)$"
             },
 
             "PrimitiveFloat": {
                 "type": "string",
                 "description": "Floating point number",
-                "pattern": "^\\d+(.\\d+)?$"
+                "pattern": "^-?\\d+(.\\d+)?$"
             },
             "PrimitivePercentage": {
                 "type": "string",
                 "description": "Floating point percentage",
-                "pattern": "^\\d+.?\\d+?%$"
+                "pattern": "^-?\\d+.?\\d+?%$"
             },
             "PrimitiveDistance": {
                 "type": "string",
                 "description": "Floating point distance (metric units)",
-                "pattern": "^\\d+(.\\d+)?(m)$"
+                "pattern": "^-?\\d+(.\\d+)?(m)$"
             },
             "PrimitiveBoolean": {
                 "type": "string",
@@ -287,7 +338,7 @@
             "PrimitiveAngle": {
                 "type": "string",
                 "description": "Angle measure in degrees",
-                "pattern": "^\\d+.?\\d+?deg$"
+                "pattern": "^-?\\d+.?\\d+?deg$"
             }
         },
 
