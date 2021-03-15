@@ -24,6 +24,7 @@ def schema(request, schema_name):
     return redirect(settings.STATIC_URL + 'schemas/{}'.format(schema_name))
 
 # State access and modification methods
+@csrf_exempt
 def modify_state(request):
     # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
     item_path_parts = request.path.split('/')
@@ -39,6 +40,7 @@ def modify_state(request):
         else:
             return HttpResponse()
 
+@csrf_exempt
 def remove_path(request):
     # Parse the URL into its sub-components (we know it'll be /remove-path/* that gets us here)
     item_path_parts = request.path.split('/')
@@ -51,6 +53,7 @@ def remove_path(request):
     else:
         return HttpResponse(reason='Method for remove must be DELETE', status=400)
 
+@csrf_exempt
 def remove(request, value):
     if request.method == 'DELETE':
         state.remove_all(value)
@@ -58,6 +61,7 @@ def remove(request, value):
     else:
         return HttpResponse(reason='Method for remove must be DELETE', status=400)
 
+@csrf_exempt
 def undo(request):
     if request.method == 'POST':
         err_message = state.undo()
@@ -68,6 +72,7 @@ def undo(request):
     else:
         return HttpResponse(reason='Method for undo must be POST', status=400)
 
+@csrf_exempt
 def redo(request):
     if request.method == 'POST':
         err_message = state.redo()
@@ -149,6 +154,7 @@ def list_datasets(request):
 
 
 
+@csrf_exempt
 def download_visasset(request, uuid):
     if request.method == 'POST':
         failed_downloads = visasset_manager.download_visasset(uuid)
