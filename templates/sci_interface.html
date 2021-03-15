@@ -18,9 +18,15 @@
 </head>
 <body>
     <div class="mode-switcher">
-        <h1>Mode</h1>
+        <h2>Mode</h2>
         <button onclick="modeSwitch('Slices')">Cutting Planes</button>
         <button onclick="modeSwitch('Streams')">Streamlines</button>
+    </div>
+
+    <div class="timestep-switcher">
+        <h2>Timestep</h2>
+        <input id="timestep" type="range" min="0" max="9" step="1" value="0" oninput="timestep(false)" onchange="timestep(true)">
+        <label id="timestep-label" for="timestep">0</label>
     </div>
 
     <script src="{% static 'common/csrf.js' %}"></script>
@@ -74,6 +80,36 @@
                     alert(resp.statusText);
                 }
             });
+        }
+
+        function timestep(send) {
+            let timestepValue = document.getElementById('timestep').value;
+            document.getElementById('timestep-label').innerHTML = timestepValue;
+
+            if (send) {
+                let dataQuery = currentState?.uiData?.dataQuery;
+                if (dataQuery) {
+                    dataQuery.timestep = +timestepValue;
+                } else {
+                    dataQuery = {
+                        timestep: +timestepValue
+                    };
+                }
+
+                fetch('/api/state/uiData/dataQuery', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    mode: 'same-origin',
+                    body: JSON.stringify(dataQuery)
+                }).then((resp) => {
+                    if (resp.status != 200) {
+                        alert(resp.statusText);
+                    }
+                });
+            }
         }
     </script>
 </body>
