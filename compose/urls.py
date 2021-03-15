@@ -5,4 +5,5 @@ from . import views
 urlpatterns = [
     path('', views.compose),
     path('raw-editor', views.raw_state),
+    path('sci-interface/', views.sci_interface),
 ]

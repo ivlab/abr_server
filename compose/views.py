@@ -7,3 +7,6 @@ def compose(request):
 
 def raw_state(request):
     return render(request, 'raw_editor.html')
+
+def sci_interface(request):
+    return render(request, 'sci_interface.html')

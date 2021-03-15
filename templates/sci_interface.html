@@ -1,0 +1,80 @@
+{% load static %}
+{% csrf_token %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet">
+
+    <link rel="stylesheet"
+    href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+
+    <title>Sci Interface</title>
+</head>
+<body>
+    <div class="mode-switcher">
+        <h1>Mode</h1>
+        <button onclick="modeSwitch('Slices')">Cutting Planes</button>
+        <button onclick="modeSwitch('Streams')">Streamlines</button>
+    </div>
+
+    <script src="{% static 'common/csrf.js' %}"></script>
+
+    <script>
+        let currentState = null;
+        let ws = new WebSocket(`ws://${window.location.host}/ws/`);
+        let initialized = false;
+        // Once the WS is open, tell the ABR Engine to send us the state since
+        // we're connected
+        ws.onopen = (_evt) => {
+            let data = 'Web client connected';
+            ws.send(data);
+            initialized = true;
+            fetch('/api/state').then((resp) => resp.text())
+                .then((state) => {
+                    let t = JSON.parse(state)['state'];
+                    currentState = t;
+            });
+        }
+        // When a message is received, forward it to all of the subscribers
+        ws.onmessage = (evt) => {
+            let data = evt.data;
+            fetch('/api/state').then((resp) => resp.text())
+                .then((state) => {
+                    let t = JSON.parse(state)['state'];
+                    currentState = t;
+            });
+        };
+
+        function modeSwitch(mode) {
+            let dataQuery = currentState?.uiData?.dataQuery;
+            if (dataQuery) {
+                dataQuery.mode = mode;
+            } else {
+                dataQuery = {
+                    mode
+                };
+            }
+
+            fetch('/api/state/uiData/dataQuery', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                mode: 'same-origin',
+                body: JSON.stringify(dataQuery)
+            }).then((resp) => {
+                if (resp.status != 200) {
+                    alert(resp.statusText);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

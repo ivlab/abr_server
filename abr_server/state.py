@@ -86,7 +86,7 @@ class State():
             return ''
         except jsonschema.ValidationError as e:
             path = '/'.join(e.path)
-            return '{}: {}'.format(path, e.message)
+            return 'Schema validation failed - {}: {}'.format(path, e.message)
 
     # CRUD operations
     def get_path(self, item_path):
