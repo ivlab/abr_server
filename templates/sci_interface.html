@@ -31,6 +31,11 @@
         <label id="timestep-label" for="timestep">0</label>
     </div>
 
+    <div class="reset-container">
+        <h2>Reset</h2>
+        <button id="reset-vis" onclick="resetVis()">Reset Visualization</button>
+    </div>
+
     <script src="{% static 'common/csrf.js' %}"></script>
 
     <script>
@@ -120,6 +125,28 @@
                     alert(resp.statusText);
                 }
             });
+        }
+
+        function resetVis() {
+            // Delete all data query impressions
+            let dataQueryImpessions = Object.values(currentState?.impressions)
+                .filter((impression) => impression?.tags?.includes("DataQuery"));
+
+            for (const impression of dataQueryImpessions)
+            {
+                fetch(`/api/remove-path/impressions/${impression.uuid}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    mode: 'same-origin'
+                }).then((resp) => {
+                    if (resp.status != 200) {
+                        alert(resp.statusText);
+                    }
+                });
+            }
         }
     </script>
 </body>

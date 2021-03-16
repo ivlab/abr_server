@@ -64,7 +64,14 @@ class State():
     # Returns a string of any validation errors
     def validate_and_backup(self):
         try:
-            jsonschema.validate(self._pending_state, self.state_schema)
+            # Sometimes validation fails (collection changed during iteration??)
+            tries = 10
+            for i in range(tries):
+                try:
+                    jsonschema.validate(self._pending_state, self.state_schema)
+                    break
+                except RuntimeError:
+                    pass
 
             # If we've successfully validated the state, make a backup. Keep
             # up to a certain amount of backups if something crashes
