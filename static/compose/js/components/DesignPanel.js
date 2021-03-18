@@ -55,7 +55,7 @@ export function DesignPanel() {
         if (typeof(artifactType) !== 'undefined') {
             console.warn('Use of VisAsset field `artifactType` is deprecated, use `type` instead');
         }
-        type = type ?? artifactType;
+        type = type ? type : artifactType;
         let mockInput = {
             inputGenre: 'VisAsset',
             inputValue: va ,

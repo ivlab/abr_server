@@ -65,7 +65,7 @@
         };
 
         function modeSwitch(mode) {
-            let dataQuery = currentState?.uiData?.dataQuery;
+            let dataQuery = currentState.uiData.dataQuery;
             if (dataQuery) {
                 dataQuery.mode = mode;
             } else {
@@ -78,7 +78,7 @@
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
+                    // 'X-CSRFToken': csrftoken,
                 },
                 mode: 'same-origin',
                 body: JSON.stringify(dataQuery)
@@ -90,7 +90,7 @@
         }
 
         function timestep(increase) {
-            let dataQuery = currentState?.uiData?.dataQuery;
+            let dataQuery = currentState.uiData.dataQuery;
             if (!dataQuery) {
                 dataQuery = {
                     mode: 'Slices',
@@ -98,7 +98,7 @@
                 };
             }
 
-            let timestepValue = dataQuery?.timestep;
+            let timestepValue = dataQuery.timestep;
             if (!timestepValue) {
                 timestepValue = 0;
             }
@@ -116,7 +116,7 @@
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
+                    // 'X-CSRFToken': csrftoken,
                 },
                 mode: 'same-origin',
                 body: JSON.stringify(dataQuery)
@@ -129,8 +129,8 @@
 
         function resetVis() {
             // Delete all data query impressions
-            let dataQueryImpessions = Object.values(currentState?.impressions)
-                .filter((impression) => impression?.tags?.includes("DataQuery"));
+            let dataQueryImpessions = Object.values(currentState.impressions)
+                .filter((impression) => impression.tags.includes("DataQuery"));
 
             for (const impression of dataQueryImpessions)
             {
@@ -138,7 +138,7 @@
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
+                        // 'X-CSRFToken': csrftoken,
                     },
                     mode: 'same-origin'
                 }).then((resp) => {

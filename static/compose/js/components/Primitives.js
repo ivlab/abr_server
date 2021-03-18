@@ -37,7 +37,7 @@ export function PrimitiveInput(inputName, resolvedProps) {
         // See if there's an input there already, if not assign the defaults
         let impressionState = globals.stateManager.state['impressions'][impressionId];
         let inputState;
-        if (impressionState?.inputValues && impressionState?.inputValues[inputName]) {
+        if (impressionState && impressionState.inputValues && impressionState.inputValues[inputName]) {
             inputState = impressionState.inputValues[inputName];
         } else {
             inputState = defaultInputs;

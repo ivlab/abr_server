@@ -48,10 +48,12 @@ export function Plate(plateType) {
 
             $instance.appendTo($composition);
 
+            let defaultName = globals.schema.definitions.Impression.properties.name.default;
+
             let impression = {
                 plateType,
                 uuid: imprId,
-                name: globals.schema.definitions?.Impression?.properties?.name?.default ?? "Data Impression",
+                name: defaultName ? defaultName : "Data Impression",
             };
             globals.stateManager.update('impressions/' + imprId, impression);
             globals.stateManager.update('uiData/compose/impressionData/' + imprId + '/position', pos);

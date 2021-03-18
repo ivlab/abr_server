@@ -152,7 +152,7 @@ export function Header() {
         $saveAsDialog.append($('<div>').append($('<input>', {
                 id: 'abr-state-save-name',
                 type: 'text',
-                val: localStorage.currentStateName ?? DEFAULT_STATE_NAME,
+                val: localStorage.currentStateName ? localStorage.currentStateName : DEFAULT_STATE_NAME,
             }).on('input', (evt) => {
                 let stateName = $(evt.target).val();
                 if (localStorage.getItem(stateName)) {

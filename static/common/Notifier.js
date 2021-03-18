@@ -27,7 +27,7 @@ export class Notifier {
             let target = JSON.parse(evt.data)['target'];
             if (target == 'state') {
                 globals.stateManager.refreshState();
-            } else if (target?.startsWith(CACHE_UPDATE)) {
+            } else if (target != null && target.startsWith(CACHE_UPDATE)) {
                 let cacheName = target.replace(CACHE_UPDATE, '');
                 globals.stateManager.refreshCache(cacheName);
             }

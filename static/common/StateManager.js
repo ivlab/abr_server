@@ -24,9 +24,9 @@ export const CACHE_UPDATE = 'CacheUpdate-';
 export function resolveSchemaConsts(data) {
     let resolvedData = {};
     for (const field in data) {
-        if (typeof(data[field]) === 'object' && data[field]?.const) {
+        if (typeof(data[field]) === 'object' && data[field].const) {
             resolvedData[field] = data[field].const;
-        } else if (typeof(data[field]) === 'object' && data[field]?.default) {
+        } else if (typeof(data[field]) === 'object' && data[field].default) {
             resolvedData[field] = data[field].default;
         } else {
             resolvedData[field] = data[field];
@@ -66,7 +66,7 @@ export class StateManager {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
+                // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin',
             body: newState,
@@ -80,7 +80,7 @@ export class StateManager {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
+                // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin',
             body: JSON.stringify(updateValue),
@@ -93,7 +93,7 @@ export class StateManager {
         await fetch('/api/remove/' + value, {
             method: 'DELETE',
             headers: {
-                'X-CSRFToken': csrftoken,
+                // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
         }).catch((errs) => alert('Error removing:\n' + errs));
@@ -101,11 +101,11 @@ export class StateManager {
 
     // Remove something at a particular path
     async removePath(path) {
-        path = path ?? '';
+        path = path ? path : '';
         await fetch('/api/remove-path/' + path, {
             method: 'DELETE',
             headers: {
-                'X-CSRFToken': csrftoken,
+                // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
         }).catch((errs) => alert('Error removing:\n' + errs));
@@ -115,7 +115,7 @@ export class StateManager {
         await fetch('/api/undo', {
             method: 'POST',
             headers: {
-                'X-CSRFToken': csrftoken,
+                // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
         }).catch((errs) => alert('Error undoing:\n' + errs));
@@ -125,7 +125,7 @@ export class StateManager {
         await fetch('/api/redo', {
             method: 'POST',
             headers: {
-                'X-CSRFToken': csrftoken,
+                // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
         }).catch((errs) => alert('Error redoing:\n' + errs));
@@ -160,7 +160,7 @@ export class StateManager {
     }
 
     getCache(cacheName) {
-        return this._caches[cacheName] ?? {};
+        return this._caches[cacheName] ? this._caches[cacheName] : {};
     }
 
     // Subscribe to when a particular cache is updated

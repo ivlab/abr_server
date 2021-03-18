@@ -19,10 +19,17 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         });
 
     let $composition = $('#' + COMPOSITION_LOADER_ID);
+    let position = {
+        top: $composition.css('left'),
+        left: $composition.css('top'),
+    }
+    if (impressionData && impressionData.position) {
+        position = impressionData.position;
+    }
     $element.css({
         position: 'absolute',
-        top: impressionData?.position?.top ?? $composition.css('left'),
-        left: impressionData?.position?.left ?? $composition.css('top'),
+        top: position.top,
+        left: position.left,
     });
 
     $element.append($('<div>', {
@@ -45,9 +52,11 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     }
 
     let inputValues = null;
-    if (globals.stateManager.state?.impressions)
+    if (globals.stateManager.state && globals.stateManager.state.impressions)
     {
-        inputValues = globals.stateManager.state.impressions[uuid]?.inputValues;
+        if (globals.stateManager.state.impressions[uuid]) {
+            inputValues = globals.stateManager.state.impressions[uuid].inputValues;
+        }
     }
 
     // Add a new row of inputs for each parameter
@@ -114,9 +123,12 @@ function InputSocket(inputName, inputProps) {
             }
 
             // See if there's an input there already, if not assign the defaults
-            let impressionState = globals.stateManager.state['impressions'][impressionId];
+            let impressionState;
+            if (globals.stateManager.state['impressions'] && globals.stateManager.state['impressions'][impressionId]) {
+                impressionState = globals.stateManager.state['impressions'][impressionId];
+            }
             let inputState;
-            if (impressionState?.inputValues && impressionState?.inputValues[inputName]) {
+            if (impressionState && impressionState.inputValues && impressionState.inputValues[inputName]) {
                 inputState = impressionState.inputValues[inputName];
             } else {
                 inputState = defaultInputs;

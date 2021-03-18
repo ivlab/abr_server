@@ -55,7 +55,7 @@ export class ComposeManager {
                         fetch('/api/download-visasset/' + matches[0], {
                             method: 'POST',
                             headers: {
-                                'X-CSRFToken': csrftoken,
+                                // 'X-CSRFToken': csrftoken,
                             },
                             mode: 'same-origin',
                         }).then(() => {
@@ -71,7 +71,16 @@ export class ComposeManager {
     syncWithState() {
         // TODO: incorporate jsondiffpatch
         let impressions = globals.stateManager.state['impressions'];
-        let uiData = globals.stateManager.state?.uiData?.compose?.impressionData ?? {};
+        let uiData = {};
+        if (globals.stateManager.state) {
+            if (globals.stateManager.state.uiData) {
+                if (globals.stateManager.state.uiData.compose) {
+                    if (globals.stateManager.state.uiData.compose.impressionData) {
+                        uiData = globals.stateManager.state.uiData.compose.impressionData;
+                    }
+                }
+            }
+        }
 
         let $compositionLoader = $('#composition-panel').find('#' + COMPOSITION_LOADER_ID);
         $compositionLoader.empty();

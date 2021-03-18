@@ -56,7 +56,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
     let $el;
     let resolvedProps = resolveSchemaConsts(inputProps);
     if (resolvedProps.inputGenre == 'VisAsset') {
-        if (!resolvedProps?.inputValue) {
+        if (resolvedProps && !resolvedProps.inputValue) {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, true, '');
         } else {
             const cssObjectFitMap = {
@@ -76,29 +76,29 @@ export function InputPuzzlePiece(inputName, inputProps) {
             $el = PuzzlePieceWithThumbnail(...args);
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
-        if (resolvedProps?.inputValue) {
+        if (resolvedProps && resolvedProps.inputValue) {
             $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, '');
         } else {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, false, '');
         }
-        $el.attr('title', resolvedProps?.inputValue ?? null);
+        $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
     } else if (resolvedProps.inputGenre == 'KeyData') {
-        if (resolvedProps?.inputValue) {
+        if (resolvedProps && resolvedProps.inputValue) {
             $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, 'keydata');
         } else {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata');
         }
-        $el.attr('title', resolvedProps?.inputValue ?? null);
+        $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
     } else if (resolvedProps.inputGenre == 'Primitive') {
         $el = PrimitiveInput(inputName, resolvedProps);
     }
 
     // Assign the constant data (NOTHING from state)
     $el.data('inputName', inputName);
-    $el.data('parameterName', resolvedProps?.parameterName);
-    $el.data('inputGenre', resolvedProps?.inputGenre);
-    $el.data('inputType', resolvedProps?.inputType);
-    $el.data('inputValue', resolvedProps?.inputValue);
+    $el.data('parameterName', resolvedProps.parameterName);
+    $el.data('inputGenre', resolvedProps.inputGenre);
+    $el.data('inputType', resolvedProps.inputType);
+    $el.data('inputValue', resolvedProps.inputValue);
     return $el;
 }
 
