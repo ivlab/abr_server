@@ -14,26 +14,59 @@
 
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 
+    <style>
+        * {
+            font-size: 20px;
+        }
+        button {
+            -webkit-appearance: none;
+            border-radius: 10px;
+            height: 3rem;
+            background-color: #ffffff;
+        }
+        div.mode-container {
+            background-color: #efeeee;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem auto;
+            width: 50%;
+        }
+        div.button-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+        }
+        h2 {
+            text-align: center;
+        }
+    </style>
+
     <title>Sci Interface</title>
 </head>
 <body>
-    <div class="mode-switcher">
+    <div class="mode-container">
         <h2>Mode</h2>
-        <button onclick="modeSwitch('Slices')">Cutting Planes</button>
-        <button onclick="modeSwitch('Streams')">Streamlines</button>
+        <div class="button-container">
+            <button onclick="modeSwitch('Slices')">Cutting Planes</button>
+            <button onclick="modeSwitch('Streams')">Streamlines</button>
+        </div>
     </div>
 
-    <div class="timestep-switcher">
+    <div class="mode-container">
         <h2>Timestep</h2>
         <!-- <input id="timestep" type="range" min="0" max="9" step="1" value="0" oninput="timestep(false)" onchange="timestep(true)"> -->
-        <button id="timestep-down" onclick="timestep(false)">-</button>
-        <button id="timestep-up" onclick="timestep(true)">+</button>
-        <label id="timestep-label" for="timestep">0</label>
+        <div class="button-container">
+            <button id="timestep-down" onclick="timestep(false)">-</button>
+            <p id="timestep-label" for="timestep">0</p>
+            <button id="timestep-up" onclick="timestep(true)">+</button>
+        </div>
     </div>
 
-    <div class="reset-container">
+    <div class="mode-container">
         <h2>Reset</h2>
-        <button id="reset-vis" onclick="resetVis()">Reset Visualization</button>
+        <div class="button-container">
+            <button id="reset-vis" onclick="resetVis()">Reset Visualization</button>
+        </div>
     </div>
 
     <script src="{% static 'common/csrf.js' %}"></script>
@@ -64,8 +97,16 @@
             });
         };
 
+        function getQuery() {
+            if (currentState && currentState.uiData && currentState.uiData.dataQuery) {
+                return currentState.uiData.dataQuery;
+            } else {
+                return null;
+            }
+        }
+
         function modeSwitch(mode) {
-            let dataQuery = currentState.uiData.dataQuery;
+            let dataQuery = getQuery();
             if (dataQuery) {
                 dataQuery.mode = mode;
             } else {
@@ -90,7 +131,7 @@
         }
 
         function timestep(increase) {
-            let dataQuery = currentState.uiData.dataQuery;
+            let dataQuery = getQuery();
             if (!dataQuery) {
                 dataQuery = {
                     mode: 'Slices',
@@ -108,6 +149,8 @@
             } else {
                 timestepValue -= 1;
             }
+
+            timestepValue = timestepValue >= 0 ? timestepValue : 0;
 
             document.getElementById('timestep-label').innerHTML = timestepValue;
             dataQuery.timestep = timestepValue;
@@ -128,6 +171,10 @@
         }
 
         function resetVis() {
+            if (!currentState || !currentState.impressions) {
+                return;
+            }
+
             // Delete all data query impressions
             let dataQueryImpessions = Object.values(currentState.impressions)
                 .filter((impression) => impression.tags.includes("DataQuery"));
