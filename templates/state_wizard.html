@@ -34,9 +34,9 @@
     <script>
         // Map old EncodingRenderStrategies to new DataImpressions
         const strategiesToPlateTypes = {
-            'SimpleGlyphEncodingRenderStrategy': 'Glyph',
-            'SimpleLineEncodingRenderStrategy': 'Ribbon',
-            'SimpleSurfaceEncodingRenderStrategy': 'Surface',
+            'SimpleGlyphEncodingRenderStrategy': 'Glyphs',
+            'SimpleLineEncodingRenderStrategy': 'Ribbons',
+            'SimpleSurfaceEncodingRenderStrategy': 'Surfaces',
         };
 
         // VariableTypes in the old system
@@ -49,6 +49,11 @@
         // Map old input names to equivalent new ones, otherwise assume they're
         // the same
         const inputNameMap = {
+            'Pattern Scale': 'Pattern Size',
+            'Pattern Blend': 'Pattern Seam Blend',
+            'Width': 'Ribbon Width',
+            'Curve': 'Ribbon Curve',
+            'Average': 'Ribbon Smooth',
         };
 
         var schema = {};
@@ -65,7 +70,7 @@
         //      "inputType": "IVLab.ABREngine.LengthPrimitive"
         // }
         // This assumes that no input value will be an object!!
-        export function resolveSchemaConsts(data) {
+        function resolveSchemaConsts(data) {
             let resolvedData = {};
             for (const field in data) {
                 if (typeof(data[field]) === 'object' && data[field].const) {
@@ -77,6 +82,22 @@
                 }
             }
             return resolvedData;
+        }
+
+        // Get the full list of input names from a plate type from a schema
+        function getSchemaInputNames(plateType) {
+            return Object.keys(schema['definitions']['Plates'][plateType]['properties']);
+        }
+
+        function getSchemaInputWithDefault(plateType, inputName) {
+            let inputProps = schema['definitions']['Plates'][plateType]['properties'][inputName]['properties'];
+            let resolvedProps = resolveSchemaConsts(inputProps);
+            return {
+                inputType: resolvedProps.inputType,
+                parameterName: resolvedProps.parameterName,
+                inputValue: resolvedProps.inputValue,
+                inputGenre: resolvedProps.inputGenre,
+            }
         }
 
         $('#upload-state').on('click', (_evt) => {
@@ -165,12 +186,14 @@
             // - UI metadata
             //
             // Things that need to be manually upgraded
-            // - Primitive inputs (choose units)
             // - Variable inputs (choose Path)
             // - KeyData inputs (choose Path)
+            //
+            // Things that need to be redone from defaults
+            // - Primitive inputs
             for (const impression of impressions) {
                 let newImpression = upgradeImpressionAuto(impression, stateJson);
-                console.log(newImpression);
+                newState.impressions[newImpression.uuid] = newImpression;
             }
         }
 
@@ -188,8 +211,29 @@
             newImpression.renderHints.visible = !uiDataForImpression.hidden;
             newImpression.inputValues = {};
 
-            for (const inputName in dataImpression.inputs) {
-                let oldInput = dataImpression.inputs[inputName];
+            for (var inputName in dataImpression.inputs) {
+                // Check if the input name exists for this plate type
+                let allInputsForPlateType = getSchemaInputNames(newImpression.plateType);
+                let oldInputName = inputName;
+                if (Object.keys(inputNameMap).indexOf(inputName) >= 0) {
+                    inputName = inputNameMap[inputName];
+                }
+
+                if (allInputsForPlateType.indexOf(inputName) < 0) {
+                    console.warn(`'${inputName}' is not an input for plate type ${newImpression.plateType}! Ignoring.`);
+                    continue;
+                }
+
+                let oldInputUuid = dataImpression.inputs[inputName];
+
+                // We can only upgrade if it's a VisAsset, otherwise leave at
+                // the default
+                let newInput = getSchemaInputWithDefault(newImpression.plateType, inputName);
+                if (newInput.inputGenre == 'VisAsset') {
+                    newInput.inputValue = oldInputUuid;
+                }
+
+                newImpression.inputValues[inputName] = newInput;
             }
 
             return newImpression;
