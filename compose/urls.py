@@ -6,4 +6,5 @@ urlpatterns = [
     path('', views.compose),
     path('raw-editor', views.raw_state),
     path('sci-interface/', views.sci_interface),
+    path('state-wizard/', views.state_wizard),
 ]

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Upgrade Wizard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+</head>
+<body>
+    <h2>ABR State Upgrade Wizard</h2>
+    <p>This wizard helps to upgrade your ABR states from version 0.1.8 (VIS 2020
+    Tutorial Version) to the new ABR 0.2.</p>
+
+    <div>
+    <button id="upload-state">Upload your old ABR state...</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous">
+    </script>
+
+    <script>
+    $('#upload-state').on('click', (_evt) => {
+        // Create a fake element to handle the actual upload
+        let $fileInput = $('<input>', {
+            type: 'file',
+        }).on('change', (evt) => {
+            if (!evt.target.files || !evt.target.files[0]) {
+                alert('No files uploaded!');
+                return;
+            }
+
+            let stateFileName = evt.target.files[0].name;
+            // get rid of file extension
+            let stateName = stateFileName.replace(/\.[^/.]+$/, ""); // https://stackoverflow.com/a/4250408
+
+            let reader = new FileReader();
+            $(reader).on('load', (loadEvt) => {
+                // Update the state with the stateManager
+                // globals.stateManager.updateState(loadEvt.target.result);
+                console.log(loadEvt.target.result);
+            });
+            reader.readAsText(evt.target.files[0]);
+
+            $fileInput.remove();
+        });
+        $('body').append($fileInput);
+        $fileInput.click();
+    });
+    </script>
+</body>
+</html>

@@ -10,3 +10,6 @@ def raw_state(request):
 
 def sci_interface(request):
     return render(request, 'sci_interface.html')
+
+def state_wizard(request):
+    return render(request, 'state_wizard.html')
