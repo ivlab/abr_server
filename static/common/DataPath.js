@@ -40,7 +40,7 @@ export class DataPath {
     }
 
     static followsConvention(dataPath, pathType) {
-        parts = this.getPathParts(dataPath);
+        let parts = this.getPathParts(dataPath);
         if (pathType != 'Dataset') {
             return parts.length == 4 && parts[2] == pathType;
         } else {
