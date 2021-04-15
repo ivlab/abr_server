@@ -155,7 +155,11 @@
                 "renderHints": {
                     "type": "object",
                     "description": "Additional data that can/should be used when rendering, such as visibility of the impression",
-                    "$comment": "TODO"
+                    "properties": {
+                        "visible": {
+                            "type": "boolean"
+                        }
+                    }
                 },
                 "inputValues": {
                     "type": "object",
