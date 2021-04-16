@@ -11,7 +11,7 @@ const strategiesToPlateTypes = {
 const variableTypes = [
     'RawScalarVariable',
     'RawVectorVariable',
-    'RangedScalarVariable'
+    'RangedScalarDataVariable'
 ];
 
 // Map old input names to equivalent new ones, otherwise assume they're
@@ -276,6 +276,7 @@ function populateWizardForm(stateName, stateJson) {
             );
         }
 
+        $impression.append($('<p>', { text: `Primitives (${Object.keys(primitives).length})`}));
         $impression.append($primitives);
 
         $('#impression-list').append($impression);
@@ -341,16 +342,22 @@ function readDataImpressions(stateJson) {
 }
 
 function readVariables(dataImpression, stateJson) {
+    let compNodeUuids = stateJson.compositionNodes.map((node) => node.uuid);
     let dataNodeUuids = stateJson.dataNodes.map((node) => node.uuid);
 
     let variables = {};
     for (const inputName in dataImpression.inputs) {
-        // Find the variable in dataNodes
+        // Find the variable in dataNodes or comp nodes
         let inputUuid = dataImpression.inputs[inputName];
-        let inputIndex = dataNodeUuids.indexOf(inputUuid);
-        if (inputIndex >= 0) {
-            variables[inputName] = stateJson.dataNodes[inputIndex];
+        let inputIndexComp = compNodeUuids.indexOf(inputUuid);
+        let inputIndexData = dataNodeUuids.indexOf(inputUuid);
+        let inputValue = stateJson.compositionNodes[inputIndexComp];
+        if (inputIndexData >= 0) {
+            variables[inputName] = stateJson.dataNodes[inputIndexData];
+        } else if (inputIndexComp >= 0 && variableTypes.indexOf(inputValue.type) >= 0) {
+            variables[inputName] = stateJson.compositionNodes[inputIndexComp];
         }
+        console.log(variables);
     }
     return variables;
 }
