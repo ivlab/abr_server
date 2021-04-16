@@ -8,6 +8,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>State Upgrade Wizard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+    <style>
+        body {
+            margin: 0 1rem;
+        }
+
+        .data-impression.card header {
+            background-color: #ceedff;
+        }
+    </style>
 </head>
 
 <body>
@@ -24,8 +33,15 @@
     </div>
 
     <div>
-        <h5>Data Impressions (towers)</h5>
-        <div class="flex two half" id="impression-list"></div>
+        <h4>Data Impressions (towers)</h4>
+        <p>
+            <span class="label error">Red-highlighted</span> items need your
+            attention. Click on a highlighted item to change its value. <span
+            class="label warning">Orange-highlighted</span> items need attention
+            or will use the default value shown. When the values have been
+            updated and are formatted correctly, they will turn <span class="label success">green</span>.
+        </p>
+        <div id="impression-list"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"

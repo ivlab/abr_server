@@ -165,7 +165,37 @@ function populateWizardForm(stateName, stateJson) {
         let $impression = $('<div>', {
             class: 'data-impression card',
         }).append($('<header>', { text: impression.label }))
-            .append($('<p>', { text: `Variables (${Object.keys(variables).length})` }));
+
+        // Choose the KeyData
+        let dataObject = findDataObjectForStrategy(impression.uuid, stateJson);
+
+        $impression.append(
+                $('<button>', {
+                class: 'error',
+                text: `Key Data: ${dataObject.label}`
+            }).on('click', (evt) => {
+                let valid = false;
+                let newVarPath = prompt('Choose new Key Data path', `${defaultDatasetPath}/KeyData/${dataObject.label}`);
+                if (!DataPath.followsConvention(newVarPath, 'KeyData')) {
+                    alert(`Path '${newVarPath} does not follow ScalarVar convention ${DataPath.getConvention('KeyData')}`);
+                } else {
+                    valid = true;
+                }
+
+                if (valid) {
+                    // Update the default dataset to make it easier next time
+                    defaultDatasetPath = DataPath.getDatasetPath(newVarPath);
+                    $(evt.target).text(`Key Data: ${newVarPath}`);
+                    $(evt.target).removeClass('error');
+                    $(evt.target).addClass('success');
+                    let defaultInputValue = getSchemaInputWithDefault(plateType, 'Key Data');
+                    defaultInputValue.inputValue = newVarPath;
+                    newState.impressions[impression.uuid].inputValues[inputName] = defaultInputValue;
+                }
+            })
+        );
+
+        $impression.append($('<p>', { text: `Variables (${Object.keys(variables).length})` }));
 
         let $vars = $('<div>');
         for (var inputName in variables) {
@@ -281,4 +311,11 @@ function readVariables(dataImpression, stateJson) {
         }
     }
     return variables;
+}
+
+function findDataObjectForStrategy(strategyUuid, stateJson) {
+    let encoding = stateJson.compositionNodes.find((node) => node.inputs && node.inputs["Rendering Strategy"] == strategyUuid);
+    if (encoding) {
+        return stateJson.dataNodes.find((node) => node.uuid == encoding.inputs['Data Object']);
+    }
 }
