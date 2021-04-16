@@ -23,7 +23,10 @@ const inputNameMap = {
     'Curve': 'Ribbon Curve',
     'Average': 'Ribbon Smooth',
 };
-var defaultDatasetPath = 'Organization/Dataset';
+const origDefaultDatasetPath = 'Organization/Dataset';
+var defaultDatasetPath = origDefaultDatasetPath;
+
+const unitRegex = /(m|%|deg)/;
 
 var schema = {};
 
@@ -172,12 +175,13 @@ function populateWizardForm(stateName, stateJson) {
         $impression.append(
                 $('<button>', {
                 class: 'error',
-                text: `Key Data: ${dataObject.label}`
+                text: `Key Data: ${dataObject.label}`,
+                title: 'Please provide a path for this key data object. Example: "TACC/Ronne/KeyData/Bathymetry"'
             }).on('click', (evt) => {
                 let valid = false;
                 let newVarPath = prompt('Choose new Key Data path', `${defaultDatasetPath}/KeyData/${dataObject.label}`);
                 if (!DataPath.followsConvention(newVarPath, 'KeyData')) {
-                    alert(`Path '${newVarPath} does not follow ScalarVar convention ${DataPath.getConvention('KeyData')}`);
+                    alert(`Path '${newVarPath} does not follow KeyData convention ${DataPath.getConvention('KeyData')}`);
                 } else {
                     valid = true;
                 }
@@ -208,7 +212,8 @@ function populateWizardForm(stateName, stateJson) {
             $vars.append(
                 $('<button>', {
                     class: 'error',
-                    text: `${inputName}: ${variable.label}`
+                    text: `${inputName}: ${variable.label}`,
+                    title: 'Please provide a path for this variable. Example: "TACC/Ronne/ScalarVar/Temperature"'
                 }).on('click', (evt) => {
                     let newVarPath = '';
                     let valid = false;
@@ -244,6 +249,35 @@ function populateWizardForm(stateName, stateJson) {
 
         $impression.append($vars);
 
+        let $primitives = $('<div>');
+        let primitives = readPrimitives(impression, stateJson);
+        for (var inputName in primitives) {
+            // Switch out for the new input name
+            if (Object.keys(inputNameMap).indexOf(inputName) > 0) {
+                inputName = inputNameMap[inputName];
+            }
+
+            let primitiveValue = primitives[inputName];
+            let newValue = getPrimitiveValueWithUnits(primitiveValue, inputName, plateType);
+
+            $primitives.append(
+                $('<button>', {
+                    class: 'warning',
+                    text: `${inputName}: ${newValue}`,
+                    title: 'Please provide a value for this primitive. Defaults have been inferred.'
+                }).on('click', (evt) => {
+                    let newValueFromUser = prompt('New primitive value (keep units)', newValue);
+                    $(evt.target).text(`${inputName}: ${newValueFromUser}`);
+                    $(evt.target).removeClass('warning');
+                    $(evt.target).addClass('success');
+                    primitiveDefault.inputValue = newValueFromUser;
+                    newState.impressions[impression.uuid].inputValues[inputName] = defaultInputValue;
+                })
+            );
+        }
+
+        $impression.append($primitives);
+
         $('#impression-list').append($impression);
     }
 }
@@ -252,6 +286,7 @@ function populateWizardForm(stateName, stateJson) {
 // be automatically done
 function upgradeImpressionAuto(dataImpression, stateJson) {
     let uiDataForImpression = stateJson.ui[dataImpression.uuid];
+    let primitives = readPrimitives(dataImpression, stateJson);
 
     // Populate the top-level data
     let newImpression = {};
@@ -265,7 +300,6 @@ function upgradeImpressionAuto(dataImpression, stateJson) {
     for (var inputName in dataImpression.inputs) {
         // Check if the input name exists for this plate type
         let allInputsForPlateType = getSchemaInputNames(newImpression.plateType);
-        let oldInputName = inputName;
         if (Object.keys(inputNameMap).indexOf(inputName) >= 0) {
             inputName = inputNameMap[inputName];
         }
@@ -282,6 +316,14 @@ function upgradeImpressionAuto(dataImpression, stateJson) {
         let newInput = getSchemaInputWithDefault(newImpression.plateType, inputName);
         if (newInput.inputGenre == 'VisAsset') {
             newInput.inputValue = oldInputUuid;
+        }
+
+        // If it's a primitive, go ahead and add the value but notify the user
+        // that it'll probably be wrong.
+        if (newInput.inputGenre == 'Primitive') {
+            let primitiveValue = primitives[inputName];
+            let newValue = getPrimitiveValueWithUnits(primitiveValue, inputName, newImpression.plateType);
+            newInput.inputValue = newValue;
         }
 
         // Only add if actually defined
@@ -313,9 +355,35 @@ function readVariables(dataImpression, stateJson) {
     return variables;
 }
 
+function readPrimitives(dataImpression, stateJson) {
+    let compNodeUuids = stateJson.compositionNodes.map((node) => node.uuid);
+
+    let primitives = {};
+    for (const inputName in dataImpression.inputs) {
+        // Find the primitive in compositionNodes
+        let inputUuid = dataImpression.inputs[inputName];
+        let inputIndex = compNodeUuids.indexOf(inputUuid);
+        let inputValue = stateJson.compositionNodes[inputIndex];
+        if (inputIndex >= 0 && inputValue.type == 'RealNumber') {
+            primitives[inputName] = inputValue.floatVal;
+        }
+    }
+    return primitives;
+}
+
 function findDataObjectForStrategy(strategyUuid, stateJson) {
     let encoding = stateJson.compositionNodes.find((node) => node.inputs && node.inputs["Rendering Strategy"] == strategyUuid);
     if (encoding) {
         return stateJson.dataNodes.find((node) => node.uuid == encoding.inputs['Data Object']);
+    }
+}
+
+function getPrimitiveValueWithUnits(primitiveValue, inputName, plateType) {
+    let primitiveDefault = getSchemaInputWithDefault(plateType, inputName);
+    let units = primitiveDefault.inputValue.match(unitRegex);
+    if (units && units[1] && primitiveValue) {
+        return primitiveValue + units[1];
+    } else {
+        return primitiveDefault.inputValue;
     }
 }
