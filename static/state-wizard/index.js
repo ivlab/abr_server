@@ -30,6 +30,7 @@ const unitRegex = /(m|%|deg)/;
 
 var schema = {};
 
+var rangesToResolve = {};
 
 // Resolve schema consts to values, if there are any values contained within
 // consts
@@ -351,13 +352,21 @@ function readVariables(dataImpression, stateJson) {
         let inputUuid = dataImpression.inputs[inputName];
         let inputIndexComp = compNodeUuids.indexOf(inputUuid);
         let inputIndexData = dataNodeUuids.indexOf(inputUuid);
-        let inputValue = stateJson.compositionNodes[inputIndexComp];
         if (inputIndexData >= 0) {
             variables[inputName] = stateJson.dataNodes[inputIndexData];
-        } else if (inputIndexComp >= 0 && variableTypes.indexOf(inputValue.type) >= 0) {
-            variables[inputName] = stateJson.compositionNodes[inputIndexComp];
+        } else if (inputIndexComp >= 0 && 'RangedScalarDataVariable') {
+            // find the variable source of this data var and keep track of its
+            // mappings
+            let inputValue = stateJson.compositionNodes[inputIndexComp];
+            let origVarUuid = inputValue.inputs.InputVariable;
+            let origVar = stateJson.dataNodes[dataNodeUuids.indexOf(origVarUuid)];
+            rangesToResolve[origVar.label] = {
+                min: origVar.minValue,
+                max: origVar.maxValue,
+            }
+
+            variables[inputName] = origVar;
         }
-        console.log(variables);
     }
     return variables;
 }
