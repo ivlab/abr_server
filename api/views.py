@@ -10,7 +10,7 @@ from django.conf import settings
 from pathlib import Path
 
 from abr_server.state import state
-from abr_server.notifier import notifier, DEFAULT_ADDRESS
+from abr_server.notifier import notifier, LOCAL_ADDRESSES
 from abr_server import visasset_manager
 
 VISASSET_CACHE = {}
@@ -89,7 +89,7 @@ def subscribe(request):
     # https://en.wikipedia.org/wiki/Basic_access_authentication
     if request.method == 'POST':
         client_ip = get_client_ip(request)
-        same_machine = client_ip == DEFAULT_ADDRESS
+        same_machine = client_ip in LOCAL_ADDRESSES
         resp = notifier.subscribe_socket(same_machine)
         return JsonResponse(resp)
     else:

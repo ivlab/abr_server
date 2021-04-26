@@ -16,6 +16,11 @@ import os
 
 # DEFAULT_ADDRESS = '127.0.0.1'
 DEFAULT_ADDRESS = socket.gethostbyname(socket.gethostname())
+LOCAL_ADDRESSES = {
+    DEFAULT_ADDRESS,
+    '127.0.0.1',
+    'localhost'
+}
 
 class StateNotifier:
     def __init__(self):
