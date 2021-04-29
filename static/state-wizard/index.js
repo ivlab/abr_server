@@ -93,7 +93,7 @@ $('#upload-state').on('click', (_evt) => {
             // globals.stateManager.updateState(loadEvt.target.result);
             // localStorage.setItem('state', loadEvt.target.result);
             let stateJson = JSON.parse(loadEvt.target.result);
-            populateWizardForm(stateName, stateJson);
+            upgradeState(stateName, stateJson);
         });
         reader.readAsText(evt.target.files[0]);
 
@@ -108,7 +108,7 @@ fetch('/api/schemas/ABRSchema_0-2-0.json')
     .then((resp) => resp.json())
     .then((s) => schema = s)
     .then(() => {
-        upgradeState('Test State', JSON.parse(localStorage.getItem('state')));
+        // upgradeState('Test State', JSON.parse(localStorage.getItem('state')));
     });
 
 
@@ -359,13 +359,15 @@ function readVariables(dataImpression, stateJson) {
             // mappings
             let inputValue = stateJson.compositionNodes[inputIndexComp];
             let origVarUuid = inputValue.inputs.InputVariable;
-            let origVar = stateJson.dataNodes[dataNodeUuids.indexOf(origVarUuid)];
-            rangesToResolve[origVar.label] = {
-                min: origVar.minValue,
-                max: origVar.maxValue,
-            }
+            if (origVarUuid) {
+                let origVar = stateJson.dataNodes[dataNodeUuids.indexOf(origVarUuid)];
+                rangesToResolve[origVar.label] = {
+                    min: origVar.minValue,
+                    max: origVar.maxValue,
+                }
 
-            variables[inputName] = origVar;
+                variables[inputName] = origVar;
+            }
         }
     }
     return variables;
