@@ -108,7 +108,7 @@ fetch('/api/schemas/ABRSchema_0-2-0.json')
     .then((resp) => resp.json())
     .then((s) => schema = s)
     .then(() => {
-        // upgradeState('Test State', JSON.parse(localStorage.getItem('state')));
+        upgradeState('Test State', JSON.parse(localStorage.getItem('state')));
     });
 
 
@@ -195,7 +195,7 @@ function populateWizardForm(stateName, stateJson) {
                     $(evt.target).addClass('success');
                     let defaultInputValue = getSchemaInputWithDefault(plateType, 'Key Data');
                     defaultInputValue.inputValue = newVarPath;
-                    newState.impressions[impression.uuid].inputValues[inputName] = defaultInputValue;
+                    newState.impressions[impression.uuid].inputValues['Key Data'] = defaultInputValue;
                 }
             })
         );
@@ -203,7 +203,7 @@ function populateWizardForm(stateName, stateJson) {
         $impression.append($('<p>', { text: `Variables (${Object.keys(variables).length})` }));
 
         let $vars = $('<div>');
-        for (var inputName in variables) {
+        for (let inputName in variables) {
             // Switch out for the new input name
             if (Object.keys(inputNameMap).indexOf(inputName) > 0) {
                 inputName = inputNameMap[inputName];
@@ -243,6 +243,15 @@ function populateWizardForm(stateName, stateJson) {
                         let defaultInputValue = getSchemaInputWithDefault(plateType, inputName);
                         defaultInputValue.inputValue = newVarPath;
                         newState.impressions[impression.uuid].inputValues[inputName] = defaultInputValue;
+
+                        // Check if this var has been remapped at all
+                        if (Object.keys(rangesToResolve).indexOf(variable.label) >= 0) {
+                            if (!newState.dataRanges.scalarRanges) {
+                                newState.dataRanges = { scalarRanges: { } };
+                            }
+                            newState.dataRanges.scalarRanges[defaultInputValue.inputValue] = rangesToResolve[variable.label];
+                            refreshDataRanges();
+                        }
                     }
                 })
             );
@@ -252,7 +261,7 @@ function populateWizardForm(stateName, stateJson) {
 
         let $primitives = $('<div>');
         let primitives = readPrimitives(impression, stateJson);
-        for (var inputName in primitives) {
+        for (let inputName in primitives) {
             // Switch out for the new input name
             if (Object.keys(inputNameMap).indexOf(inputName) > 0) {
                 inputName = inputNameMap[inputName];
@@ -281,6 +290,46 @@ function populateWizardForm(stateName, stateJson) {
         $impression.append($primitives);
 
         $('#impression-list').append($impression);
+    }
+
+    // Populate the variables
+    refreshDataRanges();
+
+    $('#export').on('click', (evt) => {
+        console.log(newState);
+    })
+}
+
+function refreshDataRanges() {
+    $('#remapped-vars').empty();
+    if (!newState.dataRanges.scalarRanges) {
+        return;
+    }
+    for (const range in newState.dataRanges.scalarRanges) {
+        let $rangeChooser = $('<div>', {
+            class: 'range-chooser card',
+        }).append($('<header>', {
+            text: range,
+        })).append($('<input>', {
+            type: 'number',
+            class: 'min-input',
+            val: newState.dataRanges.scalarRanges[range].min,
+        })).append($('<input>', {
+            type: 'number',
+            class: 'max-input',
+            val: newState.dataRanges.scalarRanges[range].max,
+        })).append($('<button>', {
+            class: 'warning',
+            text: 'Update Range'
+        }).on('click', (evt) => {
+            let minVal = $(evt.target).siblings('input.min-input').val();
+            let maxVal = $(evt.target).siblings('input.max-input').val();
+            newState.dataRanges.scalarRanges[range].min = minVal;
+            newState.dataRanges.scalarRanges[range].max = maxVal;
+            $(evt.target).removeClass('warning');
+            $(evt.target).addClass('success');
+        }));
+        $('#remapped-vars').append($rangeChooser);
     }
 }
 
