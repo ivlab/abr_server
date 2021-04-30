@@ -453,7 +453,7 @@
                         "description": "How much of the light part of the line to fill. 0% is black - no fill; 100% is white - fill everything.",
                         "properties": {
                             "inputType": { "const": "IVLab.ABREngine.PercentPrimitive" },
-                            "parameterName": { "const": "Texture Cutoff" },
+                            "parameterName": { "const": "Texture" },
                             "inputValue": { "default": "50%" },
                             "inputGenre": { "const": "Primitive" }
                         }
