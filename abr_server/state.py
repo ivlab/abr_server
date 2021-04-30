@@ -125,7 +125,11 @@ class State():
         # visassets
         if len(final_result) == 0 and settings.DOWNLOAD_VISASSETS:
             all_visassets = self._find_all(
-                lambda v: 'inputValue' in v and 'inputGenre' in v and v['inputGenre'] == 'VisAsset',
+                # Has inputValue, it's a VisAsset, and it's not a localVisAsset defined in this state
+                lambda v: 'inputValue' in v and \
+                    'inputGenre' in v and \
+                    v['inputGenre'] == 'VisAsset' and \
+                    v['inputValue'] not in self._state['localVisAssets'],
                 self._state,
                 []
             )
