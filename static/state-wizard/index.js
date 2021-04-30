@@ -112,6 +112,7 @@ var newState = {
     'version': '0.2.0',
     'impressions': {},
     'dataRanges': {},
+    'localVisAssets': {},
     'uiData': {
         'compose': {
             'impressionData': {}
@@ -147,6 +148,9 @@ function upgradeState(stateName, stateJson) {
     // Populate the wizard to help with items that can't automatically
     // be inferred
     populateWizardForm(stateName, stateJson);
+
+    // Upgrade local VisAssets
+    upgradeLocalVisAssets(stateJson);
 
     $('#export').on('click', (evt) => {
         download(stateName + '_ABR-0-2-0.json', JSON.stringify(getNewState(), null, 4), 'data:application/json,');
@@ -495,4 +499,28 @@ function getPrimitiveValueWithUnits(primitiveValue, inputName, plateType) {
     } else {
         return primitiveDefault.inputValue;
     }
+}
+
+function upgradeLocalVisAssets(stateJson) {
+    const excludeFields = ['contents', 'stateSpecific'];
+    // Copy all the old artifactJson info
+    for (const visAsset of stateJson.stateSpecificVisassets) {
+        let artifactJson = {};
+        for (const field in visAsset) {
+            if (excludeFields.indexOf(field) < 0) {
+                artifactJson[field] = visAsset[field];
+            }
+        }
+
+        let newVisAsset = {};
+        newVisAsset.artifactJson = artifactJson;
+
+        // Assume that the one we're upgrading is a colormap, specified in colormap.xml
+        newVisAsset.artifactDataContents = {
+            'colormap.xml': visAsset['contents'],
+        };
+
+        newState.localVisAssets[visAsset.uuid] = newVisAsset;
+    }
+    console.log(newState);
 }
