@@ -21,44 +21,58 @@ export function Header() {
         id: 'file-header'
     });
 
+    // Import state button
+    let $importStateButton = $('<div>')
+        .append($('<span>', { class: 'material-icons', text: 'cloud_upload'}))
+        .append($('<span>', { text: 'Import State...' })).on('click', (evt) => {
+            // Create a fake element to handle the actual upload
+            let $fileInput = $('<input>', {
+                type: 'file',
+            }).on('change', (evt) => {
+                if (!evt.target.files || !evt.target.files[0]) {
+                    alert('No files uploaded!');
+                    return;
+                }
+
+                let stateFileName = evt.target.files[0].name;
+                // get rid of file extension
+                let stateName = stateFileName.replace(/\.[^/.]+$/, ""); // https://stackoverflow.com/a/4250408
+
+                let reader = new FileReader();
+                $(reader).on('load', (loadEvt) => {
+                    // Update the state with the stateManager
+                    localStorage.currentStateName = stateName;
+                    localStorage[STORAGE_STATE_PREFIX + stateName] = loadEvt.target.result;
+                    globals.stateManager.updateState(loadEvt.target.result);
+                });
+                reader.readAsText(evt.target.files[0]);
+
+                $fileInput.remove();
+            });
+            $('body').append($fileInput);
+            $fileInput.click();
+    });
+
+    // Clear the state
+    let $clearStateButton = $('<div>')
+        .append($('<span>', { class: 'material-icons', text: 'backspace'}))
+        .append($('<span>', { text: 'Clear State...' }))
+        .on('click', (_evt) => {
+            if (window.confirm('Are you sure you want to clear the state?')) {
+                globals.stateManager.removePath('');
+                localStorage.currentStateName = DEFAULT_STATE_NAME;
+            }
+    });
+
+
     let outTimer = null;
     $('<ul>', {
         id: 'abr-menu',
         css: { visibility: 'hidden' }
     }).append(
-        $('<li>').append(
-            // Import state button
-            $('<div>')
-                .append($('<span>', { class: 'material-icons', text: 'cloud_upload'}))
-                .append($('<span>', { text: 'Import State...' })).on('click', (evt) => {
-                    // Create a fake element to handle the actual upload
-                    let $fileInput = $('<input>', {
-                        type: 'file',
-                    }).on('change', (evt) => {
-                        if (!evt.target.files || !evt.target.files[0]) {
-                            alert('No files uploaded!');
-                            return;
-                        }
-
-                        let stateFileName = evt.target.files[0].name;
-                        // get rid of file extension
-                        let stateName = stateFileName.replace(/\.[^/.]+$/, ""); // https://stackoverflow.com/a/4250408
-
-                        let reader = new FileReader();
-                        $(reader).on('load', (loadEvt) => {
-                            // Update the state with the stateManager
-                            localStorage.currentStateName = stateName;
-                            localStorage[STORAGE_STATE_PREFIX + stateName] = loadEvt.target.result;
-                            globals.stateManager.updateState(loadEvt.target.result);
-                        });
-                        reader.readAsText(evt.target.files[0]);
-
-                        $fileInput.remove();
-                    });
-                    $('body').append($fileInput);
-                    $fileInput.click();
-                })
-        )
+        $('<li>').append($importStateButton)
+    ).append(
+        $('<li>').append($clearStateButton)
     ).menu().appendTo($(document.body)).on('mouseout', (evt) => {
         outTimer = setTimeout(() => $('#abr-menu').css('visibility', 'hidden'), 500);
     }).on('mouseover', (evt) => {
@@ -202,18 +216,6 @@ export function Header() {
         ));
     }));
 
-    // Clear the state
-    $fileHeader.append($('<button>', {
-        class: 'material-icons rounded',
-        html: 'backspace',
-        title: 'Clear the state', 
-    }).on('click', (_evt) => {
-        if (window.confirm('Are you sure you want to clear the state?')) {
-            globals.stateManager.removePath('');
-            localStorage.currentStateName = DEFAULT_STATE_NAME;
-        }
-    }));
-
     // Undo/Redo
     $fileHeader.append($('<button>', {
         class: 'material-icons rounded',
@@ -232,11 +234,11 @@ export function Header() {
 
     // More settings
     // TODO
-    $fileHeader.append($('<button>', {
-        class: 'material-icons rounded',
-        html: 'settings',
-        title: 'More options...', 
-    }));
+    // $fileHeader.append($('<button>', {
+    //     class: 'material-icons rounded',
+    //     html: 'settings',
+    //     title: 'More options...', 
+    // }));
 
     //----------------------------------------------------------------------
 
