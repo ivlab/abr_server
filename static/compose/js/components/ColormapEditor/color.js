@@ -60,9 +60,10 @@ export class ColorMap {
     }
 
     toBase64(url=false) {
+        // TODO: This is probably not the right size but seems to work for the design UI right now...
         let $tmpCanvas = $('<canvas>', {
-            width: 1024,
-            height: 100,
+            width: 300,
+            height: 150,
         });
 
         let ctx = $tmpCanvas.get(0).getContext('2d');

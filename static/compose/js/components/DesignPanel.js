@@ -42,6 +42,13 @@ export function DesignPanel() {
 
     // Populate the VisAssets
     let visassets = globals.stateManager.getCache('visassets');
+    let visassetsCopy = JSON.parse(JSON.stringify(visassets));
+    let localVisAssets = globals.stateManager.state.localVisAssets;
+    if (localVisAssets) {
+        for (const va in localVisAssets) {
+            visassetsCopy[va] = localVisAssets[va].artifactJson;
+        }
+    }
     let visassetsByType = {};
 
     // Break up by type
@@ -49,9 +56,9 @@ export function DesignPanel() {
         visassetsByType[t] = [];
     }
     
-    for (const va in visassets) {
-        let type = visassets[va].type;
-        let artifactType = visassets[va].artifactType;
+    for (const va in visassetsCopy) {
+        let type = visassetsCopy[va].type;
+        let artifactType = visassetsCopy[va].artifactType;
         if (typeof(artifactType) !== 'undefined') {
             console.warn('Use of VisAsset field `artifactType` is deprecated, use `type` instead');
         }
