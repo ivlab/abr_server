@@ -83,11 +83,12 @@
     font-variant: small-caps;
     margin: 0;
     padding: 1rem 0 0 0.5rem;
-    top: 0;
-    display: block;
+    display: flex;
+    justify-content: space-evenly;
     color: white;
     text-align: left;
     font-size: 1rem;
+    width: calc(100% - 1.5rem);
 }
 
 .trash {

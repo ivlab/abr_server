@@ -35,10 +35,11 @@ export function DesignPanel() {
     let $plateList = Components.SwatchList('Plates', plateTypes);
     $designPanel.append($plateList);
 
-    $designPanel.append($('<p>', {
-        class: 'section-header',
-        text: 'VisAssets',
-    }));
+    $designPanel.append($('<div>', {
+        class: 'section-header'
+    }).append($('<p>', { text: 'VisAssets' })
+    ).append($('<button>', { class: 'rounded', text: '...' })
+    ))
 
     // Populate the VisAssets
     let visassets = globals.stateManager.getCache('visassets');
