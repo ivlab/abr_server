@@ -1,4 +1,5 @@
 import { DataPath } from '../common/DataPath.js';
+import { download } from '../common/helpers.js';
 
 // Map old EncodingRenderStrategies to new DataImpressions
 const strategiesToPlateTypes = {
@@ -90,8 +91,6 @@ $('#upload-state').on('click', (_evt) => {
         let reader = new FileReader();
         $(reader).on('load', (loadEvt) => {
             // Update the state with the stateManager
-            // globals.stateManager.updateState(loadEvt.target.result);
-            // localStorage.setItem('state', loadEvt.target.result);
             let stateJson = JSON.parse(loadEvt.target.result);
             upgradeState(stateName, stateJson);
         });
@@ -106,11 +105,7 @@ $('#upload-state').on('click', (_evt) => {
 // For debugging
 fetch('/api/schemas/ABRSchema_0-2-0.json')
     .then((resp) => resp.json())
-    .then((s) => schema = s)
-    .then(() => {
-        upgradeState('Test State', JSON.parse(localStorage.getItem('state')));
-    });
-
+    .then((s) => schema = s);
 
 // GLOBAL new state
 var newState = {
@@ -152,6 +147,32 @@ function upgradeState(stateName, stateJson) {
     // Populate the wizard to help with items that can't automatically
     // be inferred
     populateWizardForm(stateName, stateJson);
+
+    $('#export').on('click', (evt) => {
+        download(stateName + '_ABR-0-2-0.json', JSON.stringify(getNewState(), null, 4), 'data:application/json,');
+    });
+}
+
+// Returns the new state but with all the 
+function getNewState() {
+    let dontUseImpressions = [];
+    let $allUseImpressions = $('input.use-impression');
+    $allUseImpressions.each((i, el) => {
+        if (!$(el).prop('checked')) {
+            // 'checkbox-' = 8 chars
+            dontUseImpressions.push(el.id.slice(9));
+        }
+    });
+
+    // Clone the state for export
+    let stateToExport = JSON.parse(JSON.stringify(newState));
+
+    for (const impression in newState.impressions) {
+        if (dontUseImpressions.indexOf(impression) >= 0) {
+            delete stateToExport.impressions[impression];
+        }
+    }
+    return stateToExport;
 }
 
 function populateWizardForm(stateName, stateJson) {
@@ -168,7 +189,26 @@ function populateWizardForm(stateName, stateJson) {
 
         let $impression = $('<div>', {
             class: 'data-impression card',
-        }).append($('<header>', { text: impression.label }))
+        }).append($('<header>').append(
+            $('<span>', { text: impression.label })
+        )).append(
+            $('<label>', { 
+                title: 'Use this impression in the new state?',
+                css: {
+                    right: 0,
+                }
+            }).append(
+                $('<input>', {
+                    class: 'use-impression',
+                    id: `checkbox-${impression.uuid}`,
+                    type: 'checkbox',
+                    prop: { checked: 'true' }
+                })
+            ).append($('<span>', {
+                class: 'toggle button',
+                text: 'Use this impression?'
+            }))
+        );
 
         // Choose the KeyData
         let dataObject = findDataObjectForStrategy(impression.uuid, stateJson);
@@ -280,8 +320,7 @@ function populateWizardForm(stateName, stateJson) {
                     $(evt.target).text(`${inputName}: ${newValueFromUser}`);
                     $(evt.target).removeClass('warning');
                     $(evt.target).addClass('success');
-                    primitiveDefault.inputValue = newValueFromUser;
-                    newState.impressions[impression.uuid].inputValues[inputName] = defaultInputValue;
+                    newState.impressions[impression.uuid].inputValues[inputName] = newValueFromUser;
                 })
             );
         }
@@ -294,10 +333,6 @@ function populateWizardForm(stateName, stateJson) {
 
     // Populate the variables
     refreshDataRanges();
-
-    $('#export').on('click', (evt) => {
-        console.log(newState);
-    })
 }
 
 function refreshDataRanges() {
