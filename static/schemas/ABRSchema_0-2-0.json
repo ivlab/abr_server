@@ -122,7 +122,7 @@
             "type": "object",
             "description": "VisAssets that are specific to this state",
             "patternProperties": {
-                "*": {"$ref": "#/definitions/LocalVisAsset"}
+                "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}){1}$":  {"$ref": "#/definitions/LocalVisAsset"}
             }
         },
 
@@ -242,12 +242,10 @@
         "LocalVisAsset": {
             "type": "object",
             "description": "A vis asset stored locally in this state (one that has been modified by the user in ABR)",
-            "required": ["uuid"],
+            "required": ["artifactJson"],
             "properties": {
-                "uuid": { "format": "uuid" },
                 "artifactJson": {
-                    "$comment": "The json contents of the artifact.json file, with a loose schema",
-                    "$ref": "visasset.json"
+                    "$comment": "The json contents of the artifact.json file, with a schema referred to by 'visasset.json' in this folder"
                 },
                 "artifactDataContents": {
                     "$comment": "Contents of the files listed in artifactJson/artifactData/*, represented in plaintext or base64 encoding. Keys are the filename, values are the string or b64 bytes.",

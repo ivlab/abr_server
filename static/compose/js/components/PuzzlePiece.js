@@ -8,6 +8,7 @@
 import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
+import { ColorMap } from "./ColormapEditor/color.js";
 import { PrimitiveInput } from "./Primitives.js";
 
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
@@ -34,9 +35,15 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
 export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClasses, cssObjectFit) {
     let thumbUrl;
     let visassets = globals.stateManager.getCache('visassets');
+    let localVisAssets = globals.stateManager.state.localVisAssets;
     if (visassets && visassets[uuid]) {
         let previewImg = visassets[uuid]['preview'];
         thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
+    } else if (localVisAssets && localVisAssets[uuid]) {
+        // TODO assuming colormap xml for now
+        let colormapXml = localVisAssets[uuid].artifactDataContents['colormap.xml'];
+        let colormapObj = ColorMap.fromXML(colormapXml);
+        thumbUrl = colormapObj.toBase64(true);
     } else {
         thumbUrl = `${STATIC_URL}compose/${inputType}_default.png`;
     }
