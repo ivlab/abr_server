@@ -139,6 +139,28 @@ export class StateManager {
         return this._previousState;
     }
 
+    findAll(condition) {
+        let outItems = [];
+        return this._findAll(condition, this.state, outItems);
+    }
+
+    // Find all occurances of lambda function "condition" in the state
+    _findAll(condition, subState, outItems) {
+        if (typeof(subState) == 'object' && Object.keys(subState).length == 0) {
+            return subState;
+        } else {
+            if (condition(subState)) {
+                outItems.push(subState)
+            }
+            for (const subValue in subState) {
+                if (typeof(subState) == 'object') {
+                    this._findAll(condition, subState[subValue], outItems)
+                }
+            }
+            return outItems;
+        }
+    }
+
     subscribe($element) {
         this._subscribers.push($element);
     }

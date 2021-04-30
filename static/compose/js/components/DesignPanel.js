@@ -35,11 +35,60 @@ export function DesignPanel() {
     let $plateList = Components.SwatchList('Plates', plateTypes);
     $designPanel.append($plateList);
 
+
+    let outTimer = null;
+    let $visAssetMenu = $('<ul>', {
+        id: 'vis-asset-menu',
+        css: { visibility: 'hidden', position: 'fixed' },
+    }).append(
+        $('<li>').append($('<div>', { title: 'Clear all unused VisAssets' }).append(
+            $('<span>', { class: 'material-icons', text: 'delete_sweep' })
+        ).append(
+            $('<span>', { text: 'Clear unused...'})
+        ).on('click', (evt) => {
+
+            let usedUuids = globals.stateManager.findAll((s) => {
+                return s.hasOwnProperty('inputGenre') &&
+                s['inputGenre'] == 'VisAsset'
+            }).map((v) => v.inputValue);
+
+            let visAssetsToRemove = Object.keys(globals.stateManager.getCache('visassets')).filter((v) => usedUuids.indexOf(v) < 0);
+
+            let confirmed = confirm(`Really delete ${visAssetsToRemove.length} VisAssets?`);
+            if (confirmed) {
+                for (const va of visAssetsToRemove) {
+                    fetch(`/api/remove-visasset/${va}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        mode: 'same-origin',
+                    })
+                }
+            }
+        })
+    )).menu().on('mouseout', (evt) => {
+        outTimer = setTimeout(() => $('#vis-asset-menu').css('visibility', 'hidden'), 500);
+    }).on('mouseover', (evt) => {
+        clearTimeout(outTimer);
+        outTimer = null;
+    });
+
     $designPanel.append($('<div>', {
         class: 'section-header'
     }).append($('<p>', { text: 'VisAssets' })
-    ).append($('<button>', { class: 'rounded', text: '...' })
-    ))
+    ).append(
+        $('<button>', {
+            class: 'rounded',
+            text: '...'
+        }).on('click', (evt) => {
+            $visAssetMenu.css('left', $(evt.target).position().left - $visAssetMenu.width() - $(evt.target).width());
+            $visAssetMenu.css('top', $(evt.target).position().top + $visAssetMenu.height() + $(evt.target).height());
+            let visibility = $('#vis-asset-menu').css('visibility');
+            let newVisibility = visibility == 'visible' ? 'hidden' : 'visible';
+            $visAssetMenu.css('visibility', newVisibility);
+        })
+    )).append($visAssetMenu);
 
     // Populate the VisAssets
     let visassets = globals.stateManager.getCache('visassets');

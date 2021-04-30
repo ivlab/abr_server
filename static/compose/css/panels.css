@@ -84,7 +84,7 @@
     margin: 0;
     padding: 1rem 0 0 0.5rem;
     display: flex;
-    justify-content: space-evenly;
+    justify-content: space-between;
     color: white;
     text-align: left;
     font-size: 1rem;

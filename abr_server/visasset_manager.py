@@ -5,11 +5,18 @@
 
 import os
 import json
+import shutil
 from django.conf import settings
 import urllib3
 import concurrent.futures
 
 POOL_MANAGER = urllib3.PoolManager()
+
+def remove_visasset(uuid):
+    va_path = settings.VISASSET_PATH.joinpath(uuid)
+    if va_path.exists():
+        shutil.rmtree(va_path)
+
 
 def download_visasset(uuid):
     va_path = settings.VISASSET_PATH.joinpath(uuid)

@@ -15,4 +15,5 @@ urlpatterns = [
     path('visassets', views.list_visassets),
     path('datasets', views.list_datasets),
     path('download-visasset/<str:uuid>', views.download_visasset),
+    path('remove-visasset/<str:uuid>', views.remove_visasset),
 ]

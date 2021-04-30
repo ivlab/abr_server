@@ -51,7 +51,7 @@ def remove_path(request):
         state.remove_path(item_path_parts)
         return HttpResponse('OK')
     else:
-        return HttpResponse(reason='Method for remove must be DELETE', status=400)
+        return HttpResponse('Method for remove must be DELETE', status=400)
 
 @csrf_exempt
 def remove(request, value):
@@ -59,29 +59,29 @@ def remove(request, value):
         state.remove_all(value)
         return HttpResponse('OK')
     else:
-        return HttpResponse(reason='Method for remove must be DELETE', status=400)
+        return HttpResponse('Method for remove must be DELETE', status=400)
 
 @csrf_exempt
 def undo(request):
     if request.method == 'POST':
         err_message = state.undo()
         if len(err_message) > 0:
-            return HttpResponse(reason=err_message, status=400)
+            return HttpResponse(err_message, status=400)
         else:
             return HttpResponse()
     else:
-        return HttpResponse(reason='Method for undo must be POST', status=400)
+        return HttpResponse('Method for undo must be POST', status=400)
 
 @csrf_exempt
 def redo(request):
     if request.method == 'POST':
         err_message = state.redo()
         if len(err_message) > 0:
-            return HttpResponse(reason=err_message, status=400)
+            return HttpResponse(err_message, status=400)
         else:
             return HttpResponse()
     else:
-        return HttpResponse(reason='Method for redo must be POST', status=400)
+        return HttpResponse('Method for redo must be POST', status=400)
 
 @csrf_exempt
 def subscribe(request):
@@ -93,7 +93,7 @@ def subscribe(request):
         resp = notifier.subscribe_socket(same_machine)
         return JsonResponse(resp)
     else:
-        return HttpResponse(reason='Method for subscribe must be POST', status=400)
+        return HttpResponse('Method for subscribe must be POST', status=400)
 
 @csrf_exempt
 def unsubscribe(request, uuid):
@@ -101,7 +101,7 @@ def unsubscribe(request, uuid):
         notifier.unsubscribe_socket(uuid)
         return HttpResponse('OK')
     else:
-        return HttpResponse(reason='Method for subscribe must be POST', status=400)
+        return HttpResponse('Method for subscribe must be POST', status=400)
 
 # https://stackoverflow.com/a/4581997
 def get_client_ip(request):
@@ -164,4 +164,13 @@ def download_visasset(request, uuid):
         else:
             return HttpResponse('Failed to download files: {}'.format(failed_downloads), status=500)
     else:
-        return HttpResponse(reason='Method for download must be POST', status=400)
+        return HttpResponse('Method for download must be POST', status=400)
+
+@csrf_exempt
+def remove_visasset(request, uuid):
+    if request.method == 'DELETE':
+        visasset_manager.remove_visasset(uuid)
+        notifier.notify({ 'target': 'CacheUpdate-visassets' })
+        return HttpResponse()
+    else:
+        return HttpResponse('Method for download must be DELETE', status=400)

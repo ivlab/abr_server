@@ -45,3 +45,7 @@ button {
    background-color: #f8f4f4;
    border: 0;
 }
+
+.ui-menu {
+   z-index: 100;
+}
