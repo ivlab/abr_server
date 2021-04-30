@@ -21,33 +21,61 @@ export function Header() {
         id: 'file-header'
     });
 
-    // TODO: Import state
-    // }).on('click', (_evt) => {
-    //     // Create a fake element to handle the actual upload
-    //     let $fileInput = $('<input>', {
-    //         type: 'file',
-    //     }).on('change', (evt) => {
-    //         if (!evt.target.files || !evt.target.files[0]) {
-    //             alert('No files uploaded!');
-    //             return;
-    //         }
+    let outTimer = null;
+    $('<ul>', {
+        id: 'abr-menu',
+        css: { visibility: 'hidden' }
+    }).append(
+        $('<li>').append(
+            // Import state button
+            $('<div>')
+                .append($('<span>', { class: 'material-icons', text: 'cloud_upload'}))
+                .append($('<span>', { text: 'Import State...' })).on('click', (evt) => {
+                    // Create a fake element to handle the actual upload
+                    let $fileInput = $('<input>', {
+                        type: 'file',
+                    }).on('change', (evt) => {
+                        if (!evt.target.files || !evt.target.files[0]) {
+                            alert('No files uploaded!');
+                            return;
+                        }
 
-    //         let stateFileName = evt.target.files[0].name;
-    //         // get rid of file extension
-    //         let stateName = stateFileName.replace(/\.[^/.]+$/, ""); // https://stackoverflow.com/a/4250408
+                        let stateFileName = evt.target.files[0].name;
+                        // get rid of file extension
+                        let stateName = stateFileName.replace(/\.[^/.]+$/, ""); // https://stackoverflow.com/a/4250408
 
-    //         let reader = new FileReader();
-    //         $(reader).on('load', (loadEvt) => {
-    //             // Update the state with the stateManager
-    //             globals.stateManager.updateState(loadEvt.target.result);
-    //         });
-    //         reader.readAsText(evt.target.files[0]);
+                        let reader = new FileReader();
+                        $(reader).on('load', (loadEvt) => {
+                            // Update the state with the stateManager
+                            localStorage.currentStateName = stateName;
+                            localStorage[STORAGE_STATE_PREFIX + stateName] = loadEvt.target.result;
+                            globals.stateManager.updateState(loadEvt.target.result);
+                        });
+                        reader.readAsText(evt.target.files[0]);
 
-    //         $fileInput.remove();
-    //     });
-    //     $('body').append($fileInput);
-    //     $fileInput.click();
-    // }));
+                        $fileInput.remove();
+                    });
+                    $('body').append($fileInput);
+                    $fileInput.click();
+                })
+        )
+    ).menu().appendTo($(document.body)).on('mouseout', (evt) => {
+        outTimer = setTimeout(() => $('#abr-menu').css('visibility', 'hidden'), 500);
+    }).on('mouseover', (evt) => {
+        clearTimeout(outTimer);
+        outTimer = null;
+    });
+
+    // "ABR" button - like file button; open menu when clicked
+    $fileHeader.append(
+        $('<button>', { class:  'abr-main-button rounded' }).append(
+            $('<img>', { src: `${STATIC_URL}favicon.ico` })
+        ).on('click', (evt) => {
+            let visibility = $('#abr-menu').css('visibility');
+            let newVisibility = visibility == 'visible' ? 'hidden' : 'visible';
+            $('#abr-menu').css('visibility', newVisibility);
+        })
+    );
 
     // Load a state
     $fileHeader.append($('<button>', {

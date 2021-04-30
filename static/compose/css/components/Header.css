@@ -40,3 +40,15 @@
 .state-list .state-selector.selected-state {
     background-color: #ceedff;
 }
+
+.abr-main-button>img {
+    height: 1.5rem;
+}
+#abr-menu {
+    position: absolute;
+    width: 15rem;
+    background-color: #eeeeee;
+}
+#abr-menu span {
+    padding: 0 0.5rem;
+}

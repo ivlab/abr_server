@@ -36,7 +36,7 @@ def modify_state(request):
     elif request.method == 'PUT':
         err_message = state.set_path(item_path_parts, json.loads(request.body))
         if len(err_message) > 0:
-            return HttpResponse(reason=err_message, status=400)
+            return HttpResponse(err_message, status=400)
         else:
             return HttpResponse()
 

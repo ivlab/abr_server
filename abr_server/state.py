@@ -129,9 +129,13 @@ class State():
                 self._state,
                 []
             )
+            vis_asset_fails = ''
             for input_value_object in all_visassets:
                 failed = download_visasset(input_value_object['inputValue'])
-                final_result += ' ' + str(failed) if len(failed) > 0 else ''
+                vis_asset_fails += '\n' + str(failed) if len(failed) > 0 else ''
+            if len(vis_asset_fails) > 0:
+                vis_asset_fails = '\nFailed to download VisAssets: ' + vis_asset_fails
+            final_result += vis_asset_fails
             notifier.notify({ 'target': 'CacheUpdate-visassets' })
 
         return final_result

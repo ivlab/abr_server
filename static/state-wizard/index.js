@@ -172,6 +172,12 @@ function getNewState() {
             delete stateToExport.impressions[impression];
         }
     }
+
+    for (const impression in newState.uiData.compose.impressionData) {
+        if (dontUseImpressions.indexOf(impression) >= 0) {
+            delete stateToExport.uiData.compose.impressionData[impression];
+        }
+    }
     return stateToExport;
 }
 
@@ -320,7 +326,8 @@ function populateWizardForm(stateName, stateJson) {
                     $(evt.target).text(`${inputName}: ${newValueFromUser}`);
                     $(evt.target).removeClass('warning');
                     $(evt.target).addClass('success');
-                    newState.impressions[impression.uuid].inputValues[inputName] = newValueFromUser;
+                    newValue.inputValue = newValueFromUser;
+                    newState.impressions[impression.uuid].inputValues[inputName] = newValue;
                 })
             );
         }
