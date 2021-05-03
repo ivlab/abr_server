@@ -67,15 +67,7 @@ export class ColorMap {
         });
 
         let ctx = $tmpCanvas.get(0).getContext('2d');
-        let mapWidth = $tmpCanvas.width();
-        let mapHeight = $tmpCanvas.height();
-        // Draw a bunch of tiny rectangles with properly interpolated CIE Lab color
-        for (let x = 0; x < mapWidth; x++) {
-            let percentage = x / mapWidth;
-            let color = this.lookupColor(percentage);
-            ctx.fillStyle = floatToHex(color);
-            ctx.fillRect(x, 0, 1, mapHeight);
-        }
+        this.toCanvas(ctx);
 
         let thumbnail = $tmpCanvas.get(0).toDataURL('image/png');
         if (!url) {
@@ -83,6 +75,18 @@ export class ColorMap {
             return thumbnail.slice(firstComma + 1);
         } else {
             return thumbnail;
+        }
+    }
+
+    toCanvas(ctx) {
+        let mapWidth = ctx.canvas.width;
+        let mapHeight = ctx.canvas.height;
+        // Draw a bunch of tiny rectangles with properly interpolated CIE Lab color
+        for (let x = 0; x < mapWidth; x++) {
+            let percentage = x / mapWidth;
+            let color = this.lookupColor(percentage);
+            ctx.fillStyle = floatToHex(color);
+            ctx.fillRect(x, 0, 1, mapHeight);
         }
     }
 

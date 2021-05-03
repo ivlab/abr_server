@@ -168,7 +168,11 @@ export class StateManager {
         for (let i = 0; i < pathArray.length; i++) {
             obj = obj[pathArray[i]];
         }
-        return obj.hasOwnProperty(key);
+        if (obj) {
+            return obj.hasOwnProperty(key);
+        } else {
+            return null;
+        }
     }
 
     subscribe($element) {

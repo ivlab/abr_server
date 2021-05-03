@@ -61,7 +61,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
     // If it's a localVisAsset, indicate it as such
     if (globals.stateManager.keyExists(['localVisAssets'], uuid)) {
         $ret.find('.puzzle-label').append($('<p>', {
-            class: 'custom-indicator',
+            class: 'custom-indicator rounded',
             attr: { title: 'This colormap is custom' },
             text: 'C',
         }));

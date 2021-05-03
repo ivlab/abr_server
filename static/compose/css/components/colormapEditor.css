@@ -1,0 +1,56 @@
+#colormap-editor {
+    padding: 0;
+}
+
+.centered {
+    display: flex;
+    justify-content: center;
+}
+
+#trash {
+    width: 2em;
+    height: 2em;
+    margin: 0 1rem;
+}
+
+.color-thumb {
+    display: flex;
+    flex-direction: column;
+    width: 50px; /* Hardcoded based on Spectrum colorpicker width */
+    align-items: center;
+}
+
+.variable-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    margin: 0.25rem 0;
+}
+.variable-labels p {
+    margin: 0;
+}
+
+.percentage-display {
+    text-align: center;
+}
+
+#colormap * {
+    z-index: 1000;
+    border: 1px solid #3d3d3d;
+}
+
+#data-remapper {
+    margin-bottom: 0.25em;
+}
+
+.marker-bar {
+    width: 0;
+    z-index: -1;
+    border-left: 1px solid #727272;
+    position: absolute;
+}
+
+.colormap-button {
+    padding: 1rem;
+    margin: 0 0.5rem;
+}
