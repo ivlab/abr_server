@@ -106,7 +106,7 @@ export async function ColormapDialog(uuid, keyDataInput, variableInput) {
         }).on('click', (evt) => {
             let defaultPerc = 0.5;
             let colorAtDefault = colormap.lookupColor(defaultPerc);
-            $('#color-slider').append(ColorThumb(defaultPerc, colorAtDefault, updateColormap));
+            $('#color-slider').append(ColorThumb(defaultPerc, floatToHex(colorAtDefault), updateColormap));
             updateColormap();
     }));
 
@@ -119,8 +119,8 @@ export async function ColormapDialog(uuid, keyDataInput, variableInput) {
         tolerance: 'touch',
         accept: '.color-thumb',
         drop: (evt, ui) => {
-            colormap = getColormapFromThumbs();
             $(ui.draggable).remove();
+            colormap = getColormapFromThumbs();
         },
         // Indicate that it's about to be deleted
         over: (_evt, ui) => {
@@ -154,6 +154,7 @@ function saveColormap(uuid, colormap) {
 }
 
 function updateColormap() {
+    updateSpectrum();
     let newcmap = getColormapFromThumbs();
     updateColormapDisplay(newcmap);
     updateColorThumbPositions(newcmap);
@@ -183,7 +184,10 @@ function updateColorThumbPositions(colormap) {
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, updateColormap));
     });
+    updateSpectrum();
+}
 
+function updateSpectrum() {
     $('.color-input').spectrum({
         type: "color",
         showPalette: false,
