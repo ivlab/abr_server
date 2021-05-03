@@ -6,6 +6,7 @@
  */
 
 import { globals } from '../../../../common/globals.js';
+import { uuid } from '../../../../common/UUID.js';
 import { ColorMap, floatToHex, hexToFloat } from './color.js';
 import { ColorThumb } from './components.js';
 
@@ -15,6 +16,8 @@ const numBins = 540;
 const width = numBins - margin.left - margin.right;
 const height = 100 - margin.top - margin.bottom;
 const histogramHeight = 200 - margin.top - margin.bottom;
+
+var activeColormap = null;
 
 export async function ColormapDialog(uuid, keyDataInput, variableInput) {
     let visassetJson = null;
@@ -86,7 +89,7 @@ export async function ColormapDialog(uuid, keyDataInput, variableInput) {
         text: 'Save Colormap',
         title: 'Save the colormap',
     }).on('click', (evt) => {
-        saveColormap(uuid, colormap);
+        uuid = saveColormap(uuid, visassetJson);
     }));
 
     $buttons.append($('<button>', {
@@ -94,9 +97,9 @@ export async function ColormapDialog(uuid, keyDataInput, variableInput) {
         text: '< Flip colormap >',
         title: 'Flip colormap',
     }).on('click', (evt) => {
-        colormap.flip();
-        updateColormapDisplay(colormap);
-        updateColorThumbPositions(colormap);
+        activeColormap.flip();
+        updateColormapDisplay();
+        updateColorThumbPositions();
     }));
 
     $buttons.append($('<button>', {
@@ -105,9 +108,11 @@ export async function ColormapDialog(uuid, keyDataInput, variableInput) {
             title: 'Add a new color to the colormap',
         }).on('click', (evt) => {
             let defaultPerc = 0.5;
-            let colorAtDefault = colormap.lookupColor(defaultPerc);
-            $('#color-slider').append(ColorThumb(defaultPerc, floatToHex(colorAtDefault), updateColormap));
-            updateColormap();
+            let colorAtDefault = activeColormap.lookupColor(defaultPerc);
+            $('#color-slider').append(ColorThumb(defaultPerc, floatToHex(colorAtDefault), () => {
+                activeColormap = updateColormap();
+            }));
+            activeColormap = updateColormap();
     }));
 
     $colormapEditor.append($buttons);
@@ -120,7 +125,7 @@ export async function ColormapDialog(uuid, keyDataInput, variableInput) {
         accept: '.color-thumb',
         drop: (evt, ui) => {
             $(ui.draggable).remove();
-            colormap = getColormapFromThumbs();
+            activeColormap = getColormapFromThumbs();
         },
         // Indicate that it's about to be deleted
         over: (_evt, ui) => {
@@ -140,24 +145,47 @@ export async function ColormapDialog(uuid, keyDataInput, variableInput) {
 
 
     // Populate the colors from xml
-    let colormap = ColorMap.fromXML(colormapXml);
-    colormap.entries.forEach((c) => {
+    activeColormap = ColorMap.fromXML(colormapXml);
+    activeColormap.entries.forEach((c) => {
         let pt = c[0];
         let color = floatToHex(c[1]);
-        $('#color-slider').append(ColorThumb(pt, color, updateColormap));
+        $('#color-slider').append(ColorThumb(pt, color, () => {
+            activeColormap = updateColormap();
+        }));
     });
-    updateColormap();
+    activeColormap = updateColormap();
 }
 
-function saveColormap(uuid, colormap) {
-    console.log('saving colormap ' + uuid);
+function saveColormap(oldUuid, artifactJson) {
+    // Give it a new uuid if it doesn't already exist in localVisAssets
+    let newUuid = oldUuid;
+    if (!globals.stateManager.keyExists(['localVisAssets'], oldUuid)) {
+        newUuid = uuid();
+    }
+
+    artifactJson['uuid'] = newUuid;
+
+    // Gather the xml
+    let xml = activeColormap.toXML();
+    let data = {
+        artifactJson,
+        artifactDataContents: {
+            'colormap.xml': xml,
+        }
+    };
+
+    // Update the state with this particular local colormap
+    globals.stateManager.update(`localVisAssets/${newUuid}`, data);
+
+    return newUuid;
 }
 
 function updateColormap() {
     updateSpectrum();
     let newcmap = getColormapFromThumbs();
-    updateColormapDisplay(newcmap);
-    updateColorThumbPositions(newcmap);
+    updateColormapDisplay();
+    updateColorThumbPositions();
+    return newcmap;
 }
 
 function getColormapFromThumbs() {
@@ -172,17 +200,19 @@ function getColormapFromThumbs() {
     return newcmap;
 }
 
-function updateColormapDisplay(colormap) {
+function updateColormapDisplay() {
     let ctx = $('#colormap .colormap-canvas').get(0).getContext('2d');
-    colormap.toCanvas(ctx);
+    activeColormap.toCanvas(ctx);
 }
 
-function updateColorThumbPositions(colormap) {
+function updateColorThumbPositions() {
     $('#color-slider').empty();
-    colormap.entries.forEach((c) => {
+    activeColormap.entries.forEach((c) => {
         let pt = c[0];
         let color = floatToHex(c[1]);
-        $('#color-slider').append(ColorThumb(pt, color, updateColormap));
+        $('#color-slider').append(ColorThumb(pt, color, () => {
+            activeColormap = updateColormap()
+        }));
     });
     updateSpectrum();
 }

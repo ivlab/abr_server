@@ -61,6 +61,7 @@ export function Header() {
             if (window.confirm('Are you sure you want to clear the state?')) {
                 globals.stateManager.removePath('');
                 localStorage.currentStateName = DEFAULT_STATE_NAME;
+                window.location.reload();
             }
     });
 
