@@ -95,7 +95,8 @@ export async function ColormapDialog(uuid, keyDataInput, variableInput) {
         title: 'Flip colormap',
     }).on('click', (evt) => {
         colormap.flip();
-        updateColormap();
+        updateColormapDisplay(colormap);
+        updateColorThumbPositions(colormap);
     }));
 
     $buttons.append($('<button>', {
