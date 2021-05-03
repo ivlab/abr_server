@@ -16,4 +16,5 @@ urlpatterns = [
     path('datasets', views.list_datasets),
     path('download-visasset/<str:uuid>', views.download_visasset),
     path('remove-visasset/<str:uuid>', views.remove_visasset),
+    path('histogram/<str:org_name>/<str:dataset_name>/KeyData/<str:key_data_name>/<str:variable_label>', views.get_histogram),
 ]

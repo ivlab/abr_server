@@ -105,7 +105,38 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 $el.on('dragend', () => dragging = false);
                 $el.on('click', (evt) => {
                     if (!dragging) {
-                        ColormapDialog(resolvedProps.inputValue);
+                        let impressionUuid = $el.parents('.data-impression').data('uuid');
+
+                        let colorVars = globals.stateManager.findPath((s) => {
+                            return s.hasOwnProperty('inputGenre') &&
+                                s['inputGenre'] == 'Variable' && 
+                            s.hasOwnProperty('inputType') &&
+                                s['inputType'] == 'IVLab.ABREngine.ScalarDataVariable' && 
+                            s.hasOwnProperty('parameterName') &&
+                                s['parameterName'] == 'Color'
+                        });
+
+                        let colorVarPath = colorVars.find((p) => p.split('/')[2] == impressionUuid);
+
+                        let keyDatas = globals.stateManager.findPath((s) => {
+                            return s.hasOwnProperty('inputGenre') &&
+                                s['inputGenre'] == 'KeyData' && 
+                            s.hasOwnProperty('parameterName') &&
+                                s['parameterName'] == 'Key Data'
+                        });
+
+                        let keyDataPath = keyDatas.find((p) => p.split('/')[2] == impressionUuid);
+
+                        let colorVar = null;
+                        let keyData = null;
+                        if (colorVarPath) { 
+                            colorVar = globals.stateManager.getPath(colorVarPath);
+                        }
+                        if (keyDataPath) {
+                            keyData = globals.stateManager.getPath(keyDataPath);
+                        }
+
+                        ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
                     }
                 });
             }

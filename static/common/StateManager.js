@@ -75,7 +75,7 @@ export class StateManager {
 
     // Send an update to a particular object in the state. updateValue MUST be
     // an object.
-    async update(updatePath, updateValue) {
+    async update(updatePath, updateValue, lastPathIndex) {
         await fetch('/api/state/' + updatePath, {
             method: 'PUT',
             headers: {
@@ -139,26 +139,48 @@ export class StateManager {
         return this._previousState;
     }
 
+    // Find the elements that satisfy a condition
     findAll(condition) {
-        let outItems = [];
-        return this._findAll(condition, this.state, outItems);
+        let [outItems, outPath] = this._findAll(condition, this.state, '', [], []);
+        return outItems;
+    }
+
+    // Find the path(s) that satisfy a condition
+    findPath(condition) {
+        let [outItems, outPath] = this._findAll(condition, this.state, '', [], []);
+        return outPath;
     }
 
     // Find all occurances of lambda function "condition" in the state
-    _findAll(condition, subState, outItems) {
+    _findAll(condition, subState, currentPath, outItems, outPath) {
         if (typeof(subState) == 'object' && Object.keys(subState).length == 0) {
             return subState;
         } else {
             if (condition(subState)) {
-                outItems.push(subState)
+                outItems.push(subState);
+                outPath.push(currentPath);
             }
             for (const subValue in subState) {
                 if (typeof(subState) == 'object') {
-                    this._findAll(condition, subState[subValue], outItems)
+                    this._findAll(condition, subState[subValue], currentPath + '/' + subValue, outItems, outPath)
                 }
             }
-            return outItems;
+            return [outItems, outPath];
         }
+    }
+
+    // Get the object located at /path/to/object
+    getPath(path) {
+        let pathParts = path.slice(1).split('/');
+        let subState = this.state;
+        for (const subPath of pathParts) {
+            if (subState.hasOwnProperty(subPath)) {
+                subState = subState[subPath];
+            } else {
+                return null;
+            }
+        }
+        return subState;
     }
 
     // Find if a key exists within a specific path

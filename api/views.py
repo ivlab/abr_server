@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import fnmatch
+import numpy as np
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse, Http404
@@ -27,8 +28,23 @@ def schema(request, schema_name):
 @csrf_exempt
 def modify_state(request):
     # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
-    item_path_parts = request.path.split('/')
-    item_path_parts = item_path_parts[3:]
+    # For paths with keys that contain slashes (/), need to quote them
+    quote_parts = request.path.split('"')
+
+    # Build the path list
+    item_path_parts = []
+    for i in range(len(quote_parts)):
+        if len(quote_parts[i]) <= 0:
+            continue
+
+        # At the beginning, get rid of the extra state parts
+        q = quote_parts[i].replace('/api/state', '')
+
+        if i % 2 == 0:
+            item_path_parts.extend([x for x in q.split('/') if len(x) > 0])
+        else:
+            if len(q) > 0:
+                item_path_parts.append(q)
 
     if request.method == 'GET':
         resp = state.get_path(item_path_parts)
@@ -174,3 +190,64 @@ def remove_visasset(request, uuid):
         return HttpResponse()
     else:
         return HttpResponse('Method for download must be DELETE', status=400)
+
+
+# Get the histogram for any cached data living on this server
+def get_histogram(request, org_name, dataset_name, key_data_name, variable_label, bins=540):
+    keydata_path = os.path.join(settings.MEDIA_ROOT, 'datasets', org_name, dataset_name, 'KeyData', key_data_name + '.json')
+    binfile_path = os.path.join(settings.MEDIA_ROOT, 'datasets', org_name, dataset_name, 'KeyData', key_data_name + '.bin')
+
+    # Load in the key data
+    with open(keydata_path) as kd_file:
+        kd = json.load(kd_file)
+
+        try:
+            variable_index = kd['scalarArrayNames'].index(variable_label)
+        except ValueError:
+            return HttpResponse('No variable named {}'.format(variable_label), status=400)
+
+        binfile = open(binfile_path, 'rb')
+
+        offset = kd['num_points']*(3+variable_index)*4 + kd['num_cell_indices']*4
+        variable_float_data = np.fromfile(binfile, dtype='f4', count=kd['num_points'], offset=offset)
+
+        # variable_float_data = kd['scalarArrays'][variable_index]['array']
+        hist, bins_bounds = np.histogram(variable_float_data, bins=bins)
+        hist_list = hist.tolist()
+        bin_bound_list = bins_bounds.tolist()
+        bin_bound_list = bin_bound_list[1:]
+        assert len(hist_list) == len(bin_bound_list)
+        zipped = [{
+            'binMax': bin_bound_list[i],
+            'items': hist_list[i],
+        } for i in range(len(hist_list))]
+
+        binfile.close()
+
+        # Put two more bins in to allow the variable to go to its *actual*
+        # bounds, not just the bounds of this key data
+        #
+        # Need all four of these so that the line chart accurately reflects that
+        # there are ZERO items between the full min and the key_data min
+        variable_kd_min = kd['scalarMins'][variable_index]
+        variable_kd_max = kd['scalarMaxes'][variable_index]
+        variable_min = float(request.GET.get('min', variable_kd_min))
+        variable_max = float(request.GET.get('max', variable_kd_max))
+        zipped.insert(0, {
+            'binMax': variable_kd_min,
+            'items': 0,
+        })
+        zipped.insert(0, {
+            'binMax': variable_min,
+            'items': 0,
+        })
+        zipped.append({
+            'binMax': variable_kd_max,
+            'items': 0,
+        })
+        zipped.append({
+            'binMax': variable_max,
+            'items': 0,
+        })
+
+        return JsonResponse({'histogram': zipped, 'keyDataMin': variable_kd_min, 'keyDataMax': variable_kd_max})
