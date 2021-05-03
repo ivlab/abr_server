@@ -32,12 +32,17 @@ export function CollapsibleDiv(
             let content = $target[0].nextElementSibling;
             if (content.style.maxHeight) {
                 content.style.maxHeight = null;
+                $(content).css('visibility', 'hidden');
             } else {
                 content.style.maxHeight = content.scrollHeight + "px";
+                $(content).css('visibility', 'visible');
             }
         })
     ).append(
-        $('<div>', { class: 'collapsible-content rounded' }).append($contents)
+        $('<div>', {
+            class: 'collapsible-content rounded',
+            css: { visibility: 'hidden' }
+        }).append($contents)
     );
 
     if (!collapsed) {

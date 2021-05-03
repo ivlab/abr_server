@@ -9,6 +9,7 @@ import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
+import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
@@ -55,7 +56,19 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
         $thumb.css('object-fit', cssObjectFit);
     }
 
-    return PuzzlePiece($thumb, inputType, leftConnector, addClasses);
+    let $ret = PuzzlePiece($thumb, inputType, leftConnector, addClasses);
+
+    // If it's a localVisAsset, indicate it as such
+    if (globals.stateManager.keyExists(['localVisAssets'], uuid)) {
+        $ret.find('.puzzle-label').append($('<p>', {
+            class: 'custom-indicator',
+            attr: { title: 'This colormap is custom' },
+            text: 'C',
+        }));
+    }
+
+    return $ret;
+
 }
 
 // Can be either something waiting for an input or the input itself
@@ -81,6 +94,21 @@ export function InputPuzzlePiece(inputName, inputProps) {
             ];
 
             $el = PuzzlePieceWithThumbnail(...args);
+
+            // Allow the colormap to be edited
+            if (resolvedProps.inputType == 'IVLab.ABREngine.ColormapVisAsset') {
+                $el.attr('title', 'Click to customize');
+                $el.addClass('hover-bright');
+                $el.css('cursor', 'pointer');
+                let dragging = false;
+                $el.on('dragstart', () => dragging = true);
+                $el.on('dragend', () => dragging = false);
+                $el.on('click', (evt) => {
+                    if (!dragging) {
+                        ColormapDialog(resolvedProps.inputValue);
+                    }
+                });
+            }
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
         if (resolvedProps && resolvedProps.inputValue) {

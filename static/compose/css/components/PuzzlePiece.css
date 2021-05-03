@@ -89,3 +89,12 @@ div.inline {
     margin: 0.25em;
     height: 100%;
 }
+
+.puzzle-piece.hover-bright:hover {
+    filter: brightness(120%);
+}
+.puzzle-piece .puzzle-label .custom-indicator {
+    position: absolute;
+    margin: 0.5rem;
+    background: #eeeeee;
+}

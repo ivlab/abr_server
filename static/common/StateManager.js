@@ -161,6 +161,16 @@ export class StateManager {
         }
     }
 
+    // Find if a key exists within a specific path
+    // e.g. (['localVisAssets'], '04d115b5-8ae7-45ac-b889-2ef0c537b957')
+    keyExists(pathArray, key) {
+        let obj = this.state;
+        for (let i = 0; i < pathArray.length; i++) {
+            obj = obj[pathArray[i]];
+        }
+        return obj.hasOwnProperty(key);
+    }
+
     subscribe($element) {
         this._subscribers.push($element);
     }
