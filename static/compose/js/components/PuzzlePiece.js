@@ -157,6 +157,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
         $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
     } else if (resolvedProps.inputGenre == 'Primitive') {
         $el = PrimitiveInput(inputName, resolvedProps);
+        $el.addClass('no-drag');
     }
 
     // Assign the constant data (NOTHING from state)
@@ -172,14 +173,16 @@ export function InputPuzzlePiece(inputName, inputProps) {
 // removed it will send a message to the server telling it that it's removed
 export function AssignedInputPuzzlePiece(inputName, inputProps) {
     let $input = InputPuzzlePiece(inputName, inputProps);
-    $input.draggable({
-        cursor: 'grabbing',
-        stop: (evt, _ui) => {
-            // Unassign this input
-            let uuid = $(evt.target).parents('.data-impression').data('uuid');
-            globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
-        }
-    });
+    if (!$input.hasClass('no-drag')) {
+        $input.draggable({
+            cursor: 'grabbing',
+            stop: (evt, _ui) => {
+                // Unassign this input
+                let uuid = $(evt.target).parents('.data-impression').data('uuid');
+                globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+            }
+        });
+    }
     $input.css('position', 'absolute');
     $input.css('top', 0);
     $input.css('left', 0);
