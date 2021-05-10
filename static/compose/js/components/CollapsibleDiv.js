@@ -12,7 +12,6 @@
 export function CollapsibleDiv(
     header,
     $contents,
-    collapsed=true,
 ) {
     let $header;
     if (header instanceof jQuery) {
@@ -27,26 +26,22 @@ export function CollapsibleDiv(
     let $collapsibleDiv = $('<div>', {
         class: 'collapsible-div rounded',
     }).append($header.on('click', (evt) => {
-            let $target = $(evt.target).closest('.collapsible-header');
-            $target.toggleClass('active');
-            let content = $target[0].nextElementSibling;
-            if (content.style.maxHeight) {
-                content.style.maxHeight = null;
-                $(content).css('visibility', 'hidden');
-            } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-                $(content).css('visibility', 'visible');
-            }
-        })
+        let $target = $(evt.target).closest('.collapsible-header');
+        $target.toggleClass('active');
+        let content = $target[0].nextElementSibling;
+        if (!$target.hasClass('active')) {
+            content.style.maxHeight = null;
+            $(content).css('visibility', 'hidden');
+        } else {
+            content.style.maxHeight = content.scrollHeight + "px";
+            $(content).css('visibility', 'visible');
+        }
+    })
     ).append(
         $('<div>', {
             class: 'collapsible-content rounded',
             css: { visibility: 'hidden' }
         }).append($contents)
     );
-
-    if (!collapsed) {
-        $collapsibleDiv.find('.collapsible-header').trigger('click');
-    }
     return $collapsibleDiv;
 }

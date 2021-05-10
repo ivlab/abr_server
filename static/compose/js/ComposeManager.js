@@ -35,8 +35,23 @@ export class ComposeManager {
         globals.stateManager.subscribeCache('visassets', this.$element);
         this.$element.on(CACHE_UPDATE + 'visassets', (evt) => {
             evt.stopPropagation();
+
+            // Keep track of open/closed panels
+            let collapsibleStates = [];
+            $(evt.target).find('.collapsible-header').each((_i, el) => {
+                collapsibleStates.push($(el).hasClass('active'));
+            });
+
             $('#design-panel').remove();
             this.$element.children('#panel-container').append(Components.DesignPanel());
+
+            // Reset open/closed panels
+            $(evt.target).find('.collapsible-div').each((i, el) => {
+                let $header = $(el).find('.collapsible-header');
+                if ($header.hasClass('active') && !collapsibleStates[i] || !$header.hasClass('active') && collapsibleStates[i]) {
+                    $header.trigger('click');
+                }
+            });
         });
 
         // Allow the page to receive drag/dropped VisAssets from the library, then tell

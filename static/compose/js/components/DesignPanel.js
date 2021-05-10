@@ -127,7 +127,8 @@ export function DesignPanel() {
         let $title = $('<span>');
         $title.append(Components.PuzzleConnector(typeMap[t]))
         $title.append($('<p>', { text: typeCap }))
-        $designPanel.append(Components.SwatchList($title, visassetsByType[t]));
+        let $visAssetList = Components.SwatchList($title, visassetsByType[t]);
+        $designPanel.append($visAssetList);
     }
 
     return $designPanel;
