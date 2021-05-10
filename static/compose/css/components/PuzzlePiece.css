@@ -10,7 +10,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    z-index: 100;
+    /* z-index: 100; */
     margin: 0.1rem 0;
 }
 
@@ -92,6 +92,7 @@ div.inline {
 
 .puzzle-piece.hover-bright:hover {
     filter: brightness(120%);
+    z-index: 1000;
 }
 .puzzle-piece .puzzle-label .custom-indicator {
     position: absolute;

@@ -75,7 +75,7 @@ export class StateManager {
 
     // Send an update to a particular object in the state. updateValue MUST be
     // an object.
-    async update(updatePath, updateValue, lastPathIndex) {
+    async update(updatePath, updateValue) {
         await fetch('/api/state/' + updatePath, {
             method: 'PUT',
             headers: {

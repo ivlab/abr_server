@@ -11,6 +11,7 @@ import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.
 import { ColorMap } from "./ColormapEditor/color.js";
 import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
+import { VariableList } from "./VariableList.js";
 
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     let $element = $('<div>', {
@@ -99,10 +100,10 @@ export function InputPuzzlePiece(inputName, inputProps) {
             if (resolvedProps.inputType == 'IVLab.ABREngine.ColormapVisAsset') {
                 $el.attr('title', 'Click to customize');
                 $el.addClass('hover-bright');
-                $el.css('cursor', 'pointer');
                 let dragging = false;
                 $el.on('dragstart', () => dragging = true);
                 $el.on('dragend', () => dragging = false);
+                $el.css('cursor', 'pointer');
                 $el.on('click', (evt) => {
                     if (!dragging) {
                         let impressionUuid = $el.parents('.data-impression').data('uuid');
@@ -148,6 +149,42 @@ export function InputPuzzlePiece(inputName, inputProps) {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, false, '');
         }
         $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
+
+        $el.attr('title', $el.attr('title') + '\nClick to change variable');
+        $el.css('cursor', 'pointer');
+        $el.addClass('hover-bright');
+        let dragging = false;
+        $el.on('dragstart', () => dragging = true);
+        $el.on('dragend', () => dragging = false);
+
+        // Allow the user to easily change the variable to another associated with this keydata
+        $el.on('click', (evt) => {
+            if (!resolvedProps.inputValue || dragging) {
+                return;
+            }
+            let impressionUuid = $(evt.target).parents('.data-impression').data('uuid');
+            let keyDatas = globals.stateManager.findPath((s) => {
+                return s.hasOwnProperty('inputGenre') &&
+                    s['inputGenre'] == 'KeyData' && 
+                s.hasOwnProperty('parameterName') &&
+                    s['parameterName'] == 'Key Data'
+            });
+            let keyDataPath = keyDatas.find((p) => p.split('/')[2] == impressionUuid);
+            let keyDataInput = globals.stateManager.getPath(keyDataPath).inputValue;
+            let [org, dataset, _, kd] = DataPath.getPathParts(keyDataInput);
+            let rawMetadata = globals.dataCache[org][dataset][kd];
+            let varNames = [];
+            if (DataPath.getPathType(resolvedProps.inputValue) == 'ScalarVar') {
+                varNames = rawMetadata.scalarArrayNames;
+            } else if (DataPath.getPathType(resolvedProps.inputValue) == 'VectorVar') {
+                varNames = rawMetadata.vectorArrayNames;
+            }
+
+            let impressionPath = keyDataPath.split('/').slice(0, 4);
+            let statePath = impressionPath.join('/') + `/${inputName}`;
+            let $varList = VariableList(varNames, statePath, resolvedProps);
+            $varList.appendTo($el);
+        })
     } else if (resolvedProps.inputGenre == 'KeyData') {
         if (resolvedProps && resolvedProps.inputValue) {
             $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, 'keydata');
