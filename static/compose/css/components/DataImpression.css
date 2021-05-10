@@ -3,6 +3,8 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    background-color: #716e6ab0;
+    z-index: -1;
 }
 
 .data-impression>* {
@@ -59,11 +61,13 @@
 /* The 'tower' that the sockets appear to connect to
  * Width is calculated:
  * .data-impression - 2x .puzzle-piece - 2x .puzzle-piece margin
+ *
+ * Height is calculated from border radius
  */
 .data-impression .data-impression-tower {
     position: absolute;
     background: #f8f4f4;
-    height: 100%;
+    height: calc(100% - 8px);
     z-index: -1;
     width: calc(13rem - 2*5rem - 2*0.2rem);
     left: calc(50% - (13rem - 2*5rem - 2*0.2rem) * 0.5);
