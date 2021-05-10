@@ -37,10 +37,12 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     });
 
     $element.append($('<div>', {
-        class: 'data-impression-header rounded',
+        class: 'data-impression-header rounded-top',
     }).css({ cursor: 'grabbing'}).append($('<p>', {
         text: name,
     })));
+
+    $element.append(DataImpressionSummary(plateType, uuid, name, impressionData));
 
     let plateSchema = globals.schema.definitions.Plates[plateType].properties;
 
@@ -172,4 +174,13 @@ function Parameter(parameterName) {
             $('<p>', { text: parameterName })
         )
     );
+}
+
+function DataImpressionSummary(plateType, uuid, name, impressionData) {
+    let $el = $('<div>', {
+        class: 'data-impression-summary rounded-bottom'
+    }).append(
+        $('<p>', { html: '&nbsp;' })
+    );
+    return $el;
 }

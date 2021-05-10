@@ -19,6 +19,11 @@
     margin: 0.25rem;
 }
 
+.data-impression .data-impression-summary {
+    width: 100%;
+    background-color: #f8f4f4;
+}
+
 .data-impression .data-impression-thumbnail {
     width: 5rem;
 }
