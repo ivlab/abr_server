@@ -248,10 +248,9 @@ export function Header() {
     });
 
     // State name for the header
-    // TODO
     $stateHeader.append($('<p>', {
         id: 'state-name',
-        text: DEFAULT_STATE_NAME,
+        text: localStorage.currentStateName ? localStorage.currentStateName : DEFAULT_STATE_NAME,
     }));
 
     // Loading spinner

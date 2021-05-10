@@ -47,7 +47,9 @@ async function initAll() {
 }
 
 function init() {
-    localStorage.currentStateName = DEFAULT_STATE_NAME;
+    if (typeof(localStorage.currentStateName) === 'undefined') {
+        localStorage.currentStateName = DEFAULT_STATE_NAME;
+    }
 
     let toInit = [];
 
