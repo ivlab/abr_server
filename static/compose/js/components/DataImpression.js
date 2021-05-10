@@ -17,6 +17,10 @@ export function DataImpression(plateType, uuid, name, impressionData) {
             uuid,
             plateType,
         });
+    let $tower = $('<div>', {
+        class: 'data-impression-tower rounded',
+    });
+    $element.append($tower);
 
     let $composition = $('#' + COMPOSITION_LOADER_ID);
     let position = {
@@ -106,6 +110,7 @@ function InputSocket(inputName, inputProps) {
     });
     // It's an input, but we can't drag it
     let $dropZone = InputPuzzlePiece(inputName, inputProps);
+    $dropZone.addClass('drop-zone');
 
     $dropZone.droppable({
         drop: (evt, ui) => {
@@ -163,6 +168,8 @@ function InputSocket(inputName, inputProps) {
 
 function Parameter(parameterName) {
     return $('<div>', { class: 'parameter' }).append(
-        $('<p>', { class: "parameter-label", text: parameterName})
+        $('<div>', { class: "parameter-label" }).append(
+            $('<p>', { text: parameterName })
+        )
     );
 }
