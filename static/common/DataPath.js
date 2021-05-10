@@ -13,6 +13,11 @@ const DATA_PATH_TYPES = [
     'Dataset'
 ];
 
+export const VARIABLE_TYPEMAP = {
+    'IVLab.ABREngine.ScalarDataVariable': 'ScalarVar',
+    'IVLab.ABREngine.VectorDataVariable': 'VectorVar',
+};
+
 const separator = '/';
 
 export class DataPath {

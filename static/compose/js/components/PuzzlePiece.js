@@ -159,7 +159,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
 
         // Allow the user to easily change the variable to another associated with this keydata
         $el.on('click', (evt) => {
-            if (!resolvedProps.inputValue || dragging) {
+            if (dragging) {
                 return;
             }
             let impressionUuid = $(evt.target).parents('.data-impression').data('uuid');
@@ -174,16 +174,19 @@ export function InputPuzzlePiece(inputName, inputProps) {
             let [org, dataset, _, kd] = DataPath.getPathParts(keyDataInput);
             let rawMetadata = globals.dataCache[org][dataset][kd];
             let varNames = [];
-            if (DataPath.getPathType(resolvedProps.inputValue) == 'ScalarVar') {
+            if (resolvedProps.inputType == 'IVLab.ABREngine.ScalarDataVariable') {
                 varNames = rawMetadata.scalarArrayNames;
-            } else if (DataPath.getPathType(resolvedProps.inputValue) == 'VectorVar') {
+            } else if (resolvedProps.inputType == 'IVLab.ABREngine.VectorDataVariable') {
                 varNames = rawMetadata.vectorArrayNames;
             }
 
             let impressionPath = keyDataPath.split('/').slice(0, 4);
             let statePath = impressionPath.join('/') + `/${inputName}`;
-            let $varList = VariableList(varNames, statePath, resolvedProps);
-            $varList.appendTo($el);
+            let $varList = VariableList(varNames, statePath, resolvedProps, keyDataInput);
+            $varList.appendTo('body');
+            $varList.css('position', 'absolute');
+            $varList.css('left', $(evt.target).offset().left);
+            $varList.css('top', $(evt.target).offset().top);
         })
     } else if (resolvedProps.inputGenre == 'KeyData') {
         if (resolvedProps && resolvedProps.inputValue) {

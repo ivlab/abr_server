@@ -5,10 +5,10 @@
  *
  */
 
-import { DataPath } from "../../../common/DataPath.js";
+import { DataPath, VARIABLE_TYPEMAP } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 
-export function VariableList(varNames, statePath, variableData) {
+export function VariableList(varNames, statePath, variableData, keyDataPath) {
     $('#variable-list').remove();
 
     let $el = $('<ul>', {
@@ -16,7 +16,9 @@ export function VariableList(varNames, statePath, variableData) {
         css: { 'z-index': 1000 },
     });
 
-    let pathTypePath = DataPath.getPathTypePath(variableData.inputValue);
+    let dsPath = DataPath.getDatasetPath(keyDataPath);
+    let pathType = VARIABLE_TYPEMAP[variableData.inputType];
+    let pathTypePath = DataPath.join(dsPath, pathType);
     for (const varName of varNames) {
         $el.append(
             $('<li>').append(
