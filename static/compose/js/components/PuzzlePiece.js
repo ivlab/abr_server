@@ -13,6 +13,13 @@ import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
 
+const cssObjectFitMap = {
+    'IVLab.ABREngine.ColormapVisAsset': 'fill',
+    'IVLab.ABREngine.LineTextureVisAsset': 'cover',
+    'IVLab.ABREngine.SurfaceTextureVisAsset': 'contain',
+    'IVLab.ABREngine.GlyphVisAsset': 'contain',
+}
+
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     let $element = $('<div>', {
         class: 'puzzle-piece rounded ' + addClasses,
@@ -57,6 +64,32 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
         $thumb.css('object-fit', cssObjectFit);
     }
 
+    let $tooltip = $('#thumbnail-tooltip')
+        .css('width', '30rem')
+        .css('height', '10rem')
+        .css('overflow', 'hidden');
+    let tooltipOffset = 20; // pixels to upper left of mouse to center image on
+    let timer = null;
+    let $clone = $thumb.clone()
+        .css('width', '100%')
+        .css('height', '100%')
+        .css('object-fit', cssObjectFit);
+    $thumb.on('mouseover', (_evt) => {
+        $tooltip.css('visibility', 'visible');
+        $tooltip.append($clone);
+        timer = setTimeout(() => $tooltip.css('visibility', 'hidden'), 2000);
+    }).on('mousemove', (evt) => {
+        $tooltip.css('top', `${evt.pageY - $clone.height() - tooltipOffset}px`);
+        $tooltip.css('left', `${evt.pageX - $clone.width() / 2}px`);
+        clearTimeout(timer);
+        timer = setTimeout(() => $tooltip.css('visibility', 'hidden'), 2000);
+    }).on('mouseout', (_evt) => {
+        $tooltip.css('visibility', 'hidden');
+        clearTimeout(timer);
+        timer = null;
+        $tooltip.empty();
+    });
+
     let $ret = PuzzlePiece($thumb, inputType, leftConnector, addClasses);
 
     // If it's a localVisAsset, indicate it as such
@@ -80,12 +113,6 @@ export function InputPuzzlePiece(inputName, inputProps) {
         if (resolvedProps && !resolvedProps.inputValue) {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, true, '');
         } else {
-            const cssObjectFitMap = {
-                'IVLab.ABREngine.ColormapVisAsset': 'fill',
-                'IVLab.ABREngine.LineTextureVisAsset': 'cover',
-                'IVLab.ABREngine.SurfaceTextureVisAsset': 'contain',
-                'IVLab.ABREngine.GlyphVisAsset': 'contain',
-            }
             let args = [
                 resolvedProps.inputValue,
                 resolvedProps.inputType,

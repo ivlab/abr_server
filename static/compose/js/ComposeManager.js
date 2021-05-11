@@ -15,7 +15,19 @@ import { DataImpression } from './components/DataImpression.js';
 
 export class ComposeManager {
     constructor() {
+        // Tooltips for larger images on hover adapted from
+        // https://chartio.com/resources/tutorials/how-to-show-data-on-mouseover-in-d3js/
+        $('body').append($('<div>', {
+            id: 'thumbnail-tooltip',
+            css: {
+                'position': 'absolute',
+                'z-index': '100',
+                'visibility': 'hidden',
+            },
+        }));
+
         this.header = Components.Header();
+
         this.$element = $('#compose-manager');
 
         this.$element.append(this.header);
