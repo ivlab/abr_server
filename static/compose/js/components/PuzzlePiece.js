@@ -173,6 +173,10 @@ export function InputPuzzlePiece(inputName, inputProps) {
             let keyDataInput = globals.stateManager.getPath(keyDataPath).inputValue;
             let [org, dataset, _, kd] = DataPath.getPathParts(keyDataInput);
             let rawMetadata = globals.dataCache[org][dataset][kd];
+            if (!rawMetadata) {
+                alert(`Key data '${keyDataInput}' does not exist in the Data Palette.`)
+                return;
+            }
             let varNames = [];
             if (resolvedProps.inputType == 'IVLab.ABREngine.ScalarDataVariable') {
                 varNames = rawMetadata.scalarArrayNames;
