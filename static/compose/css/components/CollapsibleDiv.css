@@ -38,10 +38,8 @@
 
 .collapsible-content {
     margin: 0 auto;
-    /* width: calc(100% - 2rem); */
     padding: 0 0.5rem;
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.1s ease-out;
     background-color: white;
 }

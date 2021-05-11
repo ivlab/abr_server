@@ -76,7 +76,7 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         }
     }
 
-    $element.append(DataImpressionSummary(impressionData, inputValues, parameterMapping));
+    $element.append(DataImpressionSummary(uuid, name, impressionData, inputValues, parameterMapping));
 
     let $parameterList = $('<div>', {
         class: 'parameter-list',
@@ -197,19 +197,32 @@ function Parameter(parameterName) {
     );
 }
 
-function DataImpressionSummary(impressionData, inputValues, parameterMapping) {
+function DataImpressionSummary(uuid, name, impressionData, inputValues, parameterMapping) {
+    let oldVisibility = true;
+    if (globals.stateManager.state.impressions && globals.stateManager.state.impressions[uuid]) {
+        if (globals.stateManager.state.impressions[uuid].renderHints) {
+            oldVisibility = globals.stateManager.state.impressions[uuid].renderHints.visible;
+        }
+    }
     let $el = $('<div>', {
         class: 'data-impression-summary rounded-bottom'
     }).append(
         $('<div>', { class: 'impression-controls' }).append(
             $('<button>', {
                 class: 'material-icons rounded',
-                text: 'visibility'
+                text: oldVisibility ? 'visibility' : 'visibility_off',
+                title: oldVisibility ? 'This data impression is visible' : 'This data impression is not shown',
+            }).on('click', (evt) => {
+                globals.stateManager.update(`/impressions/${uuid}/renderHints/visible`, !oldVisibility);
             })
         ).append(
             $('<button>', {
                 class: 'material-icons rounded',
-                text: 'edit'
+                text: 'edit',
+                title: 'Rename data impression'
+            }).on('click', (evt) => {
+                let newName = prompt('Rename data impression:', name);
+                globals.stateManager.update(`/impressions/${uuid}/name`, newName);
             })
         )
     );
