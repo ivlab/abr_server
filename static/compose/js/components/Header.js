@@ -123,8 +123,7 @@ export function Header() {
         .append($('<span>', { text: 'Clear State...' }))
         .on('click', (_evt) => {
             if (window.confirm('Are you sure you want to clear the state?')) {
-                globals.stateManager.removePath('');
-                window.location.reload();
+                globals.stateManager.removePath('').then(() => window.location.reload() );
             }
     });
 
