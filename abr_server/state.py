@@ -129,6 +129,7 @@ class State():
                 lambda v: 'inputValue' in v and \
                     'inputGenre' in v and \
                     v['inputGenre'] == 'VisAsset' and \
+                    'localVisAssets' in self._state and \
                     v['inputValue'] not in self._state['localVisAssets'],
                 self._state,
                 []

@@ -96,10 +96,16 @@
                                     "properties": {
                                         "position": {
                                             "type": "object",
+                                            "description": "Position of this data impression on the browser page",
                                             "properties": {
                                                 "x": { "type": "number" },
                                                 "y": { "type": "number" }
                                             }
+                                        },
+                                        "collapsed": {
+                                            "description": "Should the data impression be expanded or not?",
+                                            "type": "boolean",
+                                            "default": false
                                         }
                                     }
                                 }

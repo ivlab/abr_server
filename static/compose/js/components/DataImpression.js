@@ -36,13 +36,32 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         left: position.left,
     });
 
+    let collapsed = false;
+    if (impressionData && impressionData.collapsed) {
+        collapsed = true;
+    }
+
     $element.append($('<div>', {
         class: 'data-impression-header rounded-top',
-    }).css({ cursor: 'grabbing'}).append($('<p>', {
-        text: name,
-    })));
+    }).css({ cursor: 'grabbing'}).append(
+        $('<p>', { text: name, })
+    ).append(
+        $('<button>', {
+            class: 'rounded',
+            html: collapsed ? '+' : '&ndash;',
+            title: collapsed ? 'Show More' : 'Show Less'
+        }).on('click', (evt) => {
+            globals.stateManager.update(`/uiData/compose/impressionData/${uuid}/collapsed`, !collapsed);
+        })
+    ));
 
-    $element.append(DataImpressionSummary(plateType, uuid, name, impressionData));
+    let inputValues = null;
+    if (globals.stateManager.state && globals.stateManager.state.impressions)
+    {
+        if (globals.stateManager.state.impressions[uuid]) {
+            inputValues = globals.stateManager.state.impressions[uuid].inputValues;
+        }
+    }
 
     let plateSchema = globals.schema.definitions.Plates[plateType].properties;
 
@@ -57,13 +76,11 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         }
     }
 
-    let inputValues = null;
-    if (globals.stateManager.state && globals.stateManager.state.impressions)
-    {
-        if (globals.stateManager.state.impressions[uuid]) {
-            inputValues = globals.stateManager.state.impressions[uuid].inputValues;
-        }
-    }
+    $element.append(DataImpressionSummary(impressionData, inputValues, parameterMapping));
+
+    let $parameterList = $('<div>', {
+        class: 'parameter-list',
+    });
 
     // Add a new row of inputs for each parameter
     for (const parameter in parameterMapping) {
@@ -86,7 +103,11 @@ export function DataImpression(plateType, uuid, name, impressionData) {
             }
             $param.append($socket);
         }
-        $element.append($param);
+        $parameterList.append($param);
+    }
+
+    if (!collapsed) {
+        $element.append($parameterList);
     }
 
     // Only need to update the UI position when dragging, not the whole impression
@@ -176,11 +197,44 @@ function Parameter(parameterName) {
     );
 }
 
-function DataImpressionSummary(plateType, uuid, name, impressionData) {
+function DataImpressionSummary(impressionData, inputValues, parameterMapping) {
     let $el = $('<div>', {
         class: 'data-impression-summary rounded-bottom'
     }).append(
-        $('<p>', { html: '&nbsp;' })
+        $('<div>', { class: 'impression-controls' }).append(
+            $('<button>', {
+                class: 'material-icons rounded',
+                text: 'visibility'
+            })
+        ).append(
+            $('<button>', {
+                class: 'material-icons rounded',
+                text: 'edit'
+            })
+        )
     );
+
+    if (impressionData && impressionData.collapsed) {
+        $el.append($('<hr>'))
+        let $props = $('<div>', {
+            class: 'summary-properties'
+        });
+        for (const parameter in parameterMapping) {
+            for (const inputName of parameterMapping[parameter]) {
+                if (inputValues && inputValues[inputName]) {
+                    // Display a non-editable version of the piece in the summary block
+                    let $input = AssignedInputPuzzlePiece(inputName, inputValues[inputName]);
+                    $input.css('position', 'relative');
+                    $input.css('height', '2rem');
+                    $input.off('click');
+                    $input.draggable('destroy');
+                    $input.removeClass('hover-bright');
+                    $props.append($input);
+                }
+            }
+        }
+        $el.append($props);
+    }
+
     return $el;
 }
