@@ -14,6 +14,12 @@
             "const": "0.2.0"
         },
 
+        "name": {
+            "type": "string",
+            "description": "Name of this state (e.g. FR14-eve)",
+            "default": "Untitled"
+        },
+
         "impressions": {
             "type": "object",
             "description": "The data impressions that a user has created",

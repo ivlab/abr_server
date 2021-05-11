@@ -11,7 +11,6 @@ import { globals } from '../../common/globals.js';
 import { ComposeManager } from './ComposeManager.js';
 import { Notifier } from '../../common/Notifier.js';
 import { StateManager } from '../../common/StateManager.js';
-import { DEFAULT_STATE_NAME } from './components/Header.js';
 
 // globals.validator and globals.schema are guaranteed to be defined after this
 // finishes
@@ -47,10 +46,6 @@ async function initAll() {
 }
 
 function init() {
-    if (typeof(localStorage.currentStateName) === 'undefined') {
-        localStorage.currentStateName = DEFAULT_STATE_NAME;
-    }
-
     let toInit = [];
 
     toInit.push(initAll());

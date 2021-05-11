@@ -8,10 +8,11 @@
 
 import { globals } from "../../../common/globals.js";
 
-export const DEFAULT_STATE_NAME = 'Untitled';
 const STORAGE_STATE_PREFIX = '_state_';
 
 export function Header() {
+    let defaultStateName = globals.schema.properties.name.default;
+
     let $header = $('<header>', {
         id: 'header',
     });
@@ -41,7 +42,7 @@ export function Header() {
                 let reader = new FileReader();
                 $(reader).on('load', (loadEvt) => {
                     // Update the state with the stateManager
-                    localStorage.currentStateName = stateName;
+                    loadEvt.target.result.name = stateName;
                     localStorage[STORAGE_STATE_PREFIX + stateName] = loadEvt.target.result;
                     globals.stateManager.updateState(loadEvt.target.result);
                 });
@@ -60,7 +61,6 @@ export function Header() {
         .on('click', (_evt) => {
             if (window.confirm('Are you sure you want to clear the state?')) {
                 globals.stateManager.removePath('');
-                localStorage.currentStateName = DEFAULT_STATE_NAME;
                 window.location.reload();
             }
     });
@@ -111,7 +111,6 @@ export function Header() {
                 "Load": function () {
                     let stateName = $(this).find('.selected-state .state-name').text();
                     if (stateName) {
-                        localStorage.currentStateName = stateName;
                         $('#state-header #state-name').text(stateName);
 
                         // Tell the server to update
@@ -153,8 +152,11 @@ export function Header() {
                             class: 'rounded',
                             text: 'Delete'
                         }).on('click', (evt) => {
-                            localStorage.removeItem(item);
-                            $(evt.target).closest('.state-selector').remove();
+                            let sure = confirm(`Are you sure you want to delete state '${stateName}'?`)
+                            if (sure) {
+                                localStorage.removeItem(item);
+                                $(evt.target).closest('.state-selector').remove();
+                            }
                         })
                     )
                 ))
@@ -181,7 +183,7 @@ export function Header() {
                 "Save": function () {
                     let $input = $(this).find('input');
                     let stateName = $input.val();
-                    localStorage.currentStateName = stateName;
+                    globals.stateManager.update('/name', stateName);
                     localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
                     $('#state-header #state-name').text(stateName);
                     $(this).dialog('close');
@@ -195,7 +197,7 @@ export function Header() {
         $saveAsDialog.append($('<div>').append($('<input>', {
                 id: 'abr-state-save-name',
                 type: 'text',
-                val: localStorage.currentStateName ? localStorage.currentStateName : DEFAULT_STATE_NAME,
+                val: globals.stateManager.state.name ? globals.stateManager.state.name : defaultStateName,
             }).on('input', (evt) => {
                 let stateName = $(evt.target).val();
                 if (localStorage.getItem(stateName)) {
@@ -208,7 +210,7 @@ export function Header() {
                 if (evt.key == 'Enter') {
                     let $input = $(evt.target);
                     let stateName = $input.val();
-                    localStorage.currentStateName = stateName;
+                    globals.stateManager.update('/name', stateName);
                     localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
                     $('#state-header #state-name').text(stateName);
                     $(evt.target).parents('#save-as-dialog').dialog('close');
@@ -250,7 +252,7 @@ export function Header() {
     // State name for the header
     $stateHeader.append($('<p>', {
         id: 'state-name',
-        text: localStorage.currentStateName ? localStorage.currentStateName : DEFAULT_STATE_NAME,
+        text: globals.stateManager.state.name ? globals.stateManager.state.name : defaultStateName,
     }));
 
     // Loading spinner
