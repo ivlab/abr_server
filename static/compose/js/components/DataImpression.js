@@ -217,7 +217,7 @@ function DataImpressionSummary(impressionData, inputValues, parameterMapping) {
     if (impressionData && impressionData.collapsed) {
         $el.append($('<hr>'))
         let $props = $('<div>', {
-            class: 'summary-properties'
+            class: 'summary-properties parameter'
         });
         for (const parameter in parameterMapping) {
             for (const inputName of parameterMapping[parameter]) {
@@ -227,7 +227,18 @@ function DataImpressionSummary(impressionData, inputValues, parameterMapping) {
                     $input.css('position', 'relative');
                     $input.css('height', '2rem');
                     $input.off('click');
-                    $input.draggable('destroy');
+                    if ($input.hasClass('ui-draggable')) {
+                        $input.draggable('destroy');
+                    }
+
+                    // Special case for primitive inputs
+                    let textInput = $input.find('input');
+                    let inputVal = textInput.val();
+                    if (inputVal) {
+                        textInput.remove();
+                        let text = $input.find('.puzzle-label').text();
+                        $input.find('.puzzle-label').text(`${text}: ${inputVal}`);
+                    }
                     $input.removeClass('hover-bright');
                     $props.append($input);
                 }

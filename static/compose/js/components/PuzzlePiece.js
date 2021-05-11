@@ -109,6 +109,12 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 export function InputPuzzlePiece(inputName, inputProps) {
     let $el;
     let resolvedProps = resolveSchemaConsts(inputProps);
+
+    // Avoid name stuttering
+    if (inputName != resolvedProps.parameterName && inputName.indexOf(resolvedProps.parameterName) >= 0) {
+        inputName = inputName.replace(resolvedProps.parameterName, '').trim();
+    }
+
     if (resolvedProps.inputGenre == 'VisAsset') {
         if (resolvedProps && !resolvedProps.inputValue) {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, true, '');
