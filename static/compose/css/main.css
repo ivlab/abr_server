@@ -23,6 +23,7 @@ html, body {
     color: #3d3d3d;
     background-color: #dae1e7;
     font-size: 14px;
+    overflow: hidden;
 
     /* disable selection because the click-and-drag scrolling feature 
        accidentally selects text. */

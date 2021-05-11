@@ -93,6 +93,8 @@ export class ComposeManager {
                 });
             }
         });
+
+        dragscroll.reset();
     }
 
     syncWithState() {

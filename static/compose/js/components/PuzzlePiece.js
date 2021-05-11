@@ -270,6 +270,9 @@ export function AssignedInputPuzzlePiece(inputName, inputProps) {
     if (!$input.hasClass('no-drag')) {
         $input.draggable({
             cursor: 'grabbing',
+            drag: (evt, ui) => {
+                evt.stopPropagation();
+            },
             stop: (evt, _ui) => {
                 // Unassign this input
                 let uuid = $(evt.target).parents('.data-impression').data('uuid');

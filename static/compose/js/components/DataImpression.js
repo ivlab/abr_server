@@ -113,6 +113,9 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     // Only need to update the UI position when dragging, not the whole impression
     $element.draggable({
         handle: '.data-impression-header',
+        drag: (evt, ui) => {
+            evt.stopPropagation();
+        },
         stop: (evt, ui) => {
             // If we're not hovering over the trash, send the update
             if (!$(ui.helper).hasClass('removing')) {

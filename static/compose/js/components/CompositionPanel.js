@@ -23,26 +23,13 @@ export function CompositionPanel() {
     }));
 
     // The composition data impressions are loaded here
-    let initPos = {left: 0, top: 0};
     let $loader = $('<div>', {
         id: COMPOSITION_LOADER_ID,
-    }).draggable({
-        stop: (evt, _ui) => {
-            // Snap back into place if we've scrolled off to the left or top
-            // let pos = $(evt.target).position();
-            // console.log(pos);
-            // console.log(initPos);
-            // if (pos.left > initPos.left) {
-            //     $(evt.target).css('left', 0);
-            // }
-            // if (pos.top > initPos.top) {
-            //     $(evt.target).css('top', 0);
-            // }
-        }
     });
 
     $compositionPanel.append($('<div>', {
         id: 'composition-scrollbox',
+        class: 'dragscroll nochilddrag'
     }).append($loader));
 
 
