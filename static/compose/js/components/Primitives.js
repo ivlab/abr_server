@@ -8,13 +8,13 @@
 
 import { globals } from "../../../common/globals.js";
 
-export function PrimitiveInput(inputName, resolvedProps) {
+export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
     let $el = $('<div>', {
         class: 'puzzle-label rounded',
     });
     $el.append($('<p>', {
         class: 'primitive-name',
-        text: inputName,
+        text: shortInputName,
     }));
     let $input = $('<input>', {
         class: 'primitive-input',
@@ -44,10 +44,16 @@ export function PrimitiveInput(inputName, resolvedProps) {
         }
 
         // Assign the new input
+        let oldInputValue = inputState['inputValue'];
         inputState['inputValue'] = $(evt.target).val();
 
         // Send the update to the server
-        globals.stateManager.update(`impressions/${impressionId}/inputValues/${inputName}`, inputState);
+        globals.stateManager.update(`impressions/${impressionId}/inputValues/${inputName}`, inputState).then(() => {
+            $(evt.target).attr('disabled', false);
+        }).catch((err) => {
+            alert(`'${inputState['inputValue']}' is not valid for type ${resolvedProps.inputType}.`)
+            globals.stateManager.refreshState();
+        });
         
         // Temporarily disable until we've heard back from the server
         $(evt.target).attr('disabled', true);

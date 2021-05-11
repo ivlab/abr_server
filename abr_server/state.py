@@ -92,6 +92,9 @@ class State():
 
             return ''
         except jsonschema.ValidationError as e:
+            # Discard the pending state and reset if it was invalid
+            self._pending_state = deepcopy(self._state)
+
             path = '/'.join(e.path)
             return 'Schema validation failed - {}: {}'.format(path, e.message)
 

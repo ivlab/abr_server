@@ -111,13 +111,14 @@ export function InputPuzzlePiece(inputName, inputProps) {
     let resolvedProps = resolveSchemaConsts(inputProps);
 
     // Avoid name stuttering
+    let shortInputName = inputName;
     if (inputName != resolvedProps.parameterName && inputName.indexOf(resolvedProps.parameterName) >= 0) {
-        inputName = inputName.replace(resolvedProps.parameterName, '').trim();
+        shortInputName = inputName.replace(resolvedProps.parameterName, '').trim();
     }
 
     if (resolvedProps.inputGenre == 'VisAsset') {
         if (resolvedProps && !resolvedProps.inputValue) {
-            $el = PuzzlePiece(inputName, resolvedProps.inputType, true, '');
+            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, true, '');
         } else {
             let uuid = resolvedProps.inputValue;
             // Add the family / class to tooltip
@@ -195,7 +196,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
         if (resolvedProps && resolvedProps.inputValue) {
             $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, '');
         } else {
-            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, '');
+            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, false, '');
         }
         $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : 'No Variable');
 
@@ -245,11 +246,11 @@ export function InputPuzzlePiece(inputName, inputProps) {
         if (resolvedProps && resolvedProps.inputValue) {
             $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, 'keydata');
         } else {
-            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata');
+            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, false, 'keydata');
         }
         $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
     } else if (resolvedProps.inputGenre == 'Primitive') {
-        $el = PrimitiveInput(inputName, resolvedProps);
+        $el = PrimitiveInput(inputName, shortInputName, resolvedProps);
         $el.addClass('no-drag');
     }
 

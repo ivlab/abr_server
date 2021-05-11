@@ -20,15 +20,18 @@ export const CACHE_UPDATE = 'CacheUpdate-';
 //      "inputValue": "4m",
 //      "inputType": "IVLab.ABREngine.LengthPrimitive"
 // }
-// This assumes that no input value will be an object!!
+// This assumes that no input value will be an object!! (all inputValues should
+// be strings)
 export function resolveSchemaConsts(data) {
     let resolvedData = {};
     for (const field in data) {
-        if (typeof(data[field]) === 'object' && data[field].const) {
-            resolvedData[field] = data[field].const;
-        } else if (typeof(data[field]) === 'object' && data[field].default) {
-            resolvedData[field] = data[field].default;
-        } else {
+        if (typeof(data[field]) === 'object') {
+            if (data[field].const) {
+                resolvedData[field] = data[field].const;
+            } else if (data[field].default) {
+                resolvedData[field] = data[field].default;
+            }
+        } else if (typeof(data[field] === 'string')) {
             resolvedData[field] = data[field];
         }
     }
@@ -57,8 +60,7 @@ export class StateManager {
                 for (const sub of this._subscribers) {
                     $(sub).trigger(STATE_UPDATE_EVENT);
                 }
-            })
-            .catch((errs) => alert('Error refreshing state:\n' + errs));
+            });
     }
 
     async updateState(newState) {
@@ -70,7 +72,7 @@ export class StateManager {
             },
             mode: 'same-origin',
             body: newState,
-        }).catch((errs) => alert('Error updating state:\n' + errs));
+        });
     }
 
     // Send an update to a particular object in the state. updateValue MUST be
@@ -84,7 +86,12 @@ export class StateManager {
             },
             mode: 'same-origin',
             body: JSON.stringify(updateValue),
-        }).catch((errs) => alert('Error updating state:\n' + errs));
+        }).then(async (resp) => {
+            if (!resp.ok) {
+                let text = await resp.text();
+                throw new Error(text);
+            }
+        });
     }
 
     // Remove all instances of a particular value from the state
@@ -96,7 +103,7 @@ export class StateManager {
                 // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-        }).catch((errs) => alert('Error removing:\n' + errs));
+        });
     }
 
     // Remove something at a particular path
@@ -108,7 +115,7 @@ export class StateManager {
                 // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-        }).catch((errs) => alert('Error removing:\n' + errs));
+                    });
     }
 
     async undo() {
@@ -118,7 +125,7 @@ export class StateManager {
                 // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-        }).catch((errs) => alert('Error undoing:\n' + errs));
+                    });
     }
 
     async redo() {
@@ -128,7 +135,7 @@ export class StateManager {
                 // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-        }).catch((errs) => alert('Error redoing:\n' + errs));
+                    });
     }
 
     get state() {
@@ -213,8 +220,7 @@ export class StateManager {
                 $(`.cache-subscription-${cacheName}`).each((_i, el) => {
                     $(el).trigger(CACHE_UPDATE + cacheName);
                 })
-            })
-            .catch((errs) => alert('Error refreshing cache:\n' + errs));
+            });
     }
 
     getCache(cacheName) {
