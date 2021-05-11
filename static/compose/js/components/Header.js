@@ -293,14 +293,16 @@ export function Header() {
     $screenshotHeader.append($('<button>', {
         class: 'material-icons rounded',
         html: 'camera_alt', 
+    }).on('click', (_evt) => {
+        alert('For now, please make screenshots in Unity using the "s" key.')
     }));
 
     // Screenshot gallery
     // TODO
-    $screenshotHeader.append($('<button>', {
-        class: 'material-icons rounded',
-        html: 'collections', 
-    }));
+    // $screenshotHeader.append($('<button>', {
+    //     class: 'material-icons rounded',
+    //     html: 'collections', 
+    // }));
 
     // Put all the sub-headers in the main header
     $header.append($fileHeader);
