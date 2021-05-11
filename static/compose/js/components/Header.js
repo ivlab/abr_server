@@ -43,10 +43,10 @@ export function Header() {
                         globals.stateManager.update('/name', stateName);
                         localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
                         $('#state-header #state-name').text(stateName);
-                        $(this).dialog('close');
+                        $(this).dialog('destroy');
                     },
                     "Cancel": function () {
-                        $(this).dialog('close');
+                        $(this).dialog('destroy');
                     }
                 }
             });
@@ -70,7 +70,7 @@ export function Header() {
                         globals.stateManager.update('/name', stateName);
                         localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
                         $('#state-header #state-name').text(stateName);
-                        $(evt.target).parents('#save-as-dialog').dialog('close');
+                        $(evt.target).parents('#save-as-dialog').dialog('destroy');
                     }
                 })
             ));
@@ -181,13 +181,13 @@ export function Header() {
 
                         // Tell the server to update
                         globals.stateManager.updateState(localStorage.getItem(STORAGE_STATE_PREFIX + stateName));
-                        $(this).dialog('close');
+                        $(this).dialog('destroy');
                     } else {
                         alert('Please select a state to load');
                     }
                 },
                 "Cancel": function () {
-                    $(this).dialog('close');
+                    $(this).dialog('destroy');
                 }
             }
         });
@@ -205,6 +205,13 @@ export function Header() {
                     let $target = $(evt.target).closest('.state-selector');
                     $('.selected-state').removeClass('selected-state');
                     $target.addClass('selected-state');
+
+                    // Make the "Load" button change color
+                    $('#load-state-dialog')
+                        .parents('.ui-dialog')
+                        .find('.ui-button')
+                        .filter((i, el) => $(el).text() == 'Load')
+                        .css('background-color', '#ceedff');
                 }).append(
                     $('<p>', {
                         class: 'state-name',
@@ -215,9 +222,11 @@ export function Header() {
                         class: 'state-hover-controls'
                     }).append(
                         $('<button>', {
-                            class: 'rounded',
-                            text: 'Delete'
-                        }).on('click', (evt) => {
+                            text: 'Delete',
+                            css: { 'background-color': '#ffdddd' }
+                        }).prepend(
+                            $('<span>', { class: 'ui-icon ui-icon-trash' }
+                        )).on('click', (evt) => {
                             let sure = confirm(`Are you sure you want to delete state '${stateName}'?`)
                             if (sure) {
                                 localStorage.removeItem(item);

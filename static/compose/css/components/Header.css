@@ -28,15 +28,23 @@
 .state-list {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-around;
 }
 .state-list .state-selector {
-    width: 5rem;
     border: 1px solid gray;
-    margin: 1rem;
     padding: 1rem;
+    margin: 0.5rem;
+    flex: 0 0 33%;
+    word-wrap: anywhere;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 .state-list .state-selector.selected-state {
     background-color: #ceedff;
+}
+.state-name {
+    margin: 0 0 1rem 0;
 }
 
 .abr-main-button>img {
