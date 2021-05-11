@@ -7,6 +7,7 @@
  */
 
 import { globals } from "../../../common/globals.js";
+import { download } from "../../../common/helpers.js";
 
 const STORAGE_STATE_PREFIX = '_state_';
 
@@ -25,7 +26,7 @@ export function Header() {
     // Save as button
     let $saveStateAsButton = $('<div>')
         .append($('<span>', { class: 'material-icons', text: 'save'}))
-        .append($('<span>', { text: 'Save state as...' }))
+        .append($('<span>', { text: 'Save State As...' }))
         .on('click', (_evt) => {
             let $saveAsDialog = $('<div>', {
                 title: 'Save state as',
@@ -107,6 +108,15 @@ export function Header() {
             $fileInput.click();
     });
 
+    // Export State Button
+    let $exportStateButton = $('<div>')
+        .append($('<span>', { class: 'material-icons', text: 'cloud_download'}))
+        .append($('<span>', { text: 'Export State...' })).on('click', (evt) => {
+            let state = globals.stateManager.state;
+            let fileName = state.name + '.json';
+            download(fileName, JSON.stringify(state, null, 4), 'data:application/json,');
+    });
+
     // Clear the state
     let $clearStateButton = $('<div>')
         .append($('<span>', { class: 'material-icons', text: 'backspace'}))
@@ -127,6 +137,8 @@ export function Header() {
         $('<li>').append($saveStateAsButton)
     ).append(
         $('<li>').append($importStateButton)
+    ).append(
+        $('<li>').append($exportStateButton)
     ).append(
         $('<li>').append($clearStateButton)
     ).menu().appendTo($(document.body)).on('mouseout', (evt) => {
