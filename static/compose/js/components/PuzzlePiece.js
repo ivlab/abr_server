@@ -113,6 +113,21 @@ export function InputPuzzlePiece(inputName, inputProps) {
         if (resolvedProps && !resolvedProps.inputValue) {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, true, '');
         } else {
+            let uuid = resolvedProps.inputValue;
+            // Add the family / class to tooltip
+            let visassets = globals.stateManager.getCache('visassets');
+            let localVisAssets = globals.stateManager.state.localVisAssets;
+            let vaFamily = '';
+            let vaClass = '';
+            if (visassets && visassets[uuid]) {
+                vaClass = visassets[uuid]['class'] || '';
+                vaFamily = visassets[uuid]['family'] || '';
+            } else if (localVisAssets && localVisAssets[uuid]) {
+                vaClass = localVisAssets[uuid].artifactJson['class'] || '';
+                vaFamily = localVisAssets[uuid].artifactJson['family'] || '';
+            }
+            let familyClass = `${vaClass} - ${vaFamily}`;
+
             let args = [
                 resolvedProps.inputValue,
                 resolvedProps.inputType,
@@ -122,10 +137,11 @@ export function InputPuzzlePiece(inputName, inputProps) {
             ];
 
             $el = PuzzlePieceWithThumbnail(...args);
+            $el.attr('title', familyClass);
 
             // Allow the colormap to be edited
             if (resolvedProps.inputType == 'IVLab.ABREngine.ColormapVisAsset') {
-                $el.attr('title', 'Click to customize');
+                $el.attr('title', $el.attr('title') + '\nClick to customize');
                 $el.addClass('hover-bright');
                 let dragging = false;
                 $el.on('dragstart', () => dragging = true);
@@ -175,7 +191,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
         } else {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, false, '');
         }
-        $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
+        $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : 'No Variable');
 
         $el.attr('title', $el.attr('title') + '\nClick to change variable');
         $el.css('cursor', 'pointer');
