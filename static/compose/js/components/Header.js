@@ -22,6 +22,59 @@ export function Header() {
         id: 'file-header'
     });
 
+    // Save as button
+    let $saveStateAsButton = $('<div>')
+        .append($('<span>', { class: 'material-icons', text: 'save'}))
+        .append($('<span>', { text: 'Save state as...' }))
+        .on('click', (_evt) => {
+            let $saveAsDialog = $('<div>', {
+                title: 'Save state as',
+                id: 'save-as-dialog',
+            }).dialog({
+                resizable: false,
+                height: 'auto',
+                width: 400,
+                modal: true,
+                buttons: {
+                    "Save": function () {
+                        let $input = $(this).find('input');
+                        let stateName = $input.val();
+                        globals.stateManager.update('/name', stateName);
+                        localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
+                        $('#state-header #state-name').text(stateName);
+                        $(this).dialog('close');
+                    },
+                    "Cancel": function () {
+                        $(this).dialog('close');
+                    }
+                }
+            });
+
+            $saveAsDialog.append($('<div>').append($('<input>', {
+                    id: 'abr-state-save-name',
+                    type: 'text',
+                    val: globals.stateManager.state.name ? globals.stateManager.state.name : defaultStateName,
+                }).on('input', (evt) => {
+                    let stateName = $(evt.target).val();
+                    if (localStorage.getItem(stateName)) {
+                        $(evt.target).parent().append($('<p>', {class: 'save-as-warning', text: `Warning: State '${stateName}' already exists`}));
+                    } else {
+                        $('.save-as-warning').remove();
+                        $(evt.target).css('background-color', null);
+                    }
+                }).on('keyup', (evt) => {
+                    if (evt.key == 'Enter') {
+                        let $input = $(evt.target);
+                        let stateName = $input.val();
+                        globals.stateManager.update('/name', stateName);
+                        localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
+                        $('#state-header #state-name').text(stateName);
+                        $(evt.target).parents('#save-as-dialog').dialog('close');
+                    }
+                })
+            ));
+    });
+
     // Import state button
     let $importStateButton = $('<div>')
         .append($('<span>', { class: 'material-icons', text: 'cloud_upload'}))
@@ -71,6 +124,8 @@ export function Header() {
         id: 'abr-menu',
         css: { visibility: 'hidden' }
     }).append(
+        $('<li>').append($saveStateAsButton)
+    ).append(
         $('<li>').append($importStateButton)
     ).append(
         $('<li>').append($clearStateButton)
@@ -171,52 +226,15 @@ export function Header() {
         html: 'save',
         title: 'Save state', 
     }).on('click', (evt) => {
-        let $saveAsDialog = $('<div>', {
-            title: 'Save state as',
-            id: 'save-as-dialog',
-        }).dialog({
-            resizable: false,
-            height: 'auto',
-            width: 400,
-            modal: true,
-            buttons: {
-                "Save": function () {
-                    let $input = $(this).find('input');
-                    let stateName = $input.val();
-                    globals.stateManager.update('/name', stateName);
-                    localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
-                    $('#state-header #state-name').text(stateName);
-                    $(this).dialog('close');
-                },
-                "Cancel": function () {
-                    $(this).dialog('close');
-                }
-            }
-        });
+        let stateName = globals.stateManager.state.name;
 
-        $saveAsDialog.append($('<div>').append($('<input>', {
-                id: 'abr-state-save-name',
-                type: 'text',
-                val: globals.stateManager.state.name ? globals.stateManager.state.name : defaultStateName,
-            }).on('input', (evt) => {
-                let stateName = $(evt.target).val();
-                if (localStorage.getItem(stateName)) {
-                    $(evt.target).parent().append($('<p>', {class: 'save-as-warning', text: `Warning: State '${stateName}' already exists`}));
-                } else {
-                    $('.save-as-warning').remove();
-                    $(evt.target).css('background-color', null);
-                }
-            }).on('keyup', (evt) => {
-                if (evt.key == 'Enter') {
-                    let $input = $(evt.target);
-                    let stateName = $input.val();
-                    globals.stateManager.update('/name', stateName);
-                    localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
-                    $('#state-header #state-name').text(stateName);
-                    $(evt.target).parents('#save-as-dialog').dialog('close');
-                }
-            })
-        ));
+        // If the state name is still the default, ask the user to input a new one
+        if (stateName == defaultStateName) {
+            $saveStateAsButton.trigger('click');
+        } else {
+            localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
+            $('#state-header #state-name').text(stateName);
+        }
     }));
 
     // Undo/Redo
@@ -226,13 +244,14 @@ export function Header() {
         title: 'Undo', 
     }).on('click', (_evt) => {
         globals.stateManager.undo();
+        $('#state-name').text(globals.stateManager.state.name ? globals.stateManager.state.name : defaultStateName);
     }));
     $fileHeader.append($('<button>', {
         class: 'material-icons rounded',
         html: 'redo',
         title: 'Redo', 
     }).on('click', (_evt) => {
-        globals.stateManager.redo();
+        $('#state-name').text(globals.stateManager.state.name ? globals.stateManager.state.name : defaultStateName);
     }));
 
     // More settings
