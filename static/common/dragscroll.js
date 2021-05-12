@@ -1,1 +1,95 @@
-!function(e,n){"function"==typeof define&&define.amd?define(["exports"],n):n("undefined"!=typeof exports?exports:e.dragscroll={})}(this,function(e){var n,t,o=window,l=document,c="mousemove",r="mouseup",i="mousedown",m="EventListener",d="add"+m,s="remove"+m,f=[],u=function(e,m){for(e=0;e<f.length;)m=f[e++],m=m.container||m,m[s](i,m.md,0),o[s](r,m.mu,0),o[s](c,m.mm,0);for(f=[].slice.call(l.getElementsByClassName("dragscroll")),e=0;e<f.length;)!function(e,m,s,f,u,a){(a=e.container||e)[d](i,a.md=function(n){e.hasAttribute("nochilddrag")&&l.elementFromPoint(n.pageX,n.pageY)!=a||(f=1,m=n.clientX,s=n.clientY,n.preventDefault())},0),o[d](r,a.mu=function(){f=0},0),o[d](c,a.mm=function(o){f&&((u=e.scroller||e).scrollLeft-=n=-m+(m=o.clientX),u.scrollTop-=t=-s+(s=o.clientY),e==l.body&&((u=l.documentElement).scrollLeft-=n,u.scrollTop-=t))},0)}(f[e++])};"complete"==l.readyState?u():o[d]("load",u,0),e.reset=u});
+/**
+ * @fileoverview dragscroll - scroll area by dragging
+ * @version 0.0.8
+ * 
+ * @license MIT, see http://github.com/asvd/dragscroll
+ * @copyright 2015 asvd <heliosframework@gmail.com> 
+ */
+
+
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        factory(exports);
+    } else {
+        factory((root.dragscroll = {}));
+    }
+}(this, function (exports) {
+    var _window = window;
+    var _document = document;
+    var mousemove = 'mousemove';
+    var mouseup = 'mouseup';
+    var mousedown = 'mousedown';
+    var EventListener = 'EventListener';
+    var addEventListener = 'add'+EventListener;
+    var removeEventListener = 'remove'+EventListener;
+    var newScrollX, newScrollY;
+
+    var dragged = [];
+    var reset = function(i, el) {
+        for (i = 0; i < dragged.length;) {
+            el = dragged[i++];
+            el = el.container || el;
+            el[removeEventListener](mousedown, el.md, 0);
+            _window[removeEventListener](mouseup, el.mu, 0);
+            _window[removeEventListener](mousemove, el.mm, 0);
+        }
+
+        // cloning into array since HTMLCollection is updated dynamically
+        dragged = [].slice.call(_document.getElementsByClassName('dragscroll'));
+        for (i = 0; i < dragged.length;) {
+            (function(el, lastClientX, lastClientY, pushed, scroller, cont){
+                (cont = el.container || el)[addEventListener](
+                    mousedown,
+                    cont.md = function(e) {
+                        if (!el.hasAttribute('nochilddrag') ||
+                            _document.elementFromPoint(
+                                e.pageX, e.pageY
+                            ) == cont
+                        ) {
+                            pushed = e.button;
+
+                            // Middle mouse only
+                            if (e.button == 1) {
+                                lastClientX = e.clientX;
+                                lastClientY = e.clientY;
+                                e.preventDefault();
+                            }
+                        }
+                    }, 0
+                );
+
+                _window[addEventListener](
+                    mouseup, cont.mu = function() {pushed = -1;}, 0
+                );
+
+                _window[addEventListener](
+                    mousemove,
+                    cont.mm = function(e) {
+                        // Middle mouse only
+                        if (pushed == 1) {
+                            (scroller = el.scroller||el).scrollLeft -=
+                                newScrollX = (- lastClientX + (lastClientX=e.clientX));
+                            scroller.scrollTop -=
+                                newScrollY = (- lastClientY + (lastClientY=e.clientY));
+                            if (el == _document.body) {
+                                (scroller = _document.documentElement).scrollLeft -= newScrollX;
+                                scroller.scrollTop -= newScrollY;
+                            }
+                        }
+                    }, 0
+                );
+             })(dragged[i++]);
+        }
+    }
+
+      
+    if (_document.readyState == 'complete') {
+        reset();
+    } else {
+        _window[addEventListener]('load', reset, 0);
+    }
+
+    exports.reset = reset;
+}));
