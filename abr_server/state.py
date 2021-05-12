@@ -4,6 +4,7 @@ import jsonschema
 import json
 import time
 import jsondiff
+import logging
 from copy import deepcopy
 from django.conf import settings
 from pathlib import Path
@@ -11,6 +12,8 @@ from threading import Lock
 
 from .notifier import notifier
 from .visasset_manager import download_visasset
+
+logger = logging.getLogger('django.server')
 
 SCHEMA_PATH = Path(settings.STATIC_ROOT).joinpath('schemas')
 STATE_SCHEMA = SCHEMA_PATH.joinpath('ABRSchema_0-2-0.json')
@@ -46,6 +49,8 @@ class State():
         self._default_state = {
             'version': self.state_schema['properties']['version']['const']
         }
+
+        logger.info('Using ABR Schema, version {}'.format(self._default_state['version']))
 
         # Initialize a blank starting state
         self._state = deepcopy(self._default_state)
