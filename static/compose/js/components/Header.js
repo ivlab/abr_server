@@ -96,9 +96,11 @@ export function Header() {
                 let reader = new FileReader();
                 $(reader).on('load', (loadEvt) => {
                     // Update the state with the stateManager
-                    loadEvt.target.result.name = stateName;
-                    localStorage[STORAGE_STATE_PREFIX + stateName] = loadEvt.target.result;
-                    globals.stateManager.updateState(loadEvt.target.result);
+                    let state = JSON.parse(loadEvt.target.result);
+                    state.name = stateName;
+                    let stateStr = JSON.stringify(state);
+                    localStorage[STORAGE_STATE_PREFIX + stateName] = stateStr;
+                    globals.stateManager.updateState(stateStr);
                 });
                 reader.readAsText(evt.target.files[0]);
 
