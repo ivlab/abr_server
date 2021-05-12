@@ -251,7 +251,7 @@ export function Header() {
         let stateName = globals.stateManager.state.name;
 
         // If the state name is still the default, ask the user to input a new one
-        if (stateName == defaultStateName) {
+        if (!stateName || stateName == defaultStateName) {
             $saveStateAsButton.trigger('click');
         } else {
             localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
