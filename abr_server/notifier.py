@@ -13,6 +13,9 @@ from threading import Lock
 from .unity_connector import UnityConnector
 from django.conf import settings
 import os
+import logging
+
+logger = logging.getLogger('django.server')
 
 # DEFAULT_ADDRESS = '127.0.0.1'
 DEFAULT_ADDRESS = socket.gethostbyname(socket.gethostname())
@@ -61,13 +64,13 @@ class StateNotifier:
         with self._subscriber_lock:
             if str(sub_id) in self.ws_subscribers:
                 del self.ws_subscribers[str(sub_id)]
-        print('Unsubscribed notifier ws')
+        logger.debug('Unsubscribed notifier WebSocket')
 
     def unsubscribe_socket(self, sub_id):
         with self._subscriber_lock:
             if str(sub_id) in self.socket_subscribers:
                 del self.socket_subscribers[str(sub_id)]
-        print('Unsubscribed notifier socket')
+        logger.debug('Unsubscribed notifier socket')
 
     def notify(self, message):
         '''

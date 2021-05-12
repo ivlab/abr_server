@@ -78,7 +78,6 @@ class UnityConnector:
 
         except OSError as e:
             err = 'Unable to start Unity connection socket'
-            print(e)
             logger.error(err)
 
         except KeyboardInterrupt:

@@ -16,9 +16,9 @@ class ClientMessenger(WebsocketConsumer):
 
     def connect(self):
         self.accept()
-        logger.info('WebSocket client connected')
+        logger.debug('WebSocket client connected')
         self.id = notifier.subscribe_ws(self)
 
     def disconnect(self, status):
-        logger.info('WebSocket client disconnected: {}'.format(status))
+        logger.debug('WebSocket client disconnected: {}'.format(status))
         notifier.unsubscribe_ws(self.id)
