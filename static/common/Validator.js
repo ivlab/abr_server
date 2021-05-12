@@ -21,6 +21,7 @@ export class Validator {
                     // verbose: true,
                 });
                 ajv.addSchema(this._schema, schemaID);
+                console.log(`Using ABR Schema, version ${this._schema.properties.version.const}`)
                 return ajv;
             });
     }
