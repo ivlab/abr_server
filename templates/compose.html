@@ -50,9 +50,6 @@
         // Get the static and media URL from Django and store it for JS use
         // STATIC_URL is for static items (like puzzle piece svgs)
         var STATIC_URL = "{% get_static_prefix %}";
-        // MEDIA_URL is for dynamic items (like states, screenshots, and visassets)
-        let colonIndex = window.location.host.indexOf(':');
-        var MEDIA_URL = 'http://' + window.location.host.slice(0, colonIndex + 1) + '8001/';
     </script>
 
     <script src="{% static 'compose/js/index.js' %}" type="module"></script>
