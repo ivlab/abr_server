@@ -40,9 +40,10 @@ export function Header() {
                     "Save": function () {
                         let $input = $(this).find('input');
                         let stateName = $input.val();
-                        globals.stateManager.update('/name', stateName);
-                        localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
-                        $('#state-header #state-name').text(stateName);
+                        globals.stateManager.update('/name', stateName).then(() => {
+                            localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
+                            $('#state-header #state-name').text(stateName);
+                        });
                         $(this).dialog('destroy');
                     },
                     "Cancel": function () {

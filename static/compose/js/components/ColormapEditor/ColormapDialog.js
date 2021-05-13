@@ -199,9 +199,9 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
             let defaultPerc = 0.5;
             let colorAtDefault = activeColormap.lookupColor(defaultPerc);
             $('#color-slider').append(ColorThumb(defaultPerc, floatToHex(colorAtDefault), () => {
-                activeColormap = updateColormap();
+                updateColormap();
             }));
-            activeColormap = updateColormap();
+            updateColormap();
     }));
 
     $colormapEditor.append($buttons);
@@ -239,10 +239,10 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         let pt = c[0];
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
-            activeColormap = updateColormap();
+            updateColormap();
         }));
     });
-    activeColormap = updateColormap();
+    updateColormap();
 
     if (variableInput) {
         updateHistogram(currentMinMax.min, currentMinMax.max);
@@ -288,10 +288,9 @@ function saveColormap(oldUuid, artifactJson) {
 
 function updateColormap() {
     updateSpectrum();
-    let newcmap = getColormapFromThumbs();
+    activeColormap = getColormapFromThumbs();
     updateColormapDisplay();
     updateColorThumbPositions();
-    return newcmap;
 }
 
 function getColormapFromThumbs() {
@@ -317,7 +316,7 @@ function updateColorThumbPositions() {
         let pt = c[0];
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
-            activeColormap = updateColormap()
+            updateColormap()
         }));
     });
     updateSpectrum();
