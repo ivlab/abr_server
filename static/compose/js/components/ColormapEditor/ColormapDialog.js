@@ -70,17 +70,24 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         let variableName = DataPath.getName(variableInput.inputValue);
         let keyDataName = DataPath.getName(keyDataInput.inputValue);
 
+        // Fetch the histogram from the server
+        let url = new URL(`${window.location}api/histogram/${keyDataInput.inputValue}/${variableName}`);
+        url.search = new URLSearchParams(currentMinMax);
+
+        zippedHistogram = await fetch(url).then((resp) => resp.json());
+
         // Try to get the current min/max from state if it's been redefined
         if (globals.stateManager.state.dataRanges && globals.stateManager.state.dataRanges.scalarRanges) {
             currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
         }
 
+        if (!currentMinMax) {
+            currentMinMax = {
+                min: zippedHistogram.keyDataMin,
+                max: zippedHistogram.keyDataMax,
+            }
+        }
 
-        // Fetch the min/max value from the server with the histogram
-        let url = new URL(`${window.location}api/histogram/${keyDataInput.inputValue}/${variableName}`);
-        url.search = new URLSearchParams(currentMinMax);
-
-        zippedHistogram = await fetch(url).then((resp) => resp.json());
 
         let $histContainer = $('<div>', {
             id: 'histogram-container',
@@ -262,6 +269,19 @@ function saveColormap(oldUuid, artifactJson) {
 
     // Update the state with this particular local colormap
     globals.stateManager.update(`localVisAssets/${newUuid}`, data);
+
+    // Attach the new colormap, if we've changed UUIDs
+    if (newUuid != oldUuid) {
+        let pathsToUpdate = globals.stateManager.findPath((el) => {
+            return el.hasOwnProperty('inputType') && 
+                el.inputType == 'IVLab.ABREngine.ColormapVisAsset' &&
+                el.hasOwnProperty('inputValue') && 
+                el.inputValue == oldUuid
+        });
+        for (const p of pathsToUpdate) {
+            globals.stateManager.update(`${p}/inputValue`, newUuid);
+        }
+    }
 
     return newUuid;
 }
