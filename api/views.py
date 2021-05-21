@@ -11,7 +11,7 @@ from django.conf import settings
 from pathlib import Path
 
 from abr_server.state import state
-from abr_server.notifier import notifier, LOCAL_ADDRESSES
+from abr_server.notifier import notifier
 from abr_server import visasset_manager
 
 VISASSET_CACHE = {}
@@ -99,25 +99,6 @@ def redo(request):
     else:
         return HttpResponse('Method for redo must be POST', status=400)
 
-@csrf_exempt
-def subscribe(request):
-    # TODO: add authentication
-    # https://en.wikipedia.org/wiki/Basic_access_authentication
-    if request.method == 'POST':
-        client_ip = get_client_ip(request)
-        same_machine = client_ip in LOCAL_ADDRESSES
-        resp = notifier.subscribe_socket(same_machine)
-        return JsonResponse(resp)
-    else:
-        return HttpResponse('Method for subscribe must be POST', status=400)
-
-@csrf_exempt
-def unsubscribe(request, uuid):
-    if request.method == 'POST':
-        notifier.unsubscribe_socket(uuid)
-        return HttpResponse('OK')
-    else:
-        return HttpResponse('Method for subscribe must be POST', status=400)
 
 # https://stackoverflow.com/a/4581997
 def get_client_ip(request):

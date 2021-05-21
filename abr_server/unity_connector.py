@@ -6,6 +6,7 @@
 # Socket connection to Unity
 
 import sys
+import uuid
 import time
 import socket
 import logging
@@ -48,6 +49,9 @@ class UnityConnector:
 
     def get_port(self):
         return self.unity_socket.getsockname()[1]
+    
+    def get_address(self):
+        return self.unity_socket.getsockname()[0]
 
     def subscribe(self, callback):
         logger.info('New client subscribed to Unity messages')
@@ -59,9 +63,14 @@ class UnityConnector:
 
     def send(self, message):
         '''
-            `message` is a bytestring of the JSON message
+            `message` is a bytestring of the JSON message. Only queues messages if there are connected Unity clients.
         '''
-        self.to_unity_queue.put(message.encode('utf-8'))
+        if len(self.connections) > 0:
+            self.to_unity_queue.put(message.encode('utf-8'))
+        else:
+            # Empty the queue otherwise
+            while self.to_unity_queue.qsize() > 0:
+                self.to_unity_queue.get()
 
     def _listen(self):
         try:
@@ -69,12 +78,13 @@ class UnityConnector:
                 try:
                     conn, _addr = self.unity_socket.accept()
                     with self.connections_lock:
-                        logger.info('New Unity connection')
+                        logger.info('New Unity connection: {}'.format(conn.getpeername()))
                         self.connections.append(conn)
                 except OSError as e:
+                    logger.debug(e)
                     if e.errno == 11: # EWOULDBLOCK
                         logger.error('No Unity connection')
-                time.sleep(0.1)
+                time.sleep(0.5)
 
         except OSError as e:
             err = 'Unable to start Unity connection socket'
@@ -85,15 +95,16 @@ class UnityConnector:
 
     def _receiver(self):
         # Keep going until the server is killed
-        # Ping every 1s. The sender will set self.connected_to_engine to true
+        # Ping every 0.1s. The sender will set self.connected_to_engine to true
         # if it successfully sent bytes to the engine.
         while self.running:
+            cons_to_remove = []
             for conn in self.connections:
                 # Wait for messages from the ABR engine, then forward them to the
                 # web client
                 try:
                     # Receive the length of the next message (an Int32, assumed to be
-                    # little endian)
+                    # big endian for network byte order)
                     length = int.from_bytes(conn.recv(4), 'big')
 
                     # Construct the whole message from the socket
@@ -112,21 +123,26 @@ class UnityConnector:
                 except BlockingIOError:
                     pass
                 except OSError as e:
-                    if e.errno == 32: # Broken pipe, remove from subscribers
-                        self.running = False
-                        self.dead = True
-                except Exception:
-                    logger.error('Did not send to Unity: {}'.format(e))
+                    # The connection was closed
+                    cons_to_remove.append(conn)
+                except Exception as e:
+                    logger.error('Did not receive from Unity: {}'.format(e))
 
-            time.sleep(1)
-        
+            for conn in cons_to_remove:
+                if conn in self.connections:
+                    self.connections.remove(conn)
+                    logger.info('Unsubscribed Unity connection {}, now {} connections'.format(conn.getpeername(), len(self.connections)))
+
+            time.sleep(0.2)
+
         logger.info('Stopped receiver thread')
 
 
     def _sender(self):
         # Keep going until the server is killed
-        # Ping every 1s.
+        # Ping every 0.1s.
         while self.running:
+            cons_to_remove = []
             # Send messages from the design client to the ABR engine
             while not self.to_unity_queue.empty():
                 for conn in self.connections:
@@ -137,6 +153,7 @@ class UnityConnector:
                         length = len(message)
                         total_bytes = 0
                         while total_bytes < 4:
+                            # Assume big endian Int32 for network byte order
                             total_bytes += conn.send(int.to_bytes(length, 4, 'big'))
 
                         total_bytes = 0
@@ -146,12 +163,16 @@ class UnityConnector:
                     except BlockingIOError:
                         pass
                     except OSError as e:
-                        if e.errno == 32: # Broken pipe, remove from subscribers
-                            self.running = False
-                            self.dead = True
-                    except Exception:
+                        # The connection was closed
+                        cons_to_remove.append(conn)
+                    except Exception as e:
                         logger.error('Did not send to Unity: {}'.format(e))
 
-            time.sleep(1)
+            for conn in cons_to_remove:
+                if conn in self.connections:
+                    self.connections.remove(conn)
+                    logger.info('Unsubscribed Unity connection {}, now {} connections'.format(conn.getpeername(), len(self.connections)))
+
+            time.sleep(0.2)
 
         logger.info('Stopped sender thread')

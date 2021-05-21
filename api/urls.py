@@ -10,8 +10,6 @@ urlpatterns = [
     re_path('^state/*', views.modify_state),
     re_path('^remove-path/*', views.remove_path),
     path('remove/<str:value>', views.remove),
-    path('subscribe', views.subscribe),
-    path('unsubscribe/<str:uuid>', views.unsubscribe),
     path('visassets', views.list_visassets),
     path('datasets', views.list_datasets),
     path('download-visasset/<str:uuid>', views.download_visasset),
