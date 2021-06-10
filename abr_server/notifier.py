@@ -17,7 +17,7 @@ import logging
 
 logger = logging.getLogger('django.server')
 
-DEFAULT_ADDRESS = socket.gethostbyname(socket.gethostname())
+DEFAULT_ADDRESS = '0.0.0.0'
 DEFAULT_PORT = 8001 # Need to know port ahead of time so Docker can forward it
 LOCAL_ADDRESSES = {
     DEFAULT_ADDRESS,

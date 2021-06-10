@@ -31,7 +31,7 @@ class UnityConnector:
         self.connections_lock = Lock()
         self.connections = []
 
-        logger.info('Initializing Unity connection socket')
+        logger.info('Initializing Unity connection socket on {}:{}'.format(self.address, self.port))
         self.unity_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self.subscribers = set()
@@ -39,6 +39,7 @@ class UnityConnector:
 
         self.unity_socket.bind((self.address, self.port))
         self.unity_socket.listen()
+        logger.info('Unity connection socket listening on {}:{}'.format(self.get_address(), self.get_port()))
 
         self.listener_thread = Thread(target=self._listen)
         self.receiver_thread = Thread(target=self._receiver)

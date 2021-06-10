@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import time
 from pathlib import Path
+from types import MemberDescriptorType
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -160,6 +161,9 @@ if not os.path.exists(MEDIA_ROOT):
 DOWNLOAD_VISASSETS = True # Download visassets from a particular state if they don't exist
 VISASSET_PATH = Path(MEDIA_ROOT).joinpath('visassets')
 DATASET_PATH = Path(MEDIA_ROOT).joinpath('datasets')
+
+print('VisAssets path:', VISASSET_PATH)
+print('Dataset path:', DATASET_PATH)
 
 if not DATASET_PATH.exists():
     DATASET_PATH.mkdir()
