@@ -10,7 +10,6 @@ import json
 import uuid
 import socket
 from threading import Lock
-from .unity_connector import UnityConnector
 from django.conf import settings
 import os
 import logging
@@ -28,8 +27,6 @@ LOCAL_ADDRESSES = {
 class StateNotifier:
     def __init__(self):
         self._subscriber_lock = Lock()
-
-        self.unity_connector = UnityConnector(DEFAULT_ADDRESS, DEFAULT_PORT)
 
         self.ws_subscribers = {}
 
@@ -53,6 +50,7 @@ class StateNotifier:
         sub_id = uuid.uuid4()
         with self._subscriber_lock:
             self.ws_subscribers[str(sub_id)] = ws
+        logger.debug('Subscribed notifier WebSocket')
         return sub_id
 
     def unsubscribe_ws(self, sub_id):
@@ -63,12 +61,9 @@ class StateNotifier:
 
     def notify(self, message):
         '''
-            Send out a message to all connected parties
+            Send out a message to all connected parties on WebSocket
         '''
         message = json.dumps(message)
-
-        # Let UnityConnector manage all connected sockets
-        self.unity_connector.send(message)
 
         for _id, ws in self.ws_subscribers.items():
             ws.send(message)
