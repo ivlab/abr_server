@@ -204,7 +204,7 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
     let oldVisibility = true;
     if (globals.stateManager.state.impressions && globals.stateManager.state.impressions[uuid]) {
         if (globals.stateManager.state.impressions[uuid].renderHints) {
-            oldVisibility = globals.stateManager.state.impressions[uuid].renderHints.visible;
+            oldVisibility = globals.stateManager.state.impressions[uuid].renderHints.Visible;
         }
     }
     let $el = $('<div>', {
@@ -216,7 +216,7 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
                 text: oldVisibility ? 'visibility' : 'visibility_off',
                 title: oldVisibility ? 'This data impression is visible' : 'This data impression is not shown',
             }).on('click', (evt) => {
-                globals.stateManager.update(`/impressions/${uuid}/renderHints/visible`, !oldVisibility);
+                globals.stateManager.update(`/impressions/${uuid}/renderHints/Visible`, !oldVisibility);
             })
         ).append(
             $('<button>', {
