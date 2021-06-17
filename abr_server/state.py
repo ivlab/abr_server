@@ -1,6 +1,7 @@
 import os
 import sys
 import jsonschema
+import requests
 import json
 import time
 import jsondiff
@@ -15,8 +16,7 @@ from .visasset_manager import download_visasset
 
 logger = logging.getLogger('django.server')
 
-SCHEMA_PATH = Path(settings.STATIC_ROOT).joinpath('schemas')
-STATE_SCHEMA = SCHEMA_PATH.joinpath('ABRSchema_0-2-0.json')
+SCHEMA_URL = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/ABRSchema_0-2-0.json'
 
 BACKUP_LOCATIONS = {
     'linux': Path('~/.config/abr/'),
@@ -39,15 +39,18 @@ class State():
         BACKUP_PATH.touch()
         self.backup_path = BACKUP_PATH.resolve()
 
-        with open(STATE_SCHEMA) as scm:
-            self.state_schema = json.load(scm)
+        resp = requests.get(SCHEMA_URL)
+        if resp.status_code != 200:
+            logger.error('Unable to load schema from url {0}'.format(SCHEMA_URL))
+            return
 
+        self.state_schema = resp.json()
 
         # Lock around state modifications
         self._state_lock = Lock()
 
         self._default_state = {
-            'version': self.state_schema['properties']['version']['const']
+            'version': self.state_schema['properties']['version']['default']
         }
 
         logger.info('Using ABR Schema, version {}'.format(self._default_state['version']))
