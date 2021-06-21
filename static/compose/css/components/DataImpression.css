@@ -102,8 +102,3 @@
     width: calc(13rem - 2*5rem - 2*0.2rem);
     left: calc(50% - (13rem - 2*5rem - 2*0.2rem) * 0.5);
 }
-
-.drop-zone .puzzle-label, .drop-zone .puzzle-connector {
-    background-color: #605e5b !important;
-    color: #f8f4f4 !important;
-}

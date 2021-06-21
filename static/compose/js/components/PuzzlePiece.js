@@ -38,6 +38,16 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     }
 
     $element.attr('title', label);
+    $element.on('dragstart', (evt, ui) => {
+        // Find all drop zones that match this input type
+        let elType = $(evt.target).data('inputType');
+        let $dropZones = $('.input-socket .puzzle-piece.drop-zone');
+        let $sameTypeZones = $dropZones.filter((i, el) => $(el).data('inputType') == elType );
+        $sameTypeZones.addClass('highlighted');
+    });
+    $element.on('dragstop', (evt, ui) => {
+        $('.puzzle-piece.drop-zone').removeClass('highlighted');
+    });
     return $element;
 }
 
