@@ -5,23 +5,22 @@
  * 
  */
 
+const SCHEMA_URL = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/ABRSchema_0-2-0.json';
+
 export class Validator {
-    constructor(schemaID) {
+    constructor() {
         this._pendingValidations = [];
 
-        this.schemaID = schemaID;
+        this.schemaID = SCHEMA_URL;
         this._schema = null;
 
-        this._validator = fetch(`/api/schemas/${schemaID}`)
-            .then((resp) => resp.text())
-            .then((text) => {
-                this._schema = JSON.parse(text);
-                let ajv = new Ajv({
-                    // allErrors: true,
-                    // verbose: true,
-                });
-                ajv.addSchema(this._schema, schemaID);
-                console.log(`Using ABR Schema, version ${this._schema.properties.version.const}`)
+        this._validator = fetch(this.schemaID)
+            .then((resp) => resp.json())
+            .then((j) => {
+                this._schema = j
+                let ajv = new Ajv();
+                ajv.addSchema(this._schema, this.schemaID);
+                console.log(`Using ABR Schema, version ${this._schema.properties.version.default}`)
                 return ajv;
             });
     }
