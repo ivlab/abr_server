@@ -274,6 +274,7 @@ export function Header() {
         html: 'redo',
         title: 'Redo', 
     }).on('click', (_evt) => {
+        globals.stateManager.redo();
         $('#state-name').text(globals.stateManager.state.name ? globals.stateManager.state.name : defaultStateName);
     }));
 
