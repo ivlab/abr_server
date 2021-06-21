@@ -90,7 +90,7 @@ class State():
             # Clear the redo stack, because if we made a change to the state all
             # the previous redos are invalid
             with self._state_lock:
-                state_diff = jsondiff.diff(self._pending_state, self._state, syntax='symmetric')
+                state_diff = jsondiff.diff(self._pending_state, self._state, syntax='symmetric', marshal=True)
                 if len(state_diff) > 0: # Only record the change if there's actually a diff
                     self.undo_stack.append(state_diff)
                     self.redo_stack.clear()
@@ -263,7 +263,7 @@ class State():
             return 'Nothing to undo'
 
         with self._state_lock:
-            undone_state = jsondiff.patch(self._state, diff_w_previous, syntax='symmetric')
+            undone_state = jsondiff.patch(self._state, diff_w_previous, syntax='symmetric', marshal=True)
             self._state = undone_state
             self._pending_state = undone_state
         self.redo_stack.append(diff_w_previous)
@@ -286,7 +286,7 @@ class State():
             return 'Nothing to redo'
 
         with self._state_lock:
-            undone_state = jsondiff.JsonDiffer(syntax='symmetric').unpatch(self._state, diff_w_next)
+            undone_state = jsondiff.JsonDiffer(syntax='symmetric', marshal=True).unpatch(self._state, diff_w_next)
             self._state = undone_state
             self._pending_state = undone_state
         self.undo_stack.append(diff_w_next)
