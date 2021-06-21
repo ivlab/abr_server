@@ -91,9 +91,10 @@ class State():
             # the previous redos are invalid
             with self._state_lock:
                 state_diff = jsondiff.diff(self._pending_state, self._state, syntax='symmetric')
-                self.undo_stack.append(state_diff)
-                self.redo_stack.clear()
-                self._state = deepcopy(self._pending_state)
+                if len(state_diff) > 0: # Only record the change if there's actually a diff
+                    self.undo_stack.append(state_diff)
+                    self.redo_stack.clear()
+                    self._state = deepcopy(self._pending_state)
 
             # Tell any connected clients that we've updated the state
             notifier.notify({ 'target': 'state' })
