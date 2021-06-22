@@ -34,6 +34,11 @@ export function DataPanel() {
         text: 'Data Palette',
     }));
 
+    $dataPanel.append($('<p>', {
+        class: 'section-header',
+        text: 'Local Data'
+    }))
+
     fetch('/api/datasets')
         .then((resp) => resp.json())
         .then((datasets) => {
@@ -41,8 +46,6 @@ export function DataPanel() {
             for (const org in datasets) {
                 for (const dataset in datasets[org]) {
                     let keydataList = [];
-                    let scalarVarNames = new Set();
-                    let vectorVarNames = new Set();
                     for (const keydata in datasets[org][dataset]) {
                         let metadata = datasets[org][dataset][keydata]
                         let keyDataInput = {
@@ -54,49 +57,9 @@ export function DataPanel() {
                         keydataList.push(
                             SwatchInputPuzzlePiece(keydata, keyDataInput)
                         );
-
-                        // Vars may be shared between KeyData, so make sure only
-                        // one of each appears in the panel
-                        for (const name of metadata.scalarArrayNames) {
-                            scalarVarNames.add(name);
-                        }
-                        for (const name of metadata.vectorArrayNames) {
-                            vectorVarNames.add(name);
-                        }
                     }
 
-                    let scalarVarList = [...scalarVarNames]
-                        .filter((n) => n && n.length > 0)
-                        .map((n) => {
-                            let scalarVarInput = {
-                                inputType: 'IVLab.ABREngine.ScalarDataVariable',
-                                inputGenre: 'Variable',
-                                inputValue: DataPath.makePath(org, dataset, 'ScalarVar', n),
-                            };
-                            return SwatchInputPuzzlePiece(n, scalarVarInput)
-                    });
-                    let vectorVarList = [...vectorVarNames]
-                        .filter((n) => n && n.length > 0)
-                        .map((n) => {
-                            let vectorVarInput = {
-                                inputType: 'IVLab.ABREngine.VectorDataVariable',
-                                inputGenre: 'Variable',
-                                inputValue: DataPath.makePath(org, dataset, 'VectorVar', n),
-                            };
-                            return SwatchInputPuzzlePiece(n, vectorVarInput);
-                    });
-
-                    let $keydata = SwatchList('Key Data', keydataList);
-                    let $scalarVars = SwatchList('Scalar Variables', scalarVarList);
-                    let $vectorVars = SwatchList('Vector Variables', vectorVarList);
-                    let $dataset = $('<div>')
-                        .append($keydata)
-                        .append($scalarVars)
-                        .append($vectorVars);
-                    $dataPanel.append($('<p>', {
-                        class: 'section-header',
-                        text: DataPath.makePath(org, dataset),
-                    }))
+                    let $dataset = SwatchList(DataPath.makePath(org, dataset), keydataList);
                     $dataPanel.append($dataset);
                 }
             }

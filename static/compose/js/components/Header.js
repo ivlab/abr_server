@@ -314,12 +314,12 @@ export function Header() {
 
     // Capture a screenshot
     // TODO
-    $screenshotHeader.append($('<button>', {
-        class: 'material-icons rounded',
-        html: 'camera_alt', 
-    }).on('click', (_evt) => {
-        alert('For now, please make screenshots in Unity using the "s" key.')
-    }));
+    // $screenshotHeader.append($('<button>', {
+    //     class: 'material-icons rounded',
+    //     html: 'camera_alt',
+    // }).on('click', (_evt) => {
+    //     alert('For now, please make screenshots in Unity using the "s" key.')
+    // }));
 
     // Screenshot gallery
     // TODO
