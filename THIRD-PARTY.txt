@@ -9,3 +9,6 @@ This project incorporates components from the projects listed below.
 5. JSON Diff (https://github.com/xlwings/jsondiff)
 6. URLLib3 (https://github.com/urllib3/urllib3)
 7. Requests (https://github.com/psf/requests)
+8. DragScroll (http://github.com/asvd/dragscroll)
+9. AJV (https://github.com/ajv-validator/ajv)
+10. Color conversion (https://github.com/antimatter15/rgb-lab)
