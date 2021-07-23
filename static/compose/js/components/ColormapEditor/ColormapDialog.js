@@ -64,6 +64,11 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         class: 'colormap-editor',
     });
 
+    $colormapEditor.dialog({
+        'title': variableInput ? 'Colormap + Variable Range Editor' : 'Colormap Editor',
+        'minWidth': dialogWidth,
+    });
+
     // Label the min/max of the histogram (only if there's a variable attached)
     if (variableInput) {
         currentVarPath = variableInput.inputValue;
@@ -115,25 +120,40 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
             $('<div>', {
                 class: 'centered',
                 css: {
-                    'background-color': 'white'
+                    'background-color': 'white',
                 }
             }).append(
                 $('<div>', {
                     class: 'variable-labels',
-                }).append($('<p>', {
-                    text: currentMinMax.min.toFixed(4),
-                    id: 'slider-minLabel'
+                }).append($('<input>', {
+                    id: 'slider-minLabel',
+                    type: 'number',
+                    step: 0.0001,
+                    value: currentMinMax.min.toFixed(4),
+                    change: function() {
+                        currentMinMax.min = parseFloat(this.value);
+                        $('.data-remapping-slider').slider('values', 0, currentMinMax.min);
+                        updateHistogram(currentMinMax.min, currentMinMax.max);
+                    },
                 })).append($('<p>', {
                     html: `<em>${keyDataName} &rarr; <strong>${variableName}</strong></em>`,
-                })).append($('<p>', {
-                    text: currentMinMax.max.toFixed(4),
-                    id: 'slider-maxLabel'
+                })).append($('<input>', {
+                    id: 'slider-maxLabel',
+                    type: 'number',
+                    step: 0.0001,
+                    value: currentMinMax.max.toFixed(4),
+                    change: function() {
+                        currentMinMax.max = parseFloat(this.value);
+                        $('.data-remapping-slider').slider('values', 1, currentMinMax.max);
+                        updateHistogram(currentMinMax.min, currentMinMax.max);
+                    },
                 }))
             )
         );
+
         $colormapEditor.append(
             $('<div>', {
-                id: '#data-remapper',
+                id: 'data-remapper',
                 class: 'centered',
             }).append(
                 DataRemappingSlider(0, 1, 0, 1, width)
@@ -146,7 +166,16 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
                 }
                 updateHistogram(filterMin, filterMax);
             })
-        )
+        );
+
+        let $sliderMinHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(2)');
+        let $sliderMaxHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(3)');
+        let $handleMarkerBar = $('<div>', {
+            class: 'marker-bar handle-marker-bar'
+        })
+
+        $sliderMinHandle.append($handleMarkerBar);
+        $sliderMaxHandle.append($handleMarkerBar.clone());
     }
 
     // Append the colormap canvas
@@ -165,7 +194,7 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
     $colormapEditor.append($('<div>', {
         id: 'color-slider',
         class: 'centered',
-    }).width(dialogWidth).height('6rem'));
+    }));
 
 
     // Add the UI buttons
@@ -226,12 +255,6 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
     }).attr('title', 'Drop a color swatch here to discard');
 
     $colormapEditor.append($trash);
-
-    $colormapEditor.dialog({
-        'title': variableInput ? 'Colormap + Variable Range Editor' : 'Colormap Editor',
-        'minWidth': dialogWidth,
-    });
-
 
     // Populate the colors from xml
     activeColormap = ColorMap.fromXML(colormapXml);
@@ -333,6 +356,30 @@ function updateSpectrum() {
     });
 }
 
+// Move the slider labels as the slider handles are dragged.
+// ? Why do it like this: 
+//     A different way to do this is to nest each label inside each handle, 
+//     but this will trigger the 'slide' event every time we type in the label text boxes
+//     -> trigger 'slide' callback
+//     -> reset labels' <input> values before we finish typing
+// ! Note:
+//     Need to find a way to stop repeatedly querying for objects
+function updateSliderLabelsPosition() {
+    let $sliderMinLabel = $('#slider-minLabel');
+    let $sliderMaxLabel = $('#slider-maxLabel');
+    let $sliderMinHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(2)');
+    let $sliderMaxHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(3)');
+
+    $sliderMinLabel.offset({
+        top: $sliderMinHandle.offset().top - 30,
+        left: $sliderMinHandle.offset().left - 25,
+    });
+    $sliderMaxLabel.offset({
+        top: $sliderMaxHandle.offset().top - 30,
+        left: $sliderMaxHandle.offset().left - 25,
+    });
+}
+
 function updateHistogram(minm, maxm) {
     // In case there were any old histograms hanging out
     d3.selectAll('#histogram > *').remove();
@@ -385,13 +432,16 @@ function updateHistogram(minm, maxm) {
         .slider('values', 1, maxm)
         .slider('option', 'slide', (evt, ui) => {
             let [filterMin, filterMax] = ui.values;
-            $('.variable-labels #slider-minLabel').text(filterMin);
-            $('.variable-labels #slider-maxLabel').text(filterMax);
+            $('#slider-minLabel').val(filterMin);
+            $('#slider-maxLabel').val(filterMax);
+            updateSliderLabelsPosition();
         });
 
     // Update the numbers to reflect
-    $('.variable-labels #slider-minLabel').text(minm.toFixed(4));
-    $('.variable-labels #slider-maxLabel').text(maxm.toFixed(4));
+    $('#slider-minLabel').val(minm.toFixed(4));
+    $('#slider-maxLabel').val(maxm.toFixed(4));
+
+    updateSliderLabelsPosition();
 
     currentMinMax = {
         min: minm,
