@@ -115,7 +115,17 @@ export class StateManager {
                 // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin'
-                    });
+        });
+    }
+
+    async removeVisAsset(visAssetUUID) {
+        await fetch('/api/remove-visasset/' + visAssetUUID, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            mode: 'same-origin',
+        })
     }
 
     async undo() {

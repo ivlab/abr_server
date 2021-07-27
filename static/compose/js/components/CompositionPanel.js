@@ -41,10 +41,17 @@ export function CompositionPanel() {
     ).droppable({
         tolerance: 'pointer',
         drop: (_evt, ui) => {
-            let value = $(ui.draggable).data('uuid');
+            // let value = $(ui.draggable).data('uuid');
+            
+            let value = $(ui.draggable).data('inputValue');
+            console.log(value);
+
             if (value) {
                 $(ui.draggable).remove();
-                globals.stateManager.removeAll(value);
+                // globals.stateManager.removeAll(value);
+
+                // ! Doesn't work
+                globals.stateManager.removeVisAsset(value);
             }
         },
         // Indicate that it's about to be deleted
