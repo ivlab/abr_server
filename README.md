@@ -20,6 +20,8 @@ fine for self-contained apps, but should we want to deploy to a proper server
 such a purpose (see [abr_server_nginx.conf](./abr_server_nginx.conf) and
 uwsgi_params.)
 
+Check out [CONTRIBUTING.md](./CONTRIBUTING.md) if you want to make changes to the server.
+
 
 ## Installation and setup
 
