@@ -194,7 +194,7 @@ class State():
 
     def remove_path(self, item_path):
         if len(item_path) == 0:
-            self._pending_state = self._default_state
+            self._pending_state = deepcopy(self._default_state)
         else:
             self._remove_path(self._pending_state, item_path)
         return self.validate_and_backup()
