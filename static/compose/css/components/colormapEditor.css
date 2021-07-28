@@ -90,6 +90,10 @@
     margin: 0 0.5rem;
 }
 
+/* Make the color picker for color thumbs bigger (default 200px) */
+.sp-picker-container {
+    width: 400px;
+}
 #color-slider {
     height: 5rem;
 }
