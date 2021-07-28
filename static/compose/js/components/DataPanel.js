@@ -72,6 +72,16 @@ export function DataPanel() {
                         );
                     }
 
+                    keydataList.sort((a, b) => {
+                        if (a.data('inputType') > b.data('inputType')) {
+                            return 1;
+                        } else if (a.data('inputType') < b.data('inputType')) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    });
+
                     let $dataset = SwatchList(DataPath.makePath(org, dataset), keydataList);
                     $dataPanel.append($dataset);
                 }
