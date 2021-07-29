@@ -244,13 +244,6 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         updateColorThumbPositions();
     }).prepend($('<span>', { class: 'ui-icon ui-icon-arrow-2-e-w'})));
 
-    let $addColorButton = $('<button>', {
-            class: 'create-color colormap-button',
-            text: 'Add color',
-            title: 'Add a new color to the colormap',
-        }).on('click', (evt) => {
-    }).prepend($('<span>', { class: 'ui-icon ui-icon-plus'}));
-
     $colormapEditor.append($buttons);
 
     let $trash = $('<img>', {
