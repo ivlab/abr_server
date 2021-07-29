@@ -41,6 +41,10 @@
     z-index: 1;
 }
 
+.data-chooser-row {
+    display: flex;
+}
+
 #design-panel {
     width: 16rem;
     z-index: 1;
