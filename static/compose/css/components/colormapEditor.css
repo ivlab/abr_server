@@ -35,10 +35,10 @@
 }
 .variable-labels > input {
     text-align: center;
-    width: 80px;
+    width: 8rem;
+    height: 2rem;
     border: 2px solid steelblue;
     border-radius: 7px;
-    /* padding: 5px; */
 }
 
 .percentage-display {

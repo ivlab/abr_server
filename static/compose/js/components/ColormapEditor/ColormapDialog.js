@@ -385,12 +385,12 @@ function updateSliderLabelsPosition() {
     let $sliderMaxHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(3)');
 
     $sliderMinLabel.offset({
-        top: $sliderMinHandle.offset().top - 30,
-        left: $sliderMinHandle.offset().left - 25,
+        top: $sliderMinHandle.offset().top - 36,
+        left: $sliderMinHandle.offset().left - 40,
     });
     $sliderMaxLabel.offset({
-        top: $sliderMaxHandle.offset().top - 30,
-        left: $sliderMaxHandle.offset().left - 25,
+        top: $sliderMaxHandle.offset().top - 36,
+        left: $sliderMaxHandle.offset().left - 40,
     });
 }
 
