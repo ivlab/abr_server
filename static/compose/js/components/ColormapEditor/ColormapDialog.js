@@ -37,23 +37,23 @@ var zippedHistogram = null;
 var currentVarPath = null;
 var currentMinMax = null;
 
-export async function ColormapDialog(uuid, variableInput, keyDataInput) {
+export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
     let visassetJson = null;
     let colormapXml = null;
-    if (globals.stateManager.keyExists(['localVisAssets'], uuid)) {
-        let va = globals.stateManager.state.localVisAssets[uuid];
+    if (globals.stateManager.keyExists(['localVisAssets'], vaUuid)) {
+        let va = globals.stateManager.state.localVisAssets[vaUuid];
         visassetJson = va.artifactJson;
         colormapXml = va.artifactDataContents[visassetJson['artifactData']['colormap']];
     } else {
         let visassets = globals.stateManager.getCache('visassets');
-        if (visassets && visassets[uuid]) {
-            visassetJson = visassets[uuid];
+        if (visassets && visassets[vaUuid]) {
+            visassetJson = visassets[vaUuid];
         }
 
         // Fetch the colormap xml from the server
         if (visassetJson) {
             let xmlName = visassetJson['artifactData']['colormap'];
-            let xmlUrl = `/media/visassets/${uuid}/${xmlName}`;
+            let xmlUrl = `/media/visassets/${vaUuid}/${xmlName}`;
             colormapXml = await fetch(xmlUrl).then((resp) => resp.text());
         }
     }
@@ -228,10 +228,10 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
 
     $buttons.append($('<button>', {
         class: 'save-colormap colormap-button',
-        text: 'Save',
-        title: 'Save the colormap',
+        text: 'Save custom',
+        title: 'Save custom colormap',
     }).on('click', (evt) => {
-        uuid = saveColormap(uuid, visassetJson);
+        saveColormap(vaUuid, visassetJson).then((u) => vaUuid = u);
     }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $buttons.append($('<button>', {
@@ -243,6 +243,17 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         updateColormapDisplay();
         updateColorThumbPositions();
     }).prepend($('<span>', { class: 'ui-icon ui-icon-arrow-2-e-w'})));
+
+    $buttons.append($('<button>', {
+        class: 'colormap-button',
+        text: 'Save copy to library',
+        title: 'Save a copy of this colormap to the local library for reuse in other visualizations',
+    }).on('click', (evt) => {
+        saveColormap(vaUuid, visassetJson).then((u) => {
+            vaUuid = u
+            saveColormapToLibrary(vaUuid);
+        });
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-arrowstop-1-s'})));
 
     $colormapEditor.append($buttons);
 
@@ -283,7 +294,7 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
     }
 }
 
-function saveColormap(oldUuid, artifactJson) {
+async function saveColormap(oldUuid, artifactJson) {
     // Give it a new uuid if it doesn't already exist in localVisAssets
     let newUuid = oldUuid;
     if (!globals.stateManager.keyExists(['localVisAssets'], oldUuid)) {
@@ -302,7 +313,7 @@ function saveColormap(oldUuid, artifactJson) {
     };
 
     // Update the state with this particular local colormap
-    globals.stateManager.update(`localVisAssets/${newUuid}`, data);
+    await globals.stateManager.update(`localVisAssets/${newUuid}`, data);
 
     // Attach the new colormap, if we've changed UUIDs
     if (newUuid != oldUuid) {
@@ -318,6 +329,17 @@ function saveColormap(oldUuid, artifactJson) {
     }
 
     return newUuid;
+}
+
+async function saveColormapToLibrary(vaUuid) {
+    return fetch('/api/save-local-visasset/' + vaUuid, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'X-CSRFToken': csrftoken,
+        },
+        mode: 'same-origin'
+    });
 }
 
 function updateColormap() {

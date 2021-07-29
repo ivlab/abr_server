@@ -178,6 +178,19 @@ def download_visasset(request, uuid):
         return HttpResponse('Method for download must be POST', status=400)
 
 @csrf_exempt
+def save_visasset(request, uuid):
+    if request.method == 'POST':
+        visasset_data = state.get_path(['localVisAssets', uuid])
+        save_success = visasset_manager.save_from_local(visasset_data)
+        if save_success:
+            notifier.notify({ 'target': 'CacheUpdate-visassets' })
+            return HttpResponse('Saved visasset', status=200)
+        else:
+            return HttpResponse('Unable to save Local VisAsset', status=400)
+    else:
+        return HttpResponse('Method for download must be POST', status=400)
+
+@csrf_exempt
 def remove_visasset(request, uuid):
     if request.method == 'DELETE':
         visasset_manager.remove_visasset(uuid)
