@@ -143,6 +143,14 @@ export function Header() {
             }
     });
 
+    // Open a raw state editor in a new window
+    let $rawEditorButton = $('<div>')
+        .append($('<span>', { class: 'material-icons', text: 'code'}))
+        .append($('<span>', { text: 'Open JSON editor...' }))
+        .on('click', (_evt) => {
+            window.open(window.location.href + 'raw-editor', '_blank');
+    });
+
 
     let outTimer = null;
     $('<ul>', {
@@ -154,6 +162,8 @@ export function Header() {
         $('<li>').append($importStateButton)
     ).append(
         $('<li>').append($exportStateButton)
+    ).append(
+        $('<li>').append($rawEditorButton)
     ).append(
         $('<li>').append($clearStateButton)
     ).menu().appendTo($(document.body)).on('mouseout', (evt) => {
