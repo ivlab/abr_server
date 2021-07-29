@@ -65,6 +65,10 @@ export function DataPanel() {
                 width: 400,
                 modal: true,
             });
+            let filterDatasets = {};
+            if (localStorage.getItem('filterDatasets')) {
+                filterDatasets = JSON.parse(localStorage.filterDatasets);
+            }
 
             for (const org in globals.dataCache) {
                 for (const dataset in globals.dataCache[org]) {
@@ -73,7 +77,7 @@ export function DataPanel() {
                     let $label = $('<label>', { text: datasetPath });
                     $label.prepend($('<input>', {
                         type: 'checkbox',
-                        prop: { checked: 'true', },
+                        prop: { checked: !filterDatasets.hasOwnProperty(datasetPath), },
                     }).on('click', (evt) => {
                         let filterDatasets = {};
                         if (localStorage.getItem('filterDatasets')) {
