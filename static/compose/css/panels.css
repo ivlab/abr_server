@@ -37,7 +37,7 @@
 }
 
 #data-panel {
-    width: 16rem;
+    width: 12rem;
     z-index: 1;
 }
 
@@ -46,12 +46,12 @@
 }
 
 #design-panel {
-    width: 16rem;
+    width: 12rem;
     z-index: 1;
 }
 
 #composition-panel {
-    width: calc(100% - 33rem);
+    width: calc(100% - 25rem);
     margin: 0 0.5rem 0 0.5rem;
     overflow: hidden !important;
 }
