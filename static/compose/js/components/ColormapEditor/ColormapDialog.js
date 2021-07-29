@@ -196,13 +196,23 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
     $colormapEditor.append($('<div>', {
         id: 'colormap',
         class: 'centered',
+        title: 'Double-click to create a new color'
     }).append($('<canvas>', {
         class: 'colormap-canvas',
         attr: {
             width: width,
             height: height,
         }
-    })));
+    })).on('dblclick', (evt) => {
+        let colormapLeftBound = evt.target.getBoundingClientRect().left;
+        let colormapWidth = evt.target.width;
+        let clickPercent = (evt.clientX - colormapLeftBound) / colormapWidth;
+        let colorAtClick = activeColormap.lookupColor(clickPercent);
+        $('#color-slider').append(ColorThumb(clickPercent, floatToHex(colorAtClick), () => {
+            updateColormap();
+        }));
+        updateColormap();
+    }));
 
     // Append the color swatch area
     $colormapEditor.append($('<div>', {
@@ -218,34 +228,28 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
 
     $buttons.append($('<button>', {
         class: 'save-colormap colormap-button',
-        text: 'Save Colormap',
+        text: 'Save',
         title: 'Save the colormap',
     }).on('click', (evt) => {
         uuid = saveColormap(uuid, visassetJson);
-    }));
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $buttons.append($('<button>', {
         class: 'flip-colormap colormap-button',
-        text: '< Flip colormap >',
+        text: 'Flip',
         title: 'Flip colormap',
     }).on('click', (evt) => {
         activeColormap.flip();
         updateColormapDisplay();
         updateColorThumbPositions();
-    }));
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-arrow-2-e-w'})));
 
-    $buttons.append($('<button>', {
+    let $addColorButton = $('<button>', {
             class: 'create-color colormap-button',
-            text: '(+) Add color',
+            text: 'Add color',
             title: 'Add a new color to the colormap',
         }).on('click', (evt) => {
-            let defaultPerc = 0.5;
-            let colorAtDefault = activeColormap.lookupColor(defaultPerc);
-            $('#color-slider').append(ColorThumb(defaultPerc, floatToHex(colorAtDefault), () => {
-                updateColormap();
-            }));
-            updateColormap();
-    }));
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-plus'}));
 
     $colormapEditor.append($buttons);
 
