@@ -66,14 +66,6 @@ export function DataPanel() {
                 modal: true,
             });
 
-            $chooserDialog.append($('<button>', {
-                text: 'Select All',
-            }));
-
-            $chooserDialog.append($('<button>', {
-                text: 'Select None',
-            }));
-
             for (const org in globals.dataCache) {
                 for (const dataset in globals.dataCache[org]) {
                     let datasetPath = DataPath.makePath(org, dataset);
