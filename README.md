@@ -41,9 +41,14 @@ The server can be run local-only (on localhost:8000 by default):
 python manage.py runserver
 ```
 
-
 The server can also be broadcast to other devices:
 
 ```
 python manage.py runserver 0.0.0.0:8000
+```
+
+To enable live-reloading (automatically refresh browser when a file is changed), run:
+
+```
+python manage.py livereload
 ```

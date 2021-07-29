@@ -7,6 +7,10 @@
     justify-content: center;
 }
 
+#histogram-container {
+    margin-top: 1rem;
+}
+
 #trash {
     width: 2em;
     height: 2em;
@@ -24,10 +28,17 @@
     display: flex;
     justify-content: space-between;
     width: 80%;
-    margin: 0.25rem 0;
+    margin: 1rem 0;
 }
 .variable-labels p {
     margin: 0;
+}
+.variable-labels > input {
+    text-align: center;
+    width: 80px;
+    border: 2px solid steelblue;
+    border-radius: 7px;
+    /* padding: 5px; */
 }
 
 .percentage-display {
@@ -40,7 +51,24 @@
 }
 
 #data-remapper {
-    margin-bottom: 0.25em;
+    margin-bottom: 0.75em;
+}
+
+.data-remapping-slider > .ui-slider-range {
+    background-color: steelblue;
+}
+
+.data-remapping-slider > .ui-slider-handle {
+    border: 2px solid steelblue;
+    border-radius: 100%;
+}
+
+.slider-label {
+    text-align: center;
+    width: 80px;
+    position: absolute;
+    top: -30;
+    left: -30;
 }
 
 .marker-bar {
@@ -50,7 +78,18 @@
     position: absolute;
 }
 
+.handle-marker-bar {
+    height: 10px;
+    top: -11px;
+    left: 7px;
+    border-left: 2.5px solid steelblue;
+}
+
 .colormap-button {
     padding: 1rem;
     margin: 0 0.5rem;
+}
+
+#color-slider {
+    height: 5rem;
 }
