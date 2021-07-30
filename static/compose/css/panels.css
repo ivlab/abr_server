@@ -101,9 +101,10 @@
 .trash {
     position: fixed;
     bottom: 0;
+    right: 12rem;
     height: 3rem;
     width: 3rem;
-    margin: 1rem;
+    margin: 2rem;
     padding: 0.5rem;
 }
 
