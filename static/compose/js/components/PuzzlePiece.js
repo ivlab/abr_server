@@ -176,7 +176,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 $el.on('dragstart', () => dragging = true);
                 $el.on('dragend', () => dragging = false);
                 $el.css('cursor', 'pointer');
-                $el.on('click', (evt) => {
+                let clickEvt = (evt) => {
                     if (!dragging) {
                         let impressionUuid = $el.parents('.data-impression').data('uuid');
 
@@ -211,7 +211,9 @@ export function InputPuzzlePiece(inputName, inputProps) {
 
                         ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
                     }
-                });
+                };
+                $el.on('dblclick', clickEvt);
+                $el.on('click', clickEvt);
             }
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
