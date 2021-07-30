@@ -37,7 +37,10 @@ def save_from_local(visasset_data):
     artifact_json = visasset_data['artifactJson']
     files_and_contents = visasset_data['artifactDataContents']
 
-    va_path = settings.VISASSET_PATH.joinpath(str(uuid4()))
+    new_uuid = str(uuid4())
+    artifact_json['uuid'] = new_uuid
+
+    va_path = settings.VISASSET_PATH.joinpath(new_uuid)
     artifact_json_path = va_path.joinpath(settings.VISASSET_JSON)
 
     if not va_path.exists():
