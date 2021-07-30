@@ -58,3 +58,18 @@
 #abr-menu span {
     padding: 0 0.5rem;
 }
+
+.save-animation {
+    visibility: hidden;
+    animation-iteration-count: 1;
+}
+.save-animation.animating {
+    animation: save-animation 2s ease;
+    visibility: visible !important;
+}
+
+@keyframes save-animation {
+    0% { transform: scale(0.0); }
+    50% { transform: scale(2.0); }
+    100% { transform: scale(0.0); }
+}
