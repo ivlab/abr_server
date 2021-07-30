@@ -54,22 +54,26 @@ export function CompositionPanel() {
     ).droppable({
         tolerance: 'pointer',
         drop: (_evt, ui) => {
-            let uuidImpression = $(ui.draggable).data('uuid');
+            let uuidDataImpression = $(ui.draggable).data('uuid');
             let uuidVisAsset = $(ui.draggable).data('inputValue');
             
-            if (uuidImpression) {
+            // Trash data impressions
+            if (uuidDataImpression) {
                 $(ui.draggable).remove();
-                globals.stateManager.removeAll(uuidImpression);
+                globals.stateManager.removeAll(uuidDataImpression);
             }
 
+            // Trash VisAssets
             if (uuidVisAsset) {
                 $(ui.draggable).remove();
 
                 let localVisAssets = globals.stateManager.state.localVisAssets;
                 if (localVisAssets && localVisAssets.hasOwnProperty(uuidVisAsset)) {
+                    // Trash local VisAssets (Custom Colormaps)
                     globals.stateManager.removePath('localVisAssets/' + uuidVisAsset);
                 }
                 else {
+                    // Trash other kinds of VisAssets (Colormaps, Glyphs, Line Textures, Surface Textures)
                     globals.stateManager.removeVisAsset(uuidVisAsset);
                 }
             }
