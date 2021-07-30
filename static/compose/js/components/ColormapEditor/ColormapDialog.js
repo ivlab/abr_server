@@ -37,7 +37,7 @@ var zippedHistogram = null;
 var currentVarPath = null;
 var currentMinMax = null;
 var currentColormapUuid = null;
-var currentArtifactJson = null;
+var currentVisAssetJson = null;
 
 export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
     let visassetJson = null;
@@ -71,8 +71,8 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         return;
     }
 
-    currentArtifactJson = visassetJson;
     currentColormapUuid = vaUuid;
+    currentVisAssetJson = visassetJson;
 
     // Get rid of any previous instances of the colormap editor that were hidden
     // jQuery UI dialogs just hide the dialog when it's closed
@@ -215,6 +215,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         let colorAtClick = activeColormap.lookupColor(clickPercent);
         $('#color-slider').append(ColorThumb(clickPercent, floatToHex(colorAtClick), () => {
             updateColormap();
+            saveColormap();
         }));
         updateColormap();
     }));
@@ -231,16 +232,16 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         class: 'centered',
     });
 
-    $buttons.append($('<button>', {
-        class: 'save-colormap colormap-button',
-        text: 'Save custom',
-        title: 'Save custom colormap',
-    }).on('click', (evt) => {
-        saveColormap(vaUuid, visassetJson).then((u) => {
-            vaUuid = u;
-            currentColormapUuid = vaUuid;
-        });
-    }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
+    // $buttons.append($('<button>', {
+    //     class: 'save-colormap colormap-button',
+    //     text: 'Save custom',
+    //     title: 'Save custom colormap',
+    // }).on('click', (evt) => {
+    //     saveColormap().then((u) => {
+    //         currentVisAssetJson = visassetJson;
+    //         currentColormapUuid = u;
+    //     });
+    // }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $buttons.append($('<button>', {
         class: 'flip-colormap colormap-button',
@@ -248,20 +249,20 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         title: 'Flip colormap',
     }).on('click', (evt) => {
         activeColormap.flip();
-        updateColormapDisplay();
-        updateColorThumbPositions();
-        saveColormap();
-    }).prepend($('<span>', { class: 'ui-icon ui-icon-arrow-2-e-w'})));
+        saveColormap().then((u) => {
+            updateColormapDisplay();
+            updateColorThumbPositions();
+        });
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $buttons.append($('<button>', {
         class: 'colormap-button',
         text: 'Save copy to library',
         title: 'Save a copy of this colormap to the local library for reuse in other visualizations',
     }).on('click', (evt) => {
-        saveColormap(vaUuid, visassetJson).then((u) => {
-            vaUuid = u;
-            currentColormapUuid = vaUuid;
-            saveColormapToLibrary(vaUuid);
+        updateColormap();
+        saveColormap().then((u) => {
+            saveColormapToLibrary(u);
         });
     }).prepend($('<span>', { class: 'ui-icon ui-icon-arrowstop-1-s'})));
 
@@ -295,7 +296,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
             updateColormap();
-            saveColormap(vaUuid, visassetJson);
+            saveColormap();
         }));
     });
     updateColormap();
@@ -305,7 +306,9 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
     }
 }
 
-async function saveColormap(oldUuid, artifactJson) {
+async function saveColormap() {
+    let oldUuid = currentColormapUuid;
+    let artifactJson = currentVisAssetJson;
     // Give it a new uuid if it doesn't already exist in localVisAssets
     let newUuid = oldUuid;
     if (!globals.stateManager.keyExists(['localVisAssets'], oldUuid)) {
@@ -339,6 +342,9 @@ async function saveColormap(oldUuid, artifactJson) {
         }
     }
 
+    currentVisAssetJson = artifactJson;
+    currentColormapUuid = newUuid
+
     return newUuid;
 }
 
@@ -356,8 +362,8 @@ async function saveColormapToLibrary(vaUuid) {
 function updateColormap() {
     updateSpectrum();
     activeColormap = getColormapFromThumbs();
-    updateColormapDisplay();
     updateColorThumbPositions();
+    updateColormapDisplay();
 }
 
 function getColormapFromThumbs() {
@@ -384,7 +390,7 @@ function updateColorThumbPositions() {
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
             updateColormap();
-            saveColormap(currentColormapUuid, currentArtifactJson);
+            saveColormap();
         }));
     });
     updateSpectrum();
