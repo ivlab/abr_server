@@ -136,7 +136,7 @@ export class StateManager {
         await fetch('/api/remove-visasset/' + visAssetUUID, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
+                // 'X-CSRFToken': csrftoken,
             },
             mode: 'same-origin',
         })

@@ -181,6 +181,7 @@ def download_visasset(request, uuid):
 def remove_visasset(request, uuid):
     if request.method == 'DELETE':
         visasset_manager.remove_visasset(uuid)
+        del VISASSET_CACHE[uuid]
         notifier.notify({ 'target': 'CacheUpdate-visassets' })
         return HttpResponse()
     else:

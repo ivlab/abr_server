@@ -54,22 +54,29 @@ export function CompositionPanel() {
     ).droppable({
         tolerance: 'pointer',
         drop: (_evt, ui) => {
-            // let value = $(ui.draggable).data('uuid');
+            let uuidImpression = $(ui.draggable).data('uuid');
+            let uuidVisAsset = $(ui.draggable).data('inputValue');
             
-            let value = $(ui.draggable).data('inputValue');
-            console.log(value);
-
-            if (value) {
+            if (uuidImpression) {
                 $(ui.draggable).remove();
-                // globals.stateManager.removeAll(value);
+                globals.stateManager.removeAll(uuidImpression);
+            }
 
-                // ! Doesn't work
-                globals.stateManager.removeVisAsset(value);
+            if (uuidVisAsset) {
+                $(ui.draggable).remove();
+
+                let localVisAssets = globals.stateManager.state.localVisAssets;
+                if (localVisAssets && localVisAssets.hasOwnProperty(uuidVisAsset)) {
+                    globals.stateManager.removePath('localVisAssets/' + uuidVisAsset);
+                }
+                else {
+                    globals.stateManager.removeVisAsset(uuidVisAsset);
+                }
             }
         },
         // Indicate that it's about to be deleted
         over: (_evt, ui) => {
-            let value = $(ui.draggable).data('uuid');
+            let value = $(ui.draggable).data('uuid') || $(ui.draggable).data('inputValue');
             if (value) {
                 $(ui.helper).addClass('removing');
                 $(ui.helper).css('opacity', '25%');
