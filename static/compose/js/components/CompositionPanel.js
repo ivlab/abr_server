@@ -53,6 +53,9 @@ export function CompositionPanel() {
         })
     ).droppable({
         tolerance: 'pointer',
+        classes: {
+            "ui-droppable-hover": "trash-droppable-hover"
+        },
         drop: (_evt, ui) => {
             let uuidDataImpression = $(ui.draggable).data('uuid');
             let uuidVisAsset = $(ui.draggable).data('inputValue');
