@@ -298,9 +298,11 @@ export function AssignedInputPuzzlePiece(inputName, inputProps) {
                 evt.stopPropagation();
             },
             stop: (evt, _ui) => {
-                // Unassign this input
-                let uuid = $(evt.target).parents('.data-impression').data('uuid');
-                globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+                if ($(evt.target).data('draggedOut')) {
+                    // Unassign this input
+                    let uuid = $(evt.target).parents('.data-impression').data('uuid');
+                    globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+                }
             }
         });
     }

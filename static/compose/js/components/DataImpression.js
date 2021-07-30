@@ -152,6 +152,10 @@ function InputSocket(inputName, inputProps) {
     $dropZone.addClass('drop-zone');
 
     $dropZone.droppable({
+        tolerance: 'touch',
+        out: (_evt, ui) => {
+            $(ui.draggable).data('draggedOut', true);
+        },
         drop: (evt, ui) => {
             // Get the impression that this input is a part of
             let $impression = $(evt.target).closest('.data-impression');
