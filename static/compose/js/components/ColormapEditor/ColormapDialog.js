@@ -253,7 +253,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
             updateColormapDisplay();
             updateColorThumbPositions();
         });
-    }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-arrowthick-2-e-w'})));
 
     $buttons.append($('<button>', {
         class: 'colormap-button',
@@ -264,7 +264,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         saveColormap().then((u) => {
             saveColormapToLibrary(u);
         });
-    }).prepend($('<span>', { class: 'ui-icon ui-icon-arrowstop-1-s'})));
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $colormapEditor.append($buttons);
 
