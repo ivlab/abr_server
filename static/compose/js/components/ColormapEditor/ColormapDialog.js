@@ -397,6 +397,9 @@ function updateSpectrum() {
         showAlpha: false,
         showButtons: false,
         allowEmpty: false,
+        showInitial: true,
+        showInput: true,
+        showPalette: true,
         preferredFormat: 'hex',
     });
 }
