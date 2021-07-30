@@ -36,6 +36,8 @@ var activeColormap = null;
 var zippedHistogram = null;
 var currentVarPath = null;
 var currentMinMax = null;
+var currentColormapUuid = null;
+var currentArtifactJson = null;
 
 export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
     let visassetJson = null;
@@ -68,6 +70,9 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         alert('There is already a colormap editor open.');
         return;
     }
+
+    currentArtifactJson = visassetJson;
+    currentColormapUuid = vaUuid;
 
     // Get rid of any previous instances of the colormap editor that were hidden
     // jQuery UI dialogs just hide the dialog when it's closed
@@ -231,7 +236,10 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         text: 'Save custom',
         title: 'Save custom colormap',
     }).on('click', (evt) => {
-        saveColormap(vaUuid, visassetJson).then((u) => vaUuid = u);
+        saveColormap(vaUuid, visassetJson).then((u) => {
+            vaUuid = u;
+            currentColormapUuid = vaUuid;
+        });
     }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $buttons.append($('<button>', {
@@ -242,6 +250,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         activeColormap.flip();
         updateColormapDisplay();
         updateColorThumbPositions();
+        saveColormap();
     }).prepend($('<span>', { class: 'ui-icon ui-icon-arrow-2-e-w'})));
 
     $buttons.append($('<button>', {
@@ -250,7 +259,8 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         title: 'Save a copy of this colormap to the local library for reuse in other visualizations',
     }).on('click', (evt) => {
         saveColormap(vaUuid, visassetJson).then((u) => {
-            vaUuid = u
+            vaUuid = u;
+            currentColormapUuid = vaUuid;
             saveColormapToLibrary(vaUuid);
         });
     }).prepend($('<span>', { class: 'ui-icon ui-icon-arrowstop-1-s'})));
@@ -285,6 +295,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
             updateColormap();
+            saveColormap(vaUuid, visassetJson);
         }));
     });
     updateColormap();
@@ -372,7 +383,8 @@ function updateColorThumbPositions() {
         let pt = c[0];
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
-            updateColormap()
+            updateColormap();
+            saveColormap(currentColormapUuid, currentArtifactJson);
         }));
     });
     updateSpectrum();
