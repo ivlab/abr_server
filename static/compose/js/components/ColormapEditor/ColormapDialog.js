@@ -327,7 +327,13 @@ async function saveColormap() {
     };
 
     // Update the state with this particular local colormap
-    await globals.stateManager.update(`localVisAssets/${newUuid}`, data);
+    // If the visasset isn't found on the server, abort
+    let visAssetFound = await globals.stateManager.update(`localVisAssets/${newUuid}`, data)
+        .then(() => true)
+        .catch(() => false);
+    if (!visAssetFound) {
+        return oldUuid;
+    }
 
     // Attach the new colormap, if we've changed UUIDs
     if (newUuid != oldUuid) {

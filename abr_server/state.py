@@ -173,7 +173,7 @@ class State():
                 vis_asset_fails += '\n' + str(failed) if len(failed) > 0 else ''
             if len(vis_asset_fails) > 0:
                 vis_asset_fails = '\nFailed to download VisAssets: ' + vis_asset_fails
-            final_result += vis_asset_fails
+            logger.warning(vis_asset_fails)
             notifier.notify({ 'target': 'CacheUpdate-visassets' })
 
         return final_result
