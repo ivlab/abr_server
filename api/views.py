@@ -143,8 +143,16 @@ def list_datasets(request):
         else:
             org_data = {}
         org_disk_path = settings.DATASET_PATH.joinpath(org)
+        # Skip any "organization" that's not a directory
+        if not org_disk_path.is_dir():
+            continue
         for dataset in os.listdir(org_disk_path):
-            dataset_disk_path = org_disk_path.joinpath(dataset).joinpath('KeyData')
+            dataset_disk_path = org_disk_path.joinpath(dataset)
+            if dataset_disk_path.is_dir():
+                dataset_disk_path = dataset_disk_path.joinpath('KeyData')
+            else:
+                # Skip anything that's not a directory
+                continue
             if dataset in org_data:
                 keydata_dict = org_data[dataset]
             else:
