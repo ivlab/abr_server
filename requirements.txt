@@ -8,3 +8,4 @@ numpy==1.20.1
 requests==2.25.1
 django-livereload-server==0.3.2
 Pillow==7.1.2
+asgiref==3.2.10
