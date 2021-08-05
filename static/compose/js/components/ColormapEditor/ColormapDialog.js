@@ -403,6 +403,8 @@ function updateColorThumbPositions() {
 }
 
 function updateSpectrum() {
+    // Remove all old spectrum containers
+    $('.sp-container').remove();
     $('.color-input').spectrum({
         type: "color",
         showPalette: false,
