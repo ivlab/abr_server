@@ -43,20 +43,20 @@ def lab2rgb(lab):
     g = (1.055 * math.pow(g, 1.0 / 2.4) - 0.055) if (g > 0.0031308) else 12.92 * g
     b = (1.055 * math.pow(b, 1.0 / 2.4) - 0.055) if (b > 0.0031308) else 12.92 * b
 
-    # Colors are 0-255, not 0-1
+    # colors are 0-1 float
     return (
-        int(max(0.0, min(1.0, r)) * 255),
-        int(max(0.0, min(1.0, g)) * 255),
-        int(max(0.0, min(1.0, b)) * 255)
+        max(0.0, min(1.0, r)),
+        max(0.0, min(1.0, g)),
+        max(0.0, min(1.0, b))
     )
 
 
 # public static List<float> rgb2lab(List<float> rgb) {
 def rgb2lab(rgb):
-    # Colors are 0-255
-    r = rgb[0] / 255
-    g = rgb[1] / 255
-    b = rgb[2] / 255
+    # Colors are 0-1 float
+    r = rgb[0]
+    g = rgb[1]
+    b = rgb[2]
 
     r = math.pow((r + 0.055) / 1.055, 2.4) if (r > 0.04045) else r / 12.92
     g = math.pow((g + 0.055) / 1.055, 2.4) if (g > 0.04045) else g / 12.92

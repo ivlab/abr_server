@@ -28,6 +28,7 @@ class ColormapInternal:
     def __init__(self):
         # Internal representation of a colormap: [(t1, (r1, g1, b1)), (t2, (r2,
         # g2, b2)), ...]
+        # RGB are in 0-1 float range
         self.entries = []
 
     def add_control_point(self, data_val, color):
@@ -93,9 +94,9 @@ def colormap_from_xml(xml_text, width, height, colormap_path):
     colormap = ColormapInternal()
     for point_node in colormap_node:
         x = float(point_node.attrib['x'])
-        r = int(float(point_node.attrib['r']) * 255)
-        g = int(float(point_node.attrib['g']) * 255)
-        b = int(float(point_node.attrib['b']) * 255)
+        r = float(point_node.attrib['r'])
+        g = float(point_node.attrib['g'])
+        b = float(point_node.attrib['b'])
         color = (r, g, b)
         colormap.add_control_point(x, color)
 
@@ -110,11 +111,14 @@ def create_image_from_colormap(colormap, width, height, image_path):
 
     # Add first row to image
     for col in range(0, width):
-        pixels[col] = colormap.lookup_color(col / float(width))
+        color_float = colormap.lookup_color(col / float(width))
+        color_int = tuple([int(c * 255) for c in color_float])
+        pixels[col] = color_int
 
     # Copy to the rest of the image if greater than one row
     for row in range(1, height):
         for col in range(0, width):
+            # Convert to 0-255 range
             pixels[col + row * width] = pixels[col]
 
     img = Image.new('RGB', (width, height))
