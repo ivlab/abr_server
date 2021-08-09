@@ -143,6 +143,14 @@ export function Header() {
             }
     });
 
+    // Open a raw state editor in a new window
+    let $rawEditorButton = $('<div>')
+        .append($('<span>', { class: 'material-icons', text: 'code'}))
+        .append($('<span>', { text: 'Open JSON editor...' }))
+        .on('click', (_evt) => {
+            window.open(window.location.href + 'raw-editor', '_blank');
+    });
+
 
     let outTimer = null;
     $('<ul>', {
@@ -154,6 +162,8 @@ export function Header() {
         $('<li>').append($importStateButton)
     ).append(
         $('<li>').append($exportStateButton)
+    ).append(
+        $('<li>').append($rawEditorButton)
     ).append(
         $('<li>').append($clearStateButton)
     ).menu().appendTo($(document.body)).on('mouseout', (evt) => {
@@ -270,6 +280,10 @@ export function Header() {
         } else {
             localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
             $('#state-header #state-name').text(stateName);
+            $('.save-animation').addClass('animating');
+            setTimeout(() => {
+                $('.save-animation').removeClass('animating');
+            }, 2000);
         }
     }));
 
@@ -313,6 +327,10 @@ export function Header() {
 
     // Loading spinner
     // TODO
+    $stateHeader.append($('<p>', {
+        class: 'material-icons save-animation',
+        text: 'done'
+    }))
     $stateHeader.append($('<div>', {
         class: 'abr-state-subscriber loading-spinner',
         title: 'Loading...',

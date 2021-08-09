@@ -19,12 +19,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+// TODO: This is probably not the right size but seems to work for the design UI right now...
+var $tmpCanvas = $('<canvas>', {
+    width: 300,
+    height: 150,
+});
+
+
 // Stolen from ColorLoom:
 // https://github.umn.edu/ABRAM308/SculptingVisWebApp/blob/master/applets/static/color-loom/sketch.js
 export class ColorMap {
     constructor() {
         // List of tuples:
         // [0.01, {r: 0, g: 0, b: 0}]
+        // RGB are in 0-1 float range
         this.entries = [];
     }
 
@@ -81,12 +89,6 @@ export class ColorMap {
     }
 
     toBase64(url=false) {
-        // TODO: This is probably not the right size but seems to work for the design UI right now...
-        let $tmpCanvas = $('<canvas>', {
-            width: 300,
-            height: 150,
-        });
-
         let ctx = $tmpCanvas.get(0).getContext('2d');
         this.toCanvas(ctx);
 
@@ -100,8 +102,8 @@ export class ColorMap {
     }
 
     toCanvas(ctx) {
-        let mapWidth = ctx.canvas.width;
-        let mapHeight = ctx.canvas.height;
+        let mapWidth = $(ctx.canvas).width();
+        let mapHeight = $(ctx.canvas).height();
         // Draw a bunch of tiny rectangles with properly interpolated CIE Lab color
         for (let x = 0; x < mapWidth; x++) {
             let percentage = x / mapWidth;
@@ -264,14 +266,14 @@ SOFTWARE.
 // found on www.easyrgb.com
 
 function lab2rgb(lab) {
-    var y = (lab[0] + 16) / 116,
-        x = lab[1] / 500 + y,
-        z = y - lab[2] / 200,
+    var y = (lab[0] + 16.0) / 116.0,
+        x = lab[1] / 500.0 + y,
+        z = y - lab[2] / 200.0,
         r, g, b;
 
-    x = 0.95047 * ((x * x * x > 0.008856) ? x * x * x : (x - 16 / 116) / 7.787);
-    y = 1.00000 * ((y * y * y > 0.008856) ? y * y * y : (y - 16 / 116) / 7.787);
-    z = 1.08883 * ((z * z * z > 0.008856) ? z * z * z : (z - 16 / 116) / 7.787);
+    x = 0.95047 * ((x * x * x > 0.008856) ? x * x * x : (x - 16.0 / 116.0) / 7.787);
+    y = 1.00000 * ((y * y * y > 0.008856) ? y * y * y : (y - 16.0 / 116.0) / 7.787);
+    z = 1.08883 * ((z * z * z > 0.008856) ? z * z * z : (z - 16.0 / 116.0) / 7.787);
 
     r = x * 3.2406 + y * -1.5372 + z * -0.4986;
     g = x * -0.9689 + y * 1.8758 + z * 0.0415;
@@ -281,16 +283,16 @@ function lab2rgb(lab) {
     g = (g > 0.0031308) ? (1.055 * Math.pow(g, 1 / 2.4) - 0.055) : 12.92 * g;
     b = (b > 0.0031308) ? (1.055 * Math.pow(b, 1 / 2.4) - 0.055) : 12.92 * b;
 
-    return [Math.max(0, Math.min(1, r)) * 255,
-    Math.max(0, Math.min(1, g)) * 255,
-    Math.max(0, Math.min(1, b)) * 255]
+    return [Math.max(0, Math.min(1, r)),
+    Math.max(0, Math.min(1, g)),
+    Math.max(0, Math.min(1, b))]
 }
 
 
 function rgb2lab(rgb) {
-    var r = rgb[0] / 255,
-        g = rgb[1] / 255,
-        b = rgb[2] / 255,
+    var r = rgb[0],
+        g = rgb[1],
+        b = rgb[2],
         x, y, z;
 
     r = (r > 0.04045) ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
@@ -301,11 +303,11 @@ function rgb2lab(rgb) {
     y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
     z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
 
-    x = (x > 0.008856) ? Math.pow(x, 1 / 3) : (7.787 * x) + 16 / 116;
-    y = (y > 0.008856) ? Math.pow(y, 1 / 3) : (7.787 * y) + 16 / 116;
-    z = (z > 0.008856) ? Math.pow(z, 1 / 3) : (7.787 * z) + 16 / 116;
+    x = (x > 0.008856) ? Math.pow(x, 1.0 / 3.0) : (7.787 * x) + 16.0 / 116.0;
+    y = (y > 0.008856) ? Math.pow(y, 1.0 / 3.0) : (7.787 * y) + 16.0 / 116.0;
+    z = (z > 0.008856) ? Math.pow(z, 1.0 / 3.0) : (7.787 * z) + 16.0 / 116.0;
 
-    return [(116 * y) - 16, 500 * (x - y), 200 * (y - z)]
+    return [(116.0 * y) - 16.0, 500.0 * (x - y), 200.0 * (y - z)]
 }
 
 // calculate the perceptual distance between colors in CIELAB

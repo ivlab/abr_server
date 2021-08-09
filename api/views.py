@@ -143,8 +143,16 @@ def list_datasets(request):
         else:
             org_data = {}
         org_disk_path = settings.DATASET_PATH.joinpath(org)
+        # Skip any "organization" that's not a directory
+        if not org_disk_path.is_dir():
+            continue
         for dataset in os.listdir(org_disk_path):
-            dataset_disk_path = org_disk_path.joinpath(dataset).joinpath('KeyData')
+            dataset_disk_path = org_disk_path.joinpath(dataset)
+            if dataset_disk_path.is_dir():
+                dataset_disk_path = dataset_disk_path.joinpath('KeyData')
+            else:
+                # Skip anything that's not a directory
+                continue
             if dataset in org_data:
                 keydata_dict = org_data[dataset]
             else:
@@ -178,9 +186,23 @@ def download_visasset(request, uuid):
         return HttpResponse('Method for download must be POST', status=400)
 
 @csrf_exempt
+def save_visasset(request, uuid):
+    if request.method == 'POST':
+        visasset_data = state.get_path(['localVisAssets', uuid])
+        save_success = visasset_manager.save_from_local(visasset_data)
+        if save_success:
+            notifier.notify({ 'target': 'CacheUpdate-visassets' })
+            return HttpResponse('Saved visasset', status=200)
+        else:
+            return HttpResponse('Unable to save Local VisAsset', status=400)
+    else:
+        return HttpResponse('Method for download must be POST', status=400)
+
+@csrf_exempt
 def remove_visasset(request, uuid):
     if request.method == 'DELETE':
         visasset_manager.remove_visasset(uuid)
+        del VISASSET_CACHE[uuid]
         notifier.notify({ 'target': 'CacheUpdate-visassets' })
         return HttpResponse()
     else:

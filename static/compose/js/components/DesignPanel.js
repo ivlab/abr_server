@@ -93,7 +93,8 @@ export function DesignPanel() {
     ).append(
         $('<button>', {
             class: 'rounded',
-            text: '...'
+            text: '...',
+            title: 'Show additional options...'
         }).on('click', (evt) => {
             $visAssetMenu.css('left', $(evt.target).position().left - $visAssetMenu.width() - $(evt.target).width());
             $visAssetMenu.css('top', $(evt.target).position().top + $visAssetMenu.height() + $(evt.target).height());

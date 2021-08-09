@@ -53,16 +53,37 @@ export function CompositionPanel() {
         })
     ).droppable({
         tolerance: 'pointer',
+        classes: {
+            "ui-droppable-hover": "trash-droppable-hover"
+        },
         drop: (_evt, ui) => {
-            let value = $(ui.draggable).data('uuid');
-            if (value) {
+            let uuidDataImpression = $(ui.draggable).data('uuid');
+            let uuidVisAsset = $(ui.draggable).data('inputValue');
+            
+            // Trash data impressions
+            if (uuidDataImpression) {
                 $(ui.draggable).remove();
-                globals.stateManager.removeAll(value);
+                globals.stateManager.removeAll(uuidDataImpression);
+            }
+
+            // Trash VisAssets
+            if (uuidVisAsset) {
+                $(ui.draggable).remove();
+
+                let localVisAssets = globals.stateManager.state.localVisAssets;
+                if (localVisAssets && localVisAssets.hasOwnProperty(uuidVisAsset)) {
+                    // Trash local VisAssets (Custom Colormaps)
+                    globals.stateManager.removePath('localVisAssets/' + uuidVisAsset);
+                }
+                else {
+                    // Trash other kinds of VisAssets (Colormaps, Glyphs, Line Textures, Surface Textures)
+                    globals.stateManager.removeVisAsset(uuidVisAsset);
+                }
             }
         },
         // Indicate that it's about to be deleted
         over: (_evt, ui) => {
-            let value = $(ui.draggable).data('uuid');
+            let value = $(ui.draggable).data('uuid') || $(ui.draggable).data('inputValue');
             if (value) {
                 $(ui.helper).addClass('removing');
                 $(ui.helper).css('opacity', '25%');

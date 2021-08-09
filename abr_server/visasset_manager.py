@@ -22,6 +22,9 @@ import shutil
 from django.conf import settings
 import urllib3
 import concurrent.futures
+from uuid import uuid4
+
+from abr_server.colormap_utilities import colormap_from_xml
 
 POOL_MANAGER = urllib3.PoolManager()
 
@@ -30,6 +33,34 @@ def remove_visasset(uuid):
     if va_path.exists():
         shutil.rmtree(va_path)
 
+def save_from_local(visasset_data):
+    artifact_json = visasset_data['artifactJson']
+    files_and_contents = visasset_data['artifactDataContents']
+
+    new_uuid = str(uuid4())
+    artifact_json['uuid'] = new_uuid
+
+    va_path = settings.VISASSET_PATH.joinpath(new_uuid)
+    artifact_json_path = va_path.joinpath(settings.VISASSET_JSON)
+
+    if not va_path.exists():
+        os.makedirs(va_path)
+
+    with open(artifact_json_path, 'w') as json_file:
+        json.dump(artifact_json, json_file)
+
+    for filename in files_and_contents:
+        data_path = va_path.joinpath(filename)
+        with open(data_path, 'w') as data_file:
+            data_file.write(files_and_contents[filename])
+
+    # If it's a colormap, we need to construct the thumbnail.png
+    # For other types, this behaviour is undefined
+    if artifact_json['type'] == 'colormap':
+        colormap_from_xml(files_and_contents['colormap.xml'], 200, 30, va_path.joinpath('thumbnail.png'))
+        return True
+    else:
+        return False
 
 def download_visasset(uuid):
     va_path = settings.VISASSET_PATH.joinpath(uuid)

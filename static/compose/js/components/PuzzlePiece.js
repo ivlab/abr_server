@@ -176,7 +176,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 $el.on('dragstart', () => dragging = true);
                 $el.on('dragend', () => dragging = false);
                 $el.css('cursor', 'pointer');
-                $el.on('click', (evt) => {
+                let clickEvt = (evt) => {
                     if (!dragging) {
                         let impressionUuid = $el.parents('.data-impression').data('uuid');
 
@@ -211,7 +211,9 @@ export function InputPuzzlePiece(inputName, inputProps) {
 
                         ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
                     }
-                });
+                };
+                $el.on('dblclick', clickEvt);
+                $el.on('click', clickEvt);
             }
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
@@ -296,9 +298,11 @@ export function AssignedInputPuzzlePiece(inputName, inputProps) {
                 evt.stopPropagation();
             },
             stop: (evt, _ui) => {
-                // Unassign this input
-                let uuid = $(evt.target).parents('.data-impression').data('uuid');
-                globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+                if ($(evt.target).data('draggedOut')) {
+                    // Unassign this input
+                    let uuid = $(evt.target).parents('.data-impression').data('uuid');
+                    globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+                }
             }
         });
     }

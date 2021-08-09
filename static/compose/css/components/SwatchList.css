@@ -16,5 +16,6 @@
 }
 
 .swatch-list .puzzle-piece {
-    flex-basis: 40%;
+    flex-basis: 100%;
+    justify-content: center;
 }

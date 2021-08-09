@@ -36,24 +36,26 @@ var activeColormap = null;
 var zippedHistogram = null;
 var currentVarPath = null;
 var currentMinMax = null;
+var currentColormapUuid = null;
+var currentVisAssetJson = null;
 
-export async function ColormapDialog(uuid, variableInput, keyDataInput) {
+export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
     let visassetJson = null;
     let colormapXml = null;
-    if (globals.stateManager.keyExists(['localVisAssets'], uuid)) {
-        let va = globals.stateManager.state.localVisAssets[uuid];
+    if (globals.stateManager.keyExists(['localVisAssets'], vaUuid)) {
+        let va = globals.stateManager.state.localVisAssets[vaUuid];
         visassetJson = va.artifactJson;
         colormapXml = va.artifactDataContents[visassetJson['artifactData']['colormap']];
     } else {
         let visassets = globals.stateManager.getCache('visassets');
-        if (visassets && visassets[uuid]) {
-            visassetJson = visassets[uuid];
+        if (visassets && visassets[vaUuid]) {
+            visassetJson = visassets[vaUuid];
         }
 
         // Fetch the colormap xml from the server
         if (visassetJson) {
             let xmlName = visassetJson['artifactData']['colormap'];
-            let xmlUrl = `/media/visassets/${uuid}/${xmlName}`;
+            let xmlUrl = `/media/visassets/${vaUuid}/${xmlName}`;
             colormapXml = await fetch(xmlUrl).then((resp) => resp.text());
         }
     }
@@ -68,6 +70,9 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         alert('There is already a colormap editor open.');
         return;
     }
+
+    currentColormapUuid = vaUuid;
+    currentVisAssetJson = visassetJson;
 
     // Get rid of any previous instances of the colormap editor that were hidden
     // jQuery UI dialogs just hide the dialog when it's closed
@@ -196,13 +201,24 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
     $colormapEditor.append($('<div>', {
         id: 'colormap',
         class: 'centered',
+        title: 'Double-click to create a new color'
     }).append($('<canvas>', {
         class: 'colormap-canvas',
         attr: {
             width: width,
             height: height,
         }
-    })));
+    })).on('dblclick', (evt) => {
+        let colormapLeftBound = evt.target.getBoundingClientRect().left;
+        let colormapWidth = evt.target.width;
+        let clickPercent = (evt.clientX - colormapLeftBound) / colormapWidth;
+        let colorAtClick = activeColormap.lookupColor(clickPercent);
+        $('#color-slider').append(ColorThumb(clickPercent, floatToHex(colorAtClick), () => {
+            updateColormap();
+            saveColormap();
+        }));
+        updateColormap();
+    }));
 
     // Append the color swatch area
     $colormapEditor.append($('<div>', {
@@ -216,36 +232,39 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         class: 'centered',
     });
 
-    $buttons.append($('<button>', {
-        class: 'save-colormap colormap-button',
-        text: 'Save Colormap',
-        title: 'Save the colormap',
-    }).on('click', (evt) => {
-        uuid = saveColormap(uuid, visassetJson);
-    }));
+    // $buttons.append($('<button>', {
+    //     class: 'save-colormap colormap-button',
+    //     text: 'Save custom',
+    //     title: 'Save custom colormap',
+    // }).on('click', (evt) => {
+    //     saveColormap().then((u) => {
+    //         currentVisAssetJson = visassetJson;
+    //         currentColormapUuid = u;
+    //     });
+    // }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $buttons.append($('<button>', {
         class: 'flip-colormap colormap-button',
-        text: '< Flip colormap >',
+        text: 'Flip',
         title: 'Flip colormap',
     }).on('click', (evt) => {
         activeColormap.flip();
-        updateColormapDisplay();
-        updateColorThumbPositions();
-    }));
+        saveColormap().then((u) => {
+            updateColormapDisplay();
+            updateColorThumbPositions();
+        });
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-arrowthick-2-e-w'})));
 
     $buttons.append($('<button>', {
-            class: 'create-color colormap-button',
-            text: '(+) Add color',
-            title: 'Add a new color to the colormap',
-        }).on('click', (evt) => {
-            let defaultPerc = 0.5;
-            let colorAtDefault = activeColormap.lookupColor(defaultPerc);
-            $('#color-slider').append(ColorThumb(defaultPerc, floatToHex(colorAtDefault), () => {
-                updateColormap();
-            }));
-            updateColormap();
-    }));
+        class: 'colormap-button',
+        text: 'Save copy to library',
+        title: 'Save a copy of this colormap to the local library for reuse in other visualizations',
+    }).on('click', (evt) => {
+        updateColormap();
+        saveColormap().then((u) => {
+            saveColormapToLibrary(u);
+        });
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $colormapEditor.append($buttons);
 
@@ -277,6 +296,7 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
             updateColormap();
+            saveColormap();
         }));
     });
     updateColormap();
@@ -286,7 +306,9 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
     }
 }
 
-function saveColormap(oldUuid, artifactJson) {
+async function saveColormap() {
+    let oldUuid = currentColormapUuid;
+    let artifactJson = currentVisAssetJson;
     // Give it a new uuid if it doesn't already exist in localVisAssets
     let newUuid = oldUuid;
     if (!globals.stateManager.keyExists(['localVisAssets'], oldUuid)) {
@@ -305,7 +327,13 @@ function saveColormap(oldUuid, artifactJson) {
     };
 
     // Update the state with this particular local colormap
-    globals.stateManager.update(`localVisAssets/${newUuid}`, data);
+    // If the visasset isn't found on the server, abort
+    let visAssetFound = await globals.stateManager.update(`localVisAssets/${newUuid}`, data)
+        .then(() => true)
+        .catch(() => false);
+    if (!visAssetFound) {
+        return oldUuid;
+    }
 
     // Attach the new colormap, if we've changed UUIDs
     if (newUuid != oldUuid) {
@@ -320,14 +348,28 @@ function saveColormap(oldUuid, artifactJson) {
         }
     }
 
+    currentVisAssetJson = artifactJson;
+    currentColormapUuid = newUuid
+
     return newUuid;
+}
+
+async function saveColormapToLibrary(vaUuid) {
+    return fetch('/api/save-local-visasset/' + vaUuid, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'X-CSRFToken': csrftoken,
+        },
+        mode: 'same-origin'
+    });
 }
 
 function updateColormap() {
     updateSpectrum();
     activeColormap = getColormapFromThumbs();
-    updateColormapDisplay();
     updateColorThumbPositions();
+    updateColormapDisplay();
 }
 
 function getColormapFromThumbs() {
@@ -353,19 +395,25 @@ function updateColorThumbPositions() {
         let pt = c[0];
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
-            updateColormap()
+            updateColormap();
+            saveColormap();
         }));
     });
     updateSpectrum();
 }
 
 function updateSpectrum() {
+    // Remove all old spectrum containers
+    $('.sp-container').remove();
     $('.color-input').spectrum({
         type: "color",
         showPalette: false,
         showAlpha: false,
         showButtons: false,
         allowEmpty: false,
+        showInitial: true,
+        showInput: true,
+        showPalette: true,
         preferredFormat: 'hex',
     });
 }
@@ -385,12 +433,12 @@ function updateSliderLabelsPosition() {
     let $sliderMaxHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(3)');
 
     $sliderMinLabel.offset({
-        top: $sliderMinHandle.offset().top - 30,
-        left: $sliderMinHandle.offset().left - 25,
+        top: $sliderMinHandle.offset().top - 36,
+        left: $sliderMinHandle.offset().left - 40,
     });
     $sliderMaxLabel.offset({
-        top: $sliderMaxHandle.offset().top - 30,
-        left: $sliderMaxHandle.offset().left - 25,
+        top: $sliderMaxHandle.offset().top - 36,
+        left: $sliderMaxHandle.offset().left - 40,
     });
 }
 

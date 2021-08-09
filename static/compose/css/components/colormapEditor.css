@@ -35,10 +35,10 @@
 }
 .variable-labels > input {
     text-align: center;
-    width: 80px;
+    width: 8rem;
+    height: 2rem;
     border: 2px solid steelblue;
     border-radius: 7px;
-    /* padding: 5px; */
 }
 
 .percentage-display {
@@ -90,6 +90,15 @@
     margin: 0 0.5rem;
 }
 
+/* Make the color picker for color thumbs bigger (default 200px) */
+.sp-picker-container {
+    width: 400px;
+}
 #color-slider {
     height: 5rem;
+}
+
+/* make the color preview bigger */
+.sp-initial span {
+    width: 100px;
 }

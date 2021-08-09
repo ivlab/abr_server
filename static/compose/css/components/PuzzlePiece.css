@@ -28,6 +28,7 @@
 
 /* The body of the puzzle piece */
 .puzzle-piece .puzzle-label {
+    position: relative;
     width: 5rem;
     background-color: #bbb;
     color: #3d3d3d;

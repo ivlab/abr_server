@@ -173,7 +173,7 @@ class State():
                 vis_asset_fails += '\n' + str(failed) if len(failed) > 0 else ''
             if len(vis_asset_fails) > 0:
                 vis_asset_fails = '\nFailed to download VisAssets: ' + vis_asset_fails
-            final_result += vis_asset_fails
+            logger.warning(vis_asset_fails)
             notifier.notify({ 'target': 'CacheUpdate-visassets' })
 
         return final_result
@@ -194,7 +194,7 @@ class State():
 
     def remove_path(self, item_path):
         if len(item_path) == 0:
-            self._pending_state = self._default_state
+            self._pending_state = deepcopy(self._default_state)
         else:
             self._remove_path(self._pending_state, item_path)
         return self.validate_and_backup()
