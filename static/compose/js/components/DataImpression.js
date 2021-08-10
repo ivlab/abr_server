@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE } from '../../../common/StateManager.js';
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
@@ -200,6 +201,12 @@ function InputSocket(inputName, inputProps) {
                 $tmp.css('top', 0);
                 $tmp.css('left', 0);
                 $tmp.appendTo($socket);
+
+                // Default data impression's name to the key data applied to it
+                if (droppedType.substring(droppedType.length - 7) === "KeyData") {
+                    let newName = DataPath.getName(droppedValue);
+                    globals.stateManager.update(`/impressions/${impressionId}/name`, newName);
+                }
             }
         }
     });
