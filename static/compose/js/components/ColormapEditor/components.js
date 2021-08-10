@@ -29,6 +29,7 @@ export function ColorThumb(perc, color, colorChangeCallback) {
     let $thumb = $('<div>', {
         class: 'color-thumb',
     }).draggable({
+        containment: "parent",
         drag: (_evt, ui) => {
             let middle = ($(ui.helper).position().left - mapLeft) + $(ui.helper).width() / 2;
             // let percentage = middle / $('#colormap .colormap-canvas').width();
