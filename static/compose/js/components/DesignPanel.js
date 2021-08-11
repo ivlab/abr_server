@@ -65,18 +65,20 @@ export function DesignPanel() {
                 s['inputGenre'] == 'VisAsset'
             }).map((v) => v.inputValue);
 
-            let visAssetsToRemove = Object.keys(globals.stateManager.getCache('visassets')).filter((v) => usedUuids.indexOf(v) < 0);
-
+            let visAssets = Object.keys(globals.stateManager.getCache('visassets'));
+            let localVisAssets = Object.keys(globals.stateManager.state.localVisAssets);
+            let visAssetsToRemove = [...visAssets, ...localVisAssets].filter((v) => usedUuids.indexOf(v) < 0);
+            
             let confirmed = confirm(`Really delete ${visAssetsToRemove.length} VisAssets?`);
             if (confirmed) {
                 for (const va of visAssetsToRemove) {
-                    fetch(`/api/remove-visasset/${va}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        mode: 'same-origin',
-                    })
+                    if (localVisAssets && localVisAssets.includes(va)) {
+                        globals.stateManager.removePath('localVisAssets/' + va);
+                        // TODO: How do I remove local visassets from the cache?
+                    }
+                    else {
+                        globals.stateManager.removeVisAsset(va);
+                    }
                 }
             }
         })
