@@ -58,7 +58,7 @@ export function DesignPanel() {
             $('<span>', { class: 'material-icons', text: 'delete_sweep' })
         ).append(
             $('<span>', { text: 'Clear unused...'})
-        ).on('click', (evt) => {
+        ).on('click', async (evt) => {
 
             let usedUuids = globals.stateManager.findAll((s) => {
                 return s.hasOwnProperty('inputGenre') &&
@@ -66,15 +66,19 @@ export function DesignPanel() {
             }).map((v) => v.inputValue);
 
             let visAssets = Object.keys(globals.stateManager.getCache('visassets'));
-            let localVisAssets = Object.keys(globals.stateManager.state.localVisAssets);
+            let localVisAssets = globals.stateManager.state.localVisAssets;
+            localVisAssets = localVisAssets ? Object.keys(localVisAssets) : [];
             let visAssetsToRemove = [...visAssets, ...localVisAssets].filter((v) => usedUuids.indexOf(v) < 0);
             
             let confirmed = confirm(`Really delete ${visAssetsToRemove.length} VisAssets?`);
             if (confirmed) {
                 for (const va of visAssetsToRemove) {
-                    if (localVisAssets && localVisAssets.includes(va)) {
-                        globals.stateManager.removePath('localVisAssets/' + va);
-                        // TODO: How do I remove local visassets from the cache?
+                    if (localVisAssets.includes(va)) {
+                        // Use await here to make sure the localVisAsset is removed first before the cache is refreshed
+                        await globals.stateManager.removePath('localVisAssets/' + va);
+
+                        // Refresh the cache so that the puzzle piece disappear from the panel
+                        globals.stateManager.refreshCache('visassets');
                     }
                     else {
                         globals.stateManager.removeVisAsset(va);
