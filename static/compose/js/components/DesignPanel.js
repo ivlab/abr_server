@@ -3,7 +3,9 @@
  * Design panel (right side of the ABR Compose UI)
  *
  * Copyright (C) 2021, University of Minnesota
- * Authors: Bridger Herman <herma582@umn.edu>
+ * Authors: 
+ *   Bridger Herman <herma582@umn.edu>
+ *   Kiet Tran <tran0563@umn.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,14 +78,13 @@ export function DesignPanel() {
                     if (localVisAssets.includes(va)) {
                         // Use await here to make sure the localVisAsset is removed first before the cache is refreshed
                         await globals.stateManager.removePath('localVisAssets/' + va);
-
-                        // Refresh the cache so that the puzzle piece disappear from the panel
-                        globals.stateManager.refreshCache('visassets');
                     }
                     else {
                         globals.stateManager.removeVisAsset(va);
                     }
                 }
+                // Refresh the cache so that the puzzle piece disappear from the panel
+                globals.stateManager.refreshCache('visassets');
             }
         })
     )).menu().on('mouseout', (evt) => {
