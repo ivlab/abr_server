@@ -116,15 +116,15 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         zippedHistogram = await fetch(url).then((resp) => resp.json());
 
         // Try to get the current min/max from state if it's been redefined
-        if (globals.stateManager.state.dataRanges && globals.stateManager.state.dataRanges.scalarRanges) {
+        if (globals.stateManager.state.dataRanges) {
             // Try to get keydata-specific custom range first
-            if (globals.stateManager.state.dataRanges.scalarRanges[currentKeyDataPath]) {
-                currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentKeyDataPath][currentVarPath];
+            if (globals.stateManager.state.dataRanges.specificScalarRanges && globals.stateManager.state.dataRanges.specificScalarRanges[currentKeyDataPath]) {
+                currentMinMax = globals.stateManager.state.dataRanges.specificScalarRanges[currentKeyDataPath][currentVarPath];
                 customRange = true;
             }
 
             // Then if that fails, see if there's a global range for this var
-            if (!currentMinMax)
+            if (!currentMinMax && globals.stateManager.state.dataRanges.scalarRanges)
             {
                 currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
                 customRange = false;
@@ -183,7 +183,10 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
 
                 // If we've just unclicked custom range, get rid of the keydata-specific range
                 if (!customRange) {
-                    globals.stateManager.removePath(`dataRanges/scalarRanges/"${currentKeyDataPath}"/"${currentVarPath}"`);
+                    globals.stateManager.removePath(`dataRanges/specificScalarRanges/"${currentKeyDataPath}"/"${currentVarPath}"`);
+                    // Snap the min/max back to their original range
+                    currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
+                    updateHistogram(currentMinMax.min, currentMinMax.max);
                 }
             })
         );
@@ -564,7 +567,7 @@ function updateHistogram(minm, maxm) {
     // Update the Server with the min/max from this slider
     if (customRange) {
         // If it's a custom range for the key data, update the scalar range inside of keydata
-        globals.stateManager.update(`dataRanges/scalarRanges/"${currentKeyDataPath}"/"${currentVarPath}"`, currentMinMax);
+        globals.stateManager.update(`dataRanges/specificScalarRanges/"${currentKeyDataPath}"/"${currentVarPath}"`, currentMinMax);
     } else {
         // Otherwise, update the systemwide variable min/max
         globals.stateManager.update(`dataRanges/scalarRanges/"${currentVarPath}"`, currentMinMax);
