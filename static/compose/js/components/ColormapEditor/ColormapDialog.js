@@ -37,11 +37,23 @@ const histogramHeight = 200 - margin.top - margin.bottom;
 var activeColormap = null;
 var zippedHistogram = null;
 var currentVarPath = null;
+var currentKeyDataPath = null;
 var currentMinMax = null;
+var customRange = false;
 var currentColormapUuid = null;
 var currentVisAssetJson = null;
 
 export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
+    // Ensure all globals are zeroed out on initilization of new dialog
+    activeColormap = null;
+    zippedHistogram = null;
+    currentVarPath = null;
+    currentKeyDataPath = null;
+    currentMinMax = null;
+    customRange = false;
+    currentColormapUuid = null;
+    currentVisAssetJson = null;
+
     let visassetJson = null;
     let colormapXml = null;
     if (globals.stateManager.keyExists(['localVisAssets'], vaUuid)) {
@@ -93,27 +105,40 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
     // Label the min/max of the histogram (only if there's a variable attached)
     if (variableInput) {
         currentVarPath = variableInput.inputValue;
-        let variableName = DataPath.getName(variableInput.inputValue);
-        let keyDataName = DataPath.getName(keyDataInput.inputValue);
+        let variableName = DataPath.getName(currentVarPath);
+        currentKeyDataPath = keyDataInput.inputValue;
+        let keyDataName = DataPath.getName(currentKeyDataPath);
 
         // Fetch the histogram from the server
-        let url = new URL(`${window.location}api/histogram/${keyDataInput.inputValue}/${variableName}`);
+        let url = new URL(`${window.location}api/histogram/${currentKeyDataPath}/${variableName}`);
         url.search = new URLSearchParams(currentMinMax);
 
         zippedHistogram = await fetch(url).then((resp) => resp.json());
 
         // Try to get the current min/max from state if it's been redefined
         if (globals.stateManager.state.dataRanges && globals.stateManager.state.dataRanges.scalarRanges) {
-            currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
+            // Try to get keydata-specific custom range first
+            if (globals.stateManager.state.dataRanges.scalarRanges[currentKeyDataPath]) {
+                currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentKeyDataPath][currentVarPath];
+                customRange = true;
+            }
+
+            // Then if that fails, see if there's a global range for this var
+            if (!currentMinMax)
+            {
+                currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
+                customRange = false;
+            }
         }
 
+        // If we still can't find data ranges, use defaults from histogram
         if (!currentMinMax) {
             currentMinMax = {
                 min: zippedHistogram.keyDataMin,
                 max: zippedHistogram.keyDataMax,
             }
+            customRange = false;
         }
-
 
         let $histContainer = $('<div>', {
             id: 'histogram-container',
@@ -138,6 +163,31 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
 
         $colormapEditor.append($histContainer);
 
+        // Construct a different data label depending on whether or not we have
+        // linked or unlinked this variable w/the global one of the same name
+        // Add a button to break the link to a particular variable (make this range specific to the data impression)
+        let $dataLabel = $('<div>', { id: 'histogram-data-label' }).append(
+            $('<p>', {
+                html: `<em>${keyDataName} &rarr; <strong>${variableName}</strong></em>`,
+            })
+        ).append(
+            $('<button>', {
+                class: 'rounded' + (customRange ? ' custom-range' : ''),
+            }).append($('<span>', {
+                class: 'ui-icon ui-icon-gear',
+                title: customRange ? `Use default range for ${keyDataName}/${variableName}` : `Create custom range for ${keyDataName}/${variableName}`,
+            })).on('click', (evt) => {
+                let $target = $(evt.target).closest('button');
+                $target.toggleClass('custom-range');
+                customRange = $target.hasClass('custom-range');
+
+                // If we've just unclicked custom range, get rid of the keydata-specific range
+                if (!customRange) {
+                    globals.stateManager.removePath(`dataRanges/scalarRanges/"${currentKeyDataPath}"/"${currentVarPath}"`);
+                }
+            })
+        );
+
         $colormapEditor.append(
             $('<div>', {
                 class: 'centered',
@@ -157,9 +207,9 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
                         $('.data-remapping-slider').slider('values', 0, currentMinMax.min);
                         updateHistogram(currentMinMax.min, currentMinMax.max);
                     },
-                })).append($('<p>', {
-                    html: `<em>${keyDataName} &rarr; <strong>${variableName}</strong></em>`,
-                })).append($('<input>', {
+                })).append(
+                    $dataLabel
+                ).append($('<input>', {
                     id: 'slider-maxLabel',
                     type: 'number',
                     step: 0.0001,
@@ -508,11 +558,15 @@ function updateHistogram(minm, maxm) {
 
     updateSliderLabelsPosition();
 
-    currentMinMax = {
-        min: minm,
-        max: maxm,
-    }
+    currentMinMax.min = minm;
+    currentMinMax.max = maxm;
 
     // Update the Server with the min/max from this slider
-    globals.stateManager.update(`dataRanges/scalarRanges/"${currentVarPath}"`, currentMinMax);
+    if (customRange) {
+        // If it's a custom range for the key data, update the scalar range inside of keydata
+        globals.stateManager.update(`dataRanges/scalarRanges/"${currentKeyDataPath}"/"${currentVarPath}"`, currentMinMax);
+    } else {
+        // Otherwise, update the systemwide variable min/max
+        globals.stateManager.update(`dataRanges/scalarRanges/"${currentVarPath}"`, currentMinMax);
+    }
 }
