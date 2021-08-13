@@ -41,25 +41,7 @@ def schema(request, schema_name):
 # State access and modification methods
 @csrf_exempt
 def modify_state(request):
-    # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
-    # For paths with keys that contain slashes (/), need to quote them
-    quote_parts = request.path.split('"')
-
-    # Build the path list
-    item_path_parts = []
-    for i in range(len(quote_parts)):
-        if len(quote_parts[i]) <= 0:
-            continue
-
-        # At the beginning, get rid of the extra state parts
-        q = quote_parts[i].replace('/api/state', '')
-
-        if i % 2 == 0:
-            item_path_parts.extend([x for x in q.split('/') if len(x) > 0])
-        else:
-            if len(q) > 0:
-                item_path_parts.append(q)
-
+    item_path_parts = clean_state_path('/api/state', request.path)
     if request.method == 'GET':
         resp = state.get_path(item_path_parts)
         return JsonResponse({'state': resp})
@@ -72,10 +54,7 @@ def modify_state(request):
 
 @csrf_exempt
 def remove_path(request):
-    # Parse the URL into its sub-components (we know it'll be /remove-path/* that gets us here)
-    item_path_parts = request.path.split('/')
-    item_path_parts = item_path_parts[3:]
-    item_path_parts = [p for p in item_path_parts if len(p) > 0]
+    item_path_parts = clean_state_path('/api/remove-path', request.path)
 
     if request.method == 'DELETE':
         state.remove_path(item_path_parts)
@@ -207,6 +186,27 @@ def remove_visasset(request, uuid):
         return HttpResponse()
     else:
         return HttpResponse('Method for download must be DELETE', status=400)
+
+def clean_state_path(method_path, request_path):
+    # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
+    # For paths with keys that contain slashes (/), need to quote them
+    quote_parts = request_path.split('"')
+
+    # Build the path list
+    item_path_parts = []
+    for i in range(len(quote_parts)):
+        if len(quote_parts[i]) <= 0:
+            continue
+
+        # At the beginning, get rid of the extra state parts
+        q = quote_parts[i].replace(method_path, '')
+
+        if i % 2 == 0:
+            item_path_parts.extend([x for x in q.split('/') if len(x) > 0])
+        else:
+            if len(q) > 0:
+                item_path_parts.append(q)
+    return item_path_parts
 
 
 # Get the histogram for any cached data living on this server
