@@ -21,6 +21,58 @@
 
 import { globals } from "../../../common/globals.js";
 
+// Any special cases that don't directly translate 1:1 as floats
+const PRIMITIVE_VALUE_MULTIPLIERS = {
+    'PercentPrimitive': 100.0,
+};
+
+// Assume 0.01 increment unless otherwise defined here
+const PRIMITIVE_INCREMENTS = {
+    'AnglePrimitive': 1.0,
+    'IntegerPrimitive': 1,
+};
+
+// Increment a primitive value (e.g. 1m) up or down (positive / negative increment)
+function incrementPrimitive(primitiveString, inputType, positive) {
+    let shortType = inputType.replace('IVLab.ABREngine.', '');
+    let typeUnitsRegex = new RegExp(globals.schema.definitions.InputStringTypes[shortType].pattern);
+    let matches = primitiveString.match(typeUnitsRegex);
+    let unitStr = matches[2];
+    let strNoUnits = primitiveString.replace(unitStr, '');
+    let floatValue = +strNoUnits;
+
+    // Determine the amount that we should increment by
+    let amount = 0.01;
+    if (PRIMITIVE_INCREMENTS.hasOwnProperty(shortType)) {
+        amount = PRIMITIVE_INCREMENTS[shortType];
+    }
+    if (!positive) {
+        amount *= -1.0;
+    }
+
+    // Convert to actual float value
+    if (PRIMITIVE_VALUE_MULTIPLIERS.hasOwnProperty(shortType)) {
+        floatValue /= PRIMITIVE_VALUE_MULTIPLIERS[shortType];
+    }
+
+    // Increment
+    let newValue = floatValue + amount;
+
+    // Convert back to display value
+    if (PRIMITIVE_VALUE_MULTIPLIERS.hasOwnProperty(shortType)) {
+        newValue *= PRIMITIVE_VALUE_MULTIPLIERS[shortType];
+    }
+    let truncatedValue = newValue.toFixed(2);
+    let intValue = parseInt(newValue, 10);
+    if (Math.abs(truncatedValue - intValue) < 0.01) {
+        newValue = intValue;
+    } else {
+        newValue = truncatedValue;
+    }
+
+    return newValue + unitStr;
+}
+
 export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
     let $el = $('<div>', {
         class: 'puzzle-label rounded',
@@ -38,6 +90,9 @@ export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
         let $impression = $(evt.target).closest('.data-impression');
         let impressionId = $impression.data('uuid');
         let plateType = $impression.data('plateType');
+        if (!plateType) {
+            return;
+        }
 
         // Get the default values for this input, in case there's nothing
         // there already
@@ -72,7 +127,40 @@ export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
         $(evt.target).attr('disabled', true);
     });
 
-    $el.append($input);
+
+        let $label = $('<label>');
+
+    $label.append($input);
+
+    let dragging = false;
+    let previousX = null;
+    $label.append(
+        $('<span>', {
+            class: 'input-scrubbable ui-icon ui-icon-triangle-2-e-w',
+        }).on('mousedown', (evt) => {
+            dragging = true;
+        })
+    );
+
+    $('body').on('mousemove', (evt) => {
+        if (dragging) {
+            let newValue = $input.val();
+            if (evt.clientX > previousX) {
+                newValue = incrementPrimitive(newValue, resolvedProps.inputType, true);
+            } else {
+                newValue = incrementPrimitive(newValue, resolvedProps.inputType, false);
+            }
+            $input.val(newValue);
+        }
+        previousX = evt.clientX;
+    }).on('mouseup', (evt) => {
+        if (dragging) {
+            $input.trigger('change');
+            dragging = false;
+        }
+    });
+
+    $el.append($label);
     let $container = $('<div>', { class: 'puzzle-piece rounded' });
     $container.append($el);
     return $container;
