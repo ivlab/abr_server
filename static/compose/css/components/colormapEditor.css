@@ -49,6 +49,10 @@
     border: 2px solid steelblue;
     border-radius: 7px;
 }
+.variable-labels button {
+    font-size: 0.7em;
+    margin: 0 1rem;
+}
 
 .percentage-display {
     text-align: center;

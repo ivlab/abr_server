@@ -149,28 +149,29 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
             id: 'histogram',
         }));
 
-        $colormapEditor.append($('<button>', {
-            class: 'rounded',
-            text: 'Reset Data Range',
-            css: {
-                position: 'absolute',
-                right: '0',
-                top: '0',
-            }
-        }).on('click', (evt) => {
-            updateHistogram(zippedHistogram.keyDataMin, zippedHistogram.keyDataMax);
-        }))
-
         $colormapEditor.append($histContainer);
 
         // Construct a different data label depending on whether or not we have
         // linked or unlinked this variable w/the global one of the same name
         // Add a button to break the link to a particular variable (make this range specific to the data impression)
         let $dataLabel = $('<div>', { id: 'histogram-data-label' }).append(
+            // Add a button to reset data range to original keyData
+            $('<button>', {
+                class: 'rounded',
+                text: 'Fit',
+                title: 'Fit data range to key data',
+            }).on('click', (evt) => {
+                updateHistogram(zippedHistogram.keyDataMin, zippedHistogram.keyDataMax);
+            }).prepend($('<span>', {
+                class: 'ui-icon ui-icon-arrowthick-2-e-w',
+            }))
+        ).append(
+            // Add the actual label
             $('<p>', {
                 html: `<em>${keyDataName} &rarr; <strong>${variableName}</strong></em>`,
             })
         ).append(
+            // Add custom range button
             $('<button>', {
                 class: 'rounded' + (customRange ? ' custom-range' : ''),
             }).append($('<span>', {
@@ -288,17 +289,6 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
         class: 'centered',
     });
 
-    // $buttons.append($('<button>', {
-    //     class: 'save-colormap colormap-button',
-    //     text: 'Save custom',
-    //     title: 'Save custom colormap',
-    // }).on('click', (evt) => {
-    //     saveColormap().then((u) => {
-    //         currentVisAssetJson = visassetJson;
-    //         currentColormapUuid = u;
-    //     });
-    // }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
-
     $buttons.append($('<button>', {
         class: 'flip-colormap colormap-button',
         text: 'Flip',
@@ -309,7 +299,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
             updateColormapDisplay();
             updateColorThumbPositions();
         });
-    }).prepend($('<span>', { class: 'ui-icon ui-icon-arrowthick-2-e-w'})));
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-transferthick-e-w'})));
 
     $buttons.append($('<button>', {
         class: 'colormap-button',
