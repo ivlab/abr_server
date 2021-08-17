@@ -75,7 +75,7 @@
     text-align: center;
 }
 .puzzle-piece input.primitive-input {
-    width: 50%;
+    width: 75%;
     align-self: center;
     text-align: center;
 }
@@ -100,6 +100,11 @@ div.inline {
     margin: 0.5rem;
     background: #eeeeee;
     width: 0.8rem;
+}
+
+.puzzle-piece .puzzle-label .input-scrubbable {
+    cursor: ew-resize;
+    background-color: #eeeeee;
 }
 
 
