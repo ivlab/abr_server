@@ -3,7 +3,9 @@
  * Composition panel (Center of the ABR Compose UI)
  *
  * Copyright (C) 2021, University of Minnesota
- * Authors: Bridger Herman <herma582@umn.edu>
+ * Authors:
+ *   Bridger Herman <herma582@umn.edu>
+ *   Kiet Tran <tran0563@umn.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -3,7 +3,9 @@
  * Design panel (right side of the ABR Compose UI)
  *
  * Copyright (C) 2021, University of Minnesota
- * Authors: Bridger Herman <herma582@umn.edu>
+ * Authors: 
+ *   Bridger Herman <herma582@umn.edu>
+ *   Kiet Tran <tran0563@umn.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,26 +60,31 @@ export function DesignPanel() {
             $('<span>', { class: 'material-icons', text: 'delete_sweep' })
         ).append(
             $('<span>', { text: 'Clear unused...'})
-        ).on('click', (evt) => {
+        ).on('click', async (evt) => {
 
             let usedUuids = globals.stateManager.findAll((s) => {
                 return s.hasOwnProperty('inputGenre') &&
                 s['inputGenre'] == 'VisAsset'
             }).map((v) => v.inputValue);
 
-            let visAssetsToRemove = Object.keys(globals.stateManager.getCache('visassets')).filter((v) => usedUuids.indexOf(v) < 0);
-
+            let visAssets = Object.keys(globals.stateManager.getCache('visassets'));
+            let localVisAssets = globals.stateManager.state.localVisAssets;
+            localVisAssets = localVisAssets ? Object.keys(localVisAssets) : [];
+            let visAssetsToRemove = [...visAssets, ...localVisAssets].filter((v) => usedUuids.indexOf(v) < 0);
+            
             let confirmed = confirm(`Really delete ${visAssetsToRemove.length} VisAssets?`);
             if (confirmed) {
                 for (const va of visAssetsToRemove) {
-                    fetch(`/api/remove-visasset/${va}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        mode: 'same-origin',
-                    })
+                    if (localVisAssets.includes(va)) {
+                        // Use await here to make sure the localVisAsset is removed first before the cache is refreshed
+                        await globals.stateManager.removePath('localVisAssets/' + va);
+                    }
+                    else {
+                        globals.stateManager.removeVisAsset(va);
+                    }
                 }
+                // Refresh the cache so that the puzzle piece disappear from the panel
+                globals.stateManager.refreshCache('visassets');
             }
         })
     )).menu().on('mouseout', (evt) => {

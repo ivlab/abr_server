@@ -57,7 +57,7 @@
 }
 
 .data-impression .parameter-list {
-    overflow: hidden;
+    overflow: visible;
 }
 
 .data-impression .parameter {

@@ -3,7 +3,9 @@
  * Dialog that enables a user to modify colormaps as well as remap data ranges for scalar variables.
  *
  * Copyright (C) 2021, University of Minnesota
- * Authors: Bridger Herman <herma582@umn.edu>
+ * Authors:
+ *   Bridger Herman <herma582@umn.edu>
+ *   Kiet Tran <tran0563@umn.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -128,6 +130,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
             css: {
                 position: 'absolute',
                 right: '0',
+                top: '0',
             }
         }).on('click', (evt) => {
             updateHistogram(zippedHistogram.keyDataMin, zippedHistogram.keyDataMax);
