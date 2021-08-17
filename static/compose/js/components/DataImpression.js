@@ -202,10 +202,13 @@ function InputSocket(inputName, inputProps) {
                 $tmp.css('left', 0);
                 $tmp.appendTo($socket);
 
-                // Default data impression's name to the key data applied to it
-                if (droppedType.substring(droppedType.length - 7) === "KeyData") {
-                    let newName = DataPath.getName(droppedValue);
-                    globals.stateManager.update(`/impressions/${impressionId}/name`, newName);
+                // If the data impression hasn't been renamed by user (with the pencil icon),
+                // default impression's name to the name of the key data applied to it
+                if (!globals.stateManager.state['impressions'][impressionId].isRenamedByUser) {
+                    if (droppedType.substring(droppedType.length - 7) === "KeyData") {
+                        let newName = DataPath.getName(droppedValue);
+                        globals.stateManager.update(`/impressions/${impressionId}/name`, newName);  
+                    }
                 }
             }
         }
@@ -243,13 +246,17 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
                 globals.stateManager.update(`/impressions/${uuid}/renderHints/Visible`, !oldVisibility);
             })
         ).append(
+            // Pencil icon
             $('<button>', {
                 class: 'material-icons rounded',
                 text: 'edit',
                 title: 'Rename data impression'
             }).on('click', (evt) => {
                 let newName = prompt('Rename data impression:', name);
-                globals.stateManager.update(`/impressions/${uuid}/name`, newName);
+                if (newName) {
+                    globals.stateManager.update(`/impressions/${uuid}/name`, newName);
+                    globals.stateManager.update(`/impressions/${uuid}/isRenamedByUser`, true);
+                }
             })
         )
     );
