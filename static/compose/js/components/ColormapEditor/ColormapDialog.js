@@ -130,6 +130,7 @@ export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
             css: {
                 position: 'absolute',
                 right: '0',
+                top: '0',
             }
         }).on('click', (evt) => {
             updateHistogram(zippedHistogram.keyDataMin, zippedHistogram.keyDataMax);
