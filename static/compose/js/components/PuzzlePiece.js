@@ -244,6 +244,10 @@ export function InputPuzzlePiece(inputName, inputProps) {
                     s['parameterName'] == 'Key Data'
             });
             let keyDataPath = keyDatas.find((p) => p.split('/')[2] == impressionUuid);
+            if (!keyDataPath)
+            {
+                return;
+            }
             let keyDataInput = globals.stateManager.getPath(keyDataPath).inputValue;
             let [org, dataset, _, kd] = DataPath.getPathParts(keyDataInput);
             let rawMetadata = globals.dataCache[org][dataset][kd];
