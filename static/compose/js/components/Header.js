@@ -1,9 +1,22 @@
-/* components/Header.js
+/* Header.js
  *
- * Copyright (c) 2020, University of Minnesota
- * Author: Bridger Herman <herma582@umn.edu>
- * 
  * Header going across the top of the ABR Compose UI
+ *
+ * Copyright (C) 2021, University of Minnesota
+ * Authors: Bridger Herman <herma582@umn.edu>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { globals } from "../../../common/globals.js";
@@ -130,6 +143,14 @@ export function Header() {
             }
     });
 
+    // Open a raw state editor in a new window
+    let $rawEditorButton = $('<div>')
+        .append($('<span>', { class: 'material-icons', text: 'code'}))
+        .append($('<span>', { text: 'Open JSON editor...' }))
+        .on('click', (_evt) => {
+            window.open(window.location.href + 'raw-editor', '_blank');
+    });
+
 
     let outTimer = null;
     $('<ul>', {
@@ -141,6 +162,8 @@ export function Header() {
         $('<li>').append($importStateButton)
     ).append(
         $('<li>').append($exportStateButton)
+    ).append(
+        $('<li>').append($rawEditorButton)
     ).append(
         $('<li>').append($clearStateButton)
     ).menu().appendTo($(document.body)).on('mouseout', (evt) => {
@@ -257,6 +280,10 @@ export function Header() {
         } else {
             localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
             $('#state-header #state-name').text(stateName);
+            $('.save-animation').addClass('animating');
+            setTimeout(() => {
+                $('.save-animation').removeClass('animating');
+            }, 2000);
         }
     }));
 
@@ -274,6 +301,7 @@ export function Header() {
         html: 'redo',
         title: 'Redo', 
     }).on('click', (_evt) => {
+        globals.stateManager.redo();
         $('#state-name').text(globals.stateManager.state.name ? globals.stateManager.state.name : defaultStateName);
     }));
 
@@ -299,6 +327,10 @@ export function Header() {
 
     // Loading spinner
     // TODO
+    $stateHeader.append($('<p>', {
+        class: 'material-icons save-animation',
+        text: 'done'
+    }))
     $stateHeader.append($('<div>', {
         class: 'abr-state-subscriber loading-spinner',
         title: 'Loading...',
@@ -313,12 +345,12 @@ export function Header() {
 
     // Capture a screenshot
     // TODO
-    $screenshotHeader.append($('<button>', {
-        class: 'material-icons rounded',
-        html: 'camera_alt', 
-    }).on('click', (_evt) => {
-        alert('For now, please make screenshots in Unity using the "s" key.')
-    }));
+    // $screenshotHeader.append($('<button>', {
+    //     class: 'material-icons rounded',
+    //     html: 'camera_alt',
+    // }).on('click', (_evt) => {
+    //     alert('For now, please make screenshots in Unity using the "s" key.')
+    // }));
 
     // Screenshot gallery
     // TODO

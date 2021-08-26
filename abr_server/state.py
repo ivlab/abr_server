@@ -1,6 +1,28 @@
+# state.py
+#
+# Manages the canonical state for an ABR application, and notifies any connected
+# graphics engines and design user interfaces when the state has been updated.
+#
+# Copyright (c) 2021, University of Minnesota
+# Author: Bridger Herman <herma582@umn.edu>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import os
 import sys
 import jsonschema
+import requests
 import json
 import time
 import jsondiff
@@ -15,8 +37,7 @@ from .visasset_manager import download_visasset
 
 logger = logging.getLogger('django.server')
 
-SCHEMA_PATH = Path(settings.STATIC_ROOT).joinpath('schemas')
-STATE_SCHEMA = SCHEMA_PATH.joinpath('ABRSchema_0-2-0.json')
+SCHEMA_URL = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/ABRSchema_0-2-0.json'
 
 BACKUP_LOCATIONS = {
     'linux': Path('~/.config/abr/'),
@@ -39,15 +60,18 @@ class State():
         BACKUP_PATH.touch()
         self.backup_path = BACKUP_PATH.resolve()
 
-        with open(STATE_SCHEMA) as scm:
-            self.state_schema = json.load(scm)
+        resp = requests.get(SCHEMA_URL)
+        if resp.status_code != 200:
+            logger.error('Unable to load schema from url {0}'.format(SCHEMA_URL))
+            return
 
+        self.state_schema = resp.json()
 
         # Lock around state modifications
         self._state_lock = Lock()
 
         self._default_state = {
-            'version': self.state_schema['properties']['version']['const']
+            'version': self.state_schema['properties']['version']['default']
         }
 
         logger.info('Using ABR Schema, version {}'.format(self._default_state['version']))
@@ -87,10 +111,11 @@ class State():
             # Clear the redo stack, because if we made a change to the state all
             # the previous redos are invalid
             with self._state_lock:
-                state_diff = jsondiff.diff(self._pending_state, self._state, syntax='symmetric')
-                self.undo_stack.append(state_diff)
-                self.redo_stack.clear()
-                self._state = deepcopy(self._pending_state)
+                state_diff = jsondiff.diff(self._pending_state, self._state, syntax='symmetric', marshal=True)
+                if len(state_diff) > 0: # Only record the change if there's actually a diff
+                    self.undo_stack.append(state_diff)
+                    self.redo_stack.clear()
+                    self._state = deepcopy(self._pending_state)
 
             # Tell any connected clients that we've updated the state
             notifier.notify({ 'target': 'state' })
@@ -148,7 +173,7 @@ class State():
                 vis_asset_fails += '\n' + str(failed) if len(failed) > 0 else ''
             if len(vis_asset_fails) > 0:
                 vis_asset_fails = '\nFailed to download VisAssets: ' + vis_asset_fails
-            final_result += vis_asset_fails
+            logger.warning(vis_asset_fails)
             notifier.notify({ 'target': 'CacheUpdate-visassets' })
 
         return final_result
@@ -169,7 +194,7 @@ class State():
 
     def remove_path(self, item_path):
         if len(item_path) == 0:
-            self._pending_state = self._default_state
+            self._pending_state = deepcopy(self._default_state)
         else:
             self._remove_path(self._pending_state, item_path)
         return self.validate_and_backup()
@@ -259,7 +284,7 @@ class State():
             return 'Nothing to undo'
 
         with self._state_lock:
-            undone_state = jsondiff.patch(self._state, diff_w_previous, syntax='symmetric')
+            undone_state = jsondiff.patch(self._state, diff_w_previous, syntax='symmetric', marshal=True)
             self._state = undone_state
             self._pending_state = undone_state
         self.redo_stack.append(diff_w_previous)
@@ -282,7 +307,7 @@ class State():
             return 'Nothing to redo'
 
         with self._state_lock:
-            undone_state = jsondiff.JsonDiffer(syntax='symmetric').unpatch(self._state, diff_w_next)
+            undone_state = jsondiff.JsonDiffer(syntax='symmetric', marshal=True).unpatch(self._state, diff_w_next)
             self._state = undone_state
             self._pending_state = undone_state
         self.undo_stack.append(diff_w_next)

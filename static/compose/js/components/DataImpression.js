@@ -1,11 +1,25 @@
 /* DataImpression.js
  *
- * Copyright (c) 2020, University of Minnesota
- * Author: Bridger Herman <herma582@umn.edu>
- * 
  * Instantiated form of a Plate, contains inputs that can be changed by an artist
+ *
+ * Copyright (C) 2021, University of Minnesota
+ * Authors: Bridger Herman <herma582@umn.edu>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE } from '../../../common/StateManager.js';
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
@@ -139,6 +153,10 @@ function InputSocket(inputName, inputProps) {
     $dropZone.addClass('drop-zone');
 
     $dropZone.droppable({
+        tolerance: 'touch',
+        out: (_evt, ui) => {
+            $(ui.draggable).data('draggedOut', true);
+        },
         drop: (evt, ui) => {
             // Get the impression that this input is a part of
             let $impression = $(evt.target).closest('.data-impression');
@@ -183,6 +201,15 @@ function InputSocket(inputName, inputProps) {
                 $tmp.css('top', 0);
                 $tmp.css('left', 0);
                 $tmp.appendTo($socket);
+
+                // If the data impression hasn't been renamed by user (with the pencil icon),
+                // default impression's name to the name of the key data applied to it
+                if (!globals.stateManager.state['impressions'][impressionId].isRenamedByUser) {
+                    if (droppedType.substring(droppedType.length - 7) === "KeyData") {
+                        let newName = DataPath.getName(droppedValue);
+                        globals.stateManager.update(`/impressions/${impressionId}/name`, newName);  
+                    }
+                }
             }
         }
     });
@@ -219,13 +246,17 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
                 globals.stateManager.update(`/impressions/${uuid}/renderHints/Visible`, !oldVisibility);
             })
         ).append(
+            // Pencil icon
             $('<button>', {
                 class: 'material-icons rounded',
                 text: 'edit',
                 title: 'Rename data impression'
             }).on('click', (evt) => {
                 let newName = prompt('Rename data impression:', name);
-                globals.stateManager.update(`/impressions/${uuid}/name`, newName);
+                if (newName) {
+                    globals.stateManager.update(`/impressions/${uuid}/name`, newName);
+                    globals.stateManager.update(`/impressions/${uuid}/isRenamedByUser`, true);
+                }
             })
         )
     );

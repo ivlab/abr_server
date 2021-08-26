@@ -1,9 +1,24 @@
-/* components/DesignPanel.js
+/* DesignPanel.js
  *
- * Copyright (c) 2020, University of Minnesota
- * Author: Bridger Herman <herma582@umn.edu>
- * 
  * Design panel (right side of the ABR Compose UI)
+ *
+ * Copyright (C) 2021, University of Minnesota
+ * Authors: 
+ *   Bridger Herman <herma582@umn.edu>
+ *   Kiet Tran <tran0563@umn.edu>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 import * as Components from './Components.js';
@@ -45,26 +60,31 @@ export function DesignPanel() {
             $('<span>', { class: 'material-icons', text: 'delete_sweep' })
         ).append(
             $('<span>', { text: 'Clear unused...'})
-        ).on('click', (evt) => {
+        ).on('click', async (evt) => {
 
             let usedUuids = globals.stateManager.findAll((s) => {
                 return s.hasOwnProperty('inputGenre') &&
                 s['inputGenre'] == 'VisAsset'
             }).map((v) => v.inputValue);
 
-            let visAssetsToRemove = Object.keys(globals.stateManager.getCache('visassets')).filter((v) => usedUuids.indexOf(v) < 0);
-
+            let visAssets = Object.keys(globals.stateManager.getCache('visassets'));
+            let localVisAssets = globals.stateManager.state.localVisAssets;
+            localVisAssets = localVisAssets ? Object.keys(localVisAssets) : [];
+            let visAssetsToRemove = [...visAssets, ...localVisAssets].filter((v) => usedUuids.indexOf(v) < 0);
+            
             let confirmed = confirm(`Really delete ${visAssetsToRemove.length} VisAssets?`);
             if (confirmed) {
                 for (const va of visAssetsToRemove) {
-                    fetch(`/api/remove-visasset/${va}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        mode: 'same-origin',
-                    })
+                    if (localVisAssets.includes(va)) {
+                        // Use await here to make sure the localVisAsset is removed first before the cache is refreshed
+                        await globals.stateManager.removePath('localVisAssets/' + va);
+                    }
+                    else {
+                        globals.stateManager.removeVisAsset(va);
+                    }
                 }
+                // Refresh the cache so that the puzzle piece disappear from the panel
+                globals.stateManager.refreshCache('visassets');
             }
         })
     )).menu().on('mouseout', (evt) => {
@@ -80,7 +100,8 @@ export function DesignPanel() {
     ).append(
         $('<button>', {
             class: 'rounded',
-            text: '...'
+            text: '...',
+            title: 'Show additional options...'
         }).on('click', (evt) => {
             $visAssetMenu.css('left', $(evt.target).position().left - $visAssetMenu.width() - $(evt.target).width());
             $visAssetMenu.css('top', $(evt.target).position().top + $visAssetMenu.height() + $(evt.target).height());

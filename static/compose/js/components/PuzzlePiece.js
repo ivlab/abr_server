@@ -1,8 +1,20 @@
 /* PuzzlePiece.js
  *
- * Copyright (c) 2021, University of Minnesota
- * Author: Bridger Herman <herma582@umn.edu>
- * 
+ * Copyright (C) 2021, University of Minnesota
+ * Authors: Bridger Herman <herma582@umn.edu>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { DataPath } from "../../../common/DataPath.js";
@@ -38,6 +50,16 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     }
 
     $element.attr('title', label);
+    $element.on('dragstart', (evt, ui) => {
+        // Find all drop zones that match this input type
+        let elType = $(evt.target).data('inputType');
+        let $dropZones = $('.input-socket .puzzle-piece.drop-zone');
+        let $sameTypeZones = $dropZones.filter((i, el) => $(el).data('inputType') == elType );
+        $sameTypeZones.addClass('highlighted');
+    });
+    $element.on('dragstop', (evt, ui) => {
+        $('.puzzle-piece.drop-zone').removeClass('highlighted');
+    });
     return $element;
 }
 
@@ -154,7 +176,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 $el.on('dragstart', () => dragging = true);
                 $el.on('dragend', () => dragging = false);
                 $el.css('cursor', 'pointer');
-                $el.on('click', (evt) => {
+                let clickEvt = (evt) => {
                     if (!dragging) {
                         let impressionUuid = $el.parents('.data-impression').data('uuid');
 
@@ -189,7 +211,9 @@ export function InputPuzzlePiece(inputName, inputProps) {
 
                         ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
                     }
-                });
+                };
+                $el.on('dblclick', clickEvt);
+                $el.on('click', clickEvt);
             }
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
@@ -220,6 +244,10 @@ export function InputPuzzlePiece(inputName, inputProps) {
                     s['parameterName'] == 'Key Data'
             });
             let keyDataPath = keyDatas.find((p) => p.split('/')[2] == impressionUuid);
+            if (!keyDataPath)
+            {
+                return;
+            }
             let keyDataInput = globals.stateManager.getPath(keyDataPath).inputValue;
             let [org, dataset, _, kd] = DataPath.getPathParts(keyDataInput);
             let rawMetadata = globals.dataCache[org][dataset][kd];
@@ -274,9 +302,11 @@ export function AssignedInputPuzzlePiece(inputName, inputProps) {
                 evt.stopPropagation();
             },
             stop: (evt, _ui) => {
-                // Unassign this input
-                let uuid = $(evt.target).parents('.data-impression').data('uuid');
-                globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+                if ($(evt.target).data('draggedOut')) {
+                    // Unassign this input
+                    let uuid = $(evt.target).parents('.data-impression').data('uuid');
+                    globals.stateManager.removePath(`impressions/${uuid}/inputValues/${inputName}`);
+                }
             }
         });
     }

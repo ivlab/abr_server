@@ -28,6 +28,7 @@
 
 /* The body of the puzzle piece */
 .puzzle-piece .puzzle-label {
+    position: relative;
     width: 5rem;
     background-color: #bbb;
     color: #3d3d3d;
@@ -74,7 +75,7 @@
     text-align: center;
 }
 .puzzle-piece input.primitive-input {
-    width: 50%;
+    width: 75%;
     align-self: center;
     text-align: center;
 }
@@ -99,4 +100,33 @@ div.inline {
     margin: 0.5rem;
     background: #eeeeee;
     width: 0.8rem;
+}
+
+.puzzle-piece .puzzle-label .input-scrubbable {
+    cursor: ew-resize;
+    background-color: #eeeeee;
+}
+
+
+.puzzle-piece.drop-zone:not(.highlighted) .puzzle-label, .puzzle-piece.drop-zone:not(.highlighted) .puzzle-connector {
+    background-color: #605e5b !important;
+}
+.puzzle-piece.drop-zone .puzzle-label, .puzzle-piece.drop-zone .puzzle-connector {
+    color: #f8f4f4 !important;
+}
+
+.input-socket .puzzle-piece.highlighted .puzzle-label, .input-socket .puzzle-piece.highlighted .puzzle-connector {
+    animation-name: pulse;
+    animation-duration: 1.7s;
+    animation-timing-function: ease-in;
+    animation-iteration-count: infinite;
+}
+.input-socket .puzzle-piece.highlighted .puzzle-label p {
+    filter: drop-shadow(0px 0px 0.5rem #000);
+}
+
+@keyframes pulse {
+    0% {background-color: #666;}
+    50% {background-color: #97aec1;}
+    100% {background-color: #666;}
 }

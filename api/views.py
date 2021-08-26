@@ -1,14 +1,28 @@
+# Copyright (C) 2021, University of Minnesota
+# Authors: Bridger Herman <herma582@umn.edu>
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import os
-import sys
 import json
 import fnmatch
 import numpy as np
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, JsonResponse, Http404
+from django.http import HttpResponse, JsonResponse
 
 from django.conf import settings
-from pathlib import Path
 
 from abr_server.state import state
 from abr_server.notifier import notifier
@@ -27,25 +41,7 @@ def schema(request, schema_name):
 # State access and modification methods
 @csrf_exempt
 def modify_state(request):
-    # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
-    # For paths with keys that contain slashes (/), need to quote them
-    quote_parts = request.path.split('"')
-
-    # Build the path list
-    item_path_parts = []
-    for i in range(len(quote_parts)):
-        if len(quote_parts[i]) <= 0:
-            continue
-
-        # At the beginning, get rid of the extra state parts
-        q = quote_parts[i].replace('/api/state', '')
-
-        if i % 2 == 0:
-            item_path_parts.extend([x for x in q.split('/') if len(x) > 0])
-        else:
-            if len(q) > 0:
-                item_path_parts.append(q)
-
+    item_path_parts = clean_state_path('/api/state', request.path)
     if request.method == 'GET':
         resp = state.get_path(item_path_parts)
         return JsonResponse({'state': resp})
@@ -58,10 +54,7 @@ def modify_state(request):
 
 @csrf_exempt
 def remove_path(request):
-    # Parse the URL into its sub-components (we know it'll be /remove-path/* that gets us here)
-    item_path_parts = request.path.split('/')
-    item_path_parts = item_path_parts[3:]
-    item_path_parts = [p for p in item_path_parts if len(p) > 0]
+    item_path_parts = clean_state_path('/api/remove-path', request.path)
 
     if request.method == 'DELETE':
         state.remove_path(item_path_parts)
@@ -129,8 +122,16 @@ def list_datasets(request):
         else:
             org_data = {}
         org_disk_path = settings.DATASET_PATH.joinpath(org)
+        # Skip any "organization" that's not a directory
+        if not org_disk_path.is_dir():
+            continue
         for dataset in os.listdir(org_disk_path):
-            dataset_disk_path = org_disk_path.joinpath(dataset).joinpath('KeyData')
+            dataset_disk_path = org_disk_path.joinpath(dataset)
+            if dataset_disk_path.is_dir():
+                dataset_disk_path = dataset_disk_path.joinpath('KeyData')
+            else:
+                # Skip anything that's not a directory
+                continue
             if dataset in org_data:
                 keydata_dict = org_data[dataset]
             else:
@@ -164,13 +165,48 @@ def download_visasset(request, uuid):
         return HttpResponse('Method for download must be POST', status=400)
 
 @csrf_exempt
+def save_visasset(request, uuid):
+    if request.method == 'POST':
+        visasset_data = state.get_path(['localVisAssets', uuid])
+        save_success = visasset_manager.save_from_local(visasset_data)
+        if save_success:
+            notifier.notify({ 'target': 'CacheUpdate-visassets' })
+            return HttpResponse('Saved visasset', status=200)
+        else:
+            return HttpResponse('Unable to save Local VisAsset', status=400)
+    else:
+        return HttpResponse('Method for download must be POST', status=400)
+
+@csrf_exempt
 def remove_visasset(request, uuid):
     if request.method == 'DELETE':
         visasset_manager.remove_visasset(uuid)
+        del VISASSET_CACHE[uuid]
         notifier.notify({ 'target': 'CacheUpdate-visassets' })
         return HttpResponse()
     else:
         return HttpResponse('Method for download must be DELETE', status=400)
+
+def clean_state_path(method_path, request_path):
+    # Parse the URL into its sub-components (we know it'll be /state/* that gets us here)
+    # For paths with keys that contain slashes (/), need to quote them
+    quote_parts = request_path.split('"')
+
+    # Build the path list
+    item_path_parts = []
+    for i in range(len(quote_parts)):
+        if len(quote_parts[i]) <= 0:
+            continue
+
+        # At the beginning, get rid of the extra state parts
+        q = quote_parts[i].replace(method_path, '')
+
+        if i % 2 == 0:
+            item_path_parts.extend([x for x in q.split('/') if len(x) > 0])
+        else:
+            if len(q) > 0:
+                item_path_parts.append(q)
+    return item_path_parts
 
 
 # Get the histogram for any cached data living on this server

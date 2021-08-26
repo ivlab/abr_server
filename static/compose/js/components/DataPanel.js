@@ -1,9 +1,22 @@
-/* components/DataPanel.js
+/* DataPanel.js
  *
- * Copyright (c) 2020, University of Minnesota
- * Author: Bridger Herman <herma582@umn.edu>
- * 
  * Data panel (left side of the ABR Compose UI)
+ *
+ * Copyright (C) 2021, University of Minnesota
+ * Authors: Bridger Herman <herma582@umn.edu>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { DataPath } from "../../../common/DataPath.js";
@@ -34,15 +47,80 @@ export function DataPanel() {
         text: 'Data Palette',
     }));
 
+    let $localData = $('<p>', {
+        class: 'section-header',
+        text: 'Local Datasets'
+    }).append(
+        $('<button>', {
+            class: 'rounded',
+            text: '...',
+            title: 'Choose which datasets to show here'
+        }).on('click', (evt) => {
+            let $chooserDialog = $('<div>', {
+                title: 'Filter local datasets',
+                id: 'load-state-dialog',
+            }).dialog({
+                resizable: false,
+                height: 'auto',
+                width: 400,
+                modal: true,
+            });
+            let filterDatasets = {};
+            if (localStorage.getItem('filterDatasets')) {
+                filterDatasets = JSON.parse(localStorage.filterDatasets);
+            }
+
+            for (const org in globals.dataCache) {
+                for (const dataset in globals.dataCache[org]) {
+                    let datasetPath = DataPath.makePath(org, dataset);
+                    let $chooserRow = $('<div>', { class: 'data-chooser-row' });
+                    let $label = $('<label>', { text: datasetPath });
+                    $label.prepend($('<input>', {
+                        type: 'checkbox',
+                        prop: { checked: !filterDatasets.hasOwnProperty(datasetPath), },
+                    }).on('click', (evt) => {
+                        let filterDatasets = {};
+                        if (localStorage.getItem('filterDatasets')) {
+                            filterDatasets = JSON.parse(localStorage.filterDatasets);
+                        }
+                        if (!$(evt.target).prop('checked')) {
+                            filterDatasets[datasetPath] = true;
+                        } else {
+                            delete filterDatasets[datasetPath];
+                        }
+                        localStorage.setItem('filterDatasets', JSON.stringify(filterDatasets));
+                        refreshDataPanel($dataPanel);
+                    }));
+                    $chooserRow.append($label);
+                    $chooserDialog.append($chooserRow);
+                }
+            }
+        })
+    );
+
+    $dataPanel.append($localData);
+
+    refreshDataPanel($dataPanel);
+    return $dataPanel;
+}
+
+function refreshDataPanel($dataPanel) {
+    $dataPanel.children('.dataset-list').remove();
+    let $datasetList = $('<div>', { class: 'dataset-list' });
     fetch('/api/datasets')
         .then((resp) => resp.json())
         .then((datasets) => {
             globals.dataCache = datasets;
             for (const org in datasets) {
                 for (const dataset in datasets[org]) {
+                    let datasetPath = DataPath.makePath(org, dataset);
+                    if (localStorage.getItem('filterDatasets')) {
+                        let filterDatasets = JSON.parse(localStorage.filterDatasets);
+                        if (filterDatasets && datasetPath in filterDatasets) {
+                            continue;
+                        }
+                    }
                     let keydataList = [];
-                    let scalarVarNames = new Set();
-                    let vectorVarNames = new Set();
                     for (const keydata in datasets[org][dataset]) {
                         let metadata = datasets[org][dataset][keydata]
                         let keyDataInput = {
@@ -54,53 +132,22 @@ export function DataPanel() {
                         keydataList.push(
                             SwatchInputPuzzlePiece(keydata, keyDataInput)
                         );
-
-                        // Vars may be shared between KeyData, so make sure only
-                        // one of each appears in the panel
-                        for (const name of metadata.scalarArrayNames) {
-                            scalarVarNames.add(name);
-                        }
-                        for (const name of metadata.vectorArrayNames) {
-                            vectorVarNames.add(name);
-                        }
                     }
 
-                    let scalarVarList = [...scalarVarNames]
-                        .filter((n) => n && n.length > 0)
-                        .map((n) => {
-                            let scalarVarInput = {
-                                inputType: 'IVLab.ABREngine.ScalarDataVariable',
-                                inputGenre: 'Variable',
-                                inputValue: DataPath.makePath(org, dataset, 'ScalarVar', n),
-                            };
-                            return SwatchInputPuzzlePiece(n, scalarVarInput)
-                    });
-                    let vectorVarList = [...vectorVarNames]
-                        .filter((n) => n && n.length > 0)
-                        .map((n) => {
-                            let vectorVarInput = {
-                                inputType: 'IVLab.ABREngine.VectorDataVariable',
-                                inputGenre: 'Variable',
-                                inputValue: DataPath.makePath(org, dataset, 'VectorVar', n),
-                            };
-                            return SwatchInputPuzzlePiece(n, vectorVarInput);
+                    keydataList.sort((a, b) => {
+                        if (a.data('inputType') > b.data('inputType')) {
+                            return 1;
+                        } else if (a.data('inputType') < b.data('inputType')) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
                     });
 
-                    let $keydata = SwatchList('Key Data', keydataList);
-                    let $scalarVars = SwatchList('Scalar Variables', scalarVarList);
-                    let $vectorVars = SwatchList('Vector Variables', vectorVarList);
-                    let $dataset = $('<div>')
-                        .append($keydata)
-                        .append($scalarVars)
-                        .append($vectorVars);
-                    $dataPanel.append($('<p>', {
-                        class: 'section-header',
-                        text: DataPath.makePath(org, dataset),
-                    }))
-                    $dataPanel.append($dataset);
+                    let $dataset = SwatchList(DataPath.makePath(org, dataset), keydataList);
+                    $datasetList.append($dataset);
                 }
             }
         });
-
-    return $dataPanel;
+        $dataPanel.append($datasetList);
 }

@@ -1,8 +1,24 @@
 /* ColormapDialog.js
  *
- * Copyright (c) 2021, University of Minnesota
- * Author: Bridger Herman <herma582@umn.edu>
+ * Dialog that enables a user to modify colormaps as well as remap data ranges for scalar variables.
  *
+ * Copyright (C) 2021, University of Minnesota
+ * Authors:
+ *   Bridger Herman <herma582@umn.edu>
+ *   Kiet Tran <tran0563@umn.edu>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 import { globals } from '../../../../common/globals.js';
@@ -21,25 +37,39 @@ const histogramHeight = 200 - margin.top - margin.bottom;
 var activeColormap = null;
 var zippedHistogram = null;
 var currentVarPath = null;
+var currentKeyDataPath = null;
 var currentMinMax = null;
+var customRange = false;
+var currentColormapUuid = null;
+var currentVisAssetJson = null;
 
-export async function ColormapDialog(uuid, variableInput, keyDataInput) {
+export async function ColormapDialog(vaUuid, variableInput, keyDataInput) {
+    // Ensure all globals are zeroed out on initilization of new dialog
+    activeColormap = null;
+    zippedHistogram = null;
+    currentVarPath = null;
+    currentKeyDataPath = null;
+    currentMinMax = null;
+    customRange = false;
+    currentColormapUuid = null;
+    currentVisAssetJson = null;
+
     let visassetJson = null;
     let colormapXml = null;
-    if (globals.stateManager.keyExists(['localVisAssets'], uuid)) {
-        let va = globals.stateManager.state.localVisAssets[uuid];
+    if (globals.stateManager.keyExists(['localVisAssets'], vaUuid)) {
+        let va = globals.stateManager.state.localVisAssets[vaUuid];
         visassetJson = va.artifactJson;
         colormapXml = va.artifactDataContents[visassetJson['artifactData']['colormap']];
     } else {
         let visassets = globals.stateManager.getCache('visassets');
-        if (visassets && visassets[uuid]) {
-            visassetJson = visassets[uuid];
+        if (visassets && visassets[vaUuid]) {
+            visassetJson = visassets[vaUuid];
         }
 
         // Fetch the colormap xml from the server
         if (visassetJson) {
             let xmlName = visassetJson['artifactData']['colormap'];
-            let xmlUrl = `/media/visassets/${uuid}/${xmlName}`;
+            let xmlUrl = `/media/visassets/${vaUuid}/${xmlName}`;
             colormapXml = await fetch(xmlUrl).then((resp) => resp.text());
         }
     }
@@ -55,6 +85,9 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         return;
     }
 
+    currentColormapUuid = vaUuid;
+    currentVisAssetJson = visassetJson;
+
     // Get rid of any previous instances of the colormap editor that were hidden
     // jQuery UI dialogs just hide the dialog when it's closed
     $('.colormap-editor').remove();
@@ -64,30 +97,48 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         class: 'colormap-editor',
     });
 
+    $colormapEditor.dialog({
+        'title': variableInput ? 'Colormap + Variable Range Editor' : 'Colormap Editor',
+        'minWidth': dialogWidth,
+    });
+
     // Label the min/max of the histogram (only if there's a variable attached)
     if (variableInput) {
         currentVarPath = variableInput.inputValue;
-        let variableName = DataPath.getName(variableInput.inputValue);
-        let keyDataName = DataPath.getName(keyDataInput.inputValue);
+        let variableName = DataPath.getName(currentVarPath);
+        currentKeyDataPath = keyDataInput.inputValue;
+        let keyDataName = DataPath.getName(currentKeyDataPath);
 
         // Fetch the histogram from the server
-        let url = new URL(`${window.location}api/histogram/${keyDataInput.inputValue}/${variableName}`);
+        let url = new URL(`${window.location}api/histogram/${currentKeyDataPath}/${variableName}`);
         url.search = new URLSearchParams(currentMinMax);
 
         zippedHistogram = await fetch(url).then((resp) => resp.json());
 
         // Try to get the current min/max from state if it's been redefined
-        if (globals.stateManager.state.dataRanges && globals.stateManager.state.dataRanges.scalarRanges) {
-            currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
+        if (globals.stateManager.state.dataRanges) {
+            // Try to get keydata-specific custom range first
+            if (globals.stateManager.state.dataRanges.specificScalarRanges && globals.stateManager.state.dataRanges.specificScalarRanges[currentKeyDataPath]) {
+                currentMinMax = globals.stateManager.state.dataRanges.specificScalarRanges[currentKeyDataPath][currentVarPath];
+                customRange = true;
+            }
+
+            // Then if that fails, see if there's a global range for this var
+            if (!currentMinMax && globals.stateManager.state.dataRanges.scalarRanges)
+            {
+                currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
+                customRange = false;
+            }
         }
 
+        // If we still can't find data ranges, use defaults from histogram
         if (!currentMinMax) {
             currentMinMax = {
                 min: zippedHistogram.keyDataMin,
                 max: zippedHistogram.keyDataMax,
             }
+            customRange = false;
         }
-
 
         let $histContainer = $('<div>', {
             id: 'histogram-container',
@@ -98,42 +149,87 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
             id: 'histogram',
         }));
 
-        $colormapEditor.append($('<button>', {
-            class: 'rounded',
-            text: 'Reset Data Range',
-            css: {
-                position: 'absolute',
-                right: '0',
-            }
-        }).on('click', (evt) => {
-            updateHistogram(zippedHistogram.keyDataMin, zippedHistogram.keyDataMax);
-        }))
-
         $colormapEditor.append($histContainer);
+
+        // Construct a different data label depending on whether or not we have
+        // linked or unlinked this variable w/the global one of the same name
+        // Add a button to break the link to a particular variable (make this range specific to the data impression)
+        let $dataLabel = $('<div>', { id: 'histogram-data-label' }).append(
+            // Add a button to reset data range to original keyData
+            $('<button>', {
+                class: 'rounded',
+                text: 'Fit',
+                title: 'Fit data range to key data',
+            }).on('click', (evt) => {
+                updateHistogram(zippedHistogram.keyDataMin, zippedHistogram.keyDataMax);
+            }).prepend($('<span>', {
+                class: 'ui-icon ui-icon-arrowthick-2-e-w',
+            }))
+        ).append(
+            // Add the actual label
+            $('<p>', {
+                html: `<em>${keyDataName} &rarr; <strong>${variableName}</strong></em>`,
+            })
+        ).append(
+            // Add custom range button
+            $('<button>', {
+                class: 'rounded' + (customRange ? ' custom-range' : ''),
+            }).append($('<span>', {
+                class: 'ui-icon ui-icon-gear',
+                title: customRange ? `Use default range for ${keyDataName}/${variableName}` : `Create custom range for ${keyDataName}/${variableName}`,
+            })).on('click', (evt) => {
+                let $target = $(evt.target).closest('button');
+                $target.toggleClass('custom-range');
+                customRange = $target.hasClass('custom-range');
+
+                // If we've just unclicked custom range, get rid of the keydata-specific range
+                if (!customRange) {
+                    globals.stateManager.removePath(`dataRanges/specificScalarRanges/"${currentKeyDataPath}"/"${currentVarPath}"`);
+                    // Snap the min/max back to their original range
+                    currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
+                    updateHistogram(currentMinMax.min, currentMinMax.max);
+                }
+            })
+        );
 
         $colormapEditor.append(
             $('<div>', {
                 class: 'centered',
                 css: {
-                    'background-color': 'white'
+                    'background-color': 'white',
                 }
             }).append(
                 $('<div>', {
                     class: 'variable-labels',
-                }).append($('<p>', {
-                    text: currentMinMax.min.toFixed(4),
-                    id: 'slider-minLabel'
-                })).append($('<p>', {
-                    html: `<em>${keyDataName} &rarr; <strong>${variableName}</strong></em>`,
-                })).append($('<p>', {
-                    text: currentMinMax.max.toFixed(4),
-                    id: 'slider-maxLabel'
+                }).append($('<input>', {
+                    id: 'slider-minLabel',
+                    type: 'number',
+                    step: 0.0001,
+                    value: currentMinMax.min.toFixed(4),
+                    change: function() {
+                        currentMinMax.min = parseFloat(this.value);
+                        $('.data-remapping-slider').slider('values', 0, currentMinMax.min);
+                        updateHistogram(currentMinMax.min, currentMinMax.max);
+                    },
+                })).append(
+                    $dataLabel
+                ).append($('<input>', {
+                    id: 'slider-maxLabel',
+                    type: 'number',
+                    step: 0.0001,
+                    value: currentMinMax.max.toFixed(4),
+                    change: function() {
+                        currentMinMax.max = parseFloat(this.value);
+                        $('.data-remapping-slider').slider('values', 1, currentMinMax.max);
+                        updateHistogram(currentMinMax.min, currentMinMax.max);
+                    },
                 }))
             )
         );
+
         $colormapEditor.append(
             $('<div>', {
-                id: '#data-remapper',
+                id: 'data-remapper',
                 class: 'centered',
             }).append(
                 DataRemappingSlider(0, 1, 0, 1, width)
@@ -146,26 +242,46 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
                 }
                 updateHistogram(filterMin, filterMax);
             })
-        )
+        );
+
+        let $sliderMinHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(2)');
+        let $sliderMaxHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(3)');
+        let $handleMarkerBar = $('<div>', {
+            class: 'marker-bar handle-marker-bar'
+        })
+
+        $sliderMinHandle.append($handleMarkerBar);
+        $sliderMaxHandle.append($handleMarkerBar.clone());
     }
 
     // Append the colormap canvas
     $colormapEditor.append($('<div>', {
         id: 'colormap',
         class: 'centered',
+        title: 'Double-click to create a new color'
     }).append($('<canvas>', {
         class: 'colormap-canvas',
         attr: {
             width: width,
             height: height,
         }
-    })));
+    })).on('dblclick', (evt) => {
+        let colormapLeftBound = evt.target.getBoundingClientRect().left;
+        let colormapWidth = evt.target.width;
+        let clickPercent = (evt.clientX - colormapLeftBound) / colormapWidth;
+        let colorAtClick = activeColormap.lookupColor(clickPercent);
+        $('#color-slider').append(ColorThumb(clickPercent, floatToHex(colorAtClick), () => {
+            updateColormap();
+            saveColormap();
+        }));
+        updateColormap();
+    }));
 
     // Append the color swatch area
     $colormapEditor.append($('<div>', {
         id: 'color-slider',
         class: 'centered',
-    }).width(dialogWidth).height('6rem'));
+    }));
 
 
     // Add the UI buttons
@@ -174,35 +290,27 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
     });
 
     $buttons.append($('<button>', {
-        class: 'save-colormap colormap-button',
-        text: 'Save Colormap',
-        title: 'Save the colormap',
-    }).on('click', (evt) => {
-        uuid = saveColormap(uuid, visassetJson);
-    }));
-
-    $buttons.append($('<button>', {
         class: 'flip-colormap colormap-button',
-        text: '< Flip colormap >',
+        text: 'Flip',
         title: 'Flip colormap',
     }).on('click', (evt) => {
         activeColormap.flip();
-        updateColormapDisplay();
-        updateColorThumbPositions();
-    }));
+        saveColormap().then((u) => {
+            updateColormapDisplay();
+            updateColorThumbPositions();
+        });
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-transferthick-e-w'})));
 
     $buttons.append($('<button>', {
-            class: 'create-color colormap-button',
-            text: '(+) Add color',
-            title: 'Add a new color to the colormap',
-        }).on('click', (evt) => {
-            let defaultPerc = 0.5;
-            let colorAtDefault = activeColormap.lookupColor(defaultPerc);
-            $('#color-slider').append(ColorThumb(defaultPerc, floatToHex(colorAtDefault), () => {
-                updateColormap();
-            }));
-            updateColormap();
-    }));
+        class: 'colormap-button',
+        text: 'Save copy to library',
+        title: 'Save a copy of this colormap to the local library for reuse in other visualizations',
+    }).on('click', (evt) => {
+        updateColormap();
+        saveColormap().then((u) => {
+            saveColormapToLibrary(u);
+        });
+    }).prepend($('<span>', { class: 'ui-icon ui-icon-disk'})));
 
     $colormapEditor.append($buttons);
 
@@ -227,12 +335,6 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
 
     $colormapEditor.append($trash);
 
-    $colormapEditor.dialog({
-        'title': variableInput ? 'Colormap + Variable Range Editor' : 'Colormap Editor',
-        'minWidth': dialogWidth,
-    });
-
-
     // Populate the colors from xml
     activeColormap = ColorMap.fromXML(colormapXml);
     activeColormap.entries.forEach((c) => {
@@ -240,6 +342,7 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
             updateColormap();
+            saveColormap();
         }));
     });
     updateColormap();
@@ -249,7 +352,9 @@ export async function ColormapDialog(uuid, variableInput, keyDataInput) {
     }
 }
 
-function saveColormap(oldUuid, artifactJson) {
+async function saveColormap() {
+    let oldUuid = currentColormapUuid;
+    let artifactJson = currentVisAssetJson;
     // Give it a new uuid if it doesn't already exist in localVisAssets
     let newUuid = oldUuid;
     if (!globals.stateManager.keyExists(['localVisAssets'], oldUuid)) {
@@ -268,7 +373,13 @@ function saveColormap(oldUuid, artifactJson) {
     };
 
     // Update the state with this particular local colormap
-    globals.stateManager.update(`localVisAssets/${newUuid}`, data);
+    // If the visasset isn't found on the server, abort
+    let visAssetFound = await globals.stateManager.update(`localVisAssets/${newUuid}`, data)
+        .then(() => true)
+        .catch(() => false);
+    if (!visAssetFound) {
+        return oldUuid;
+    }
 
     // Attach the new colormap, if we've changed UUIDs
     if (newUuid != oldUuid) {
@@ -283,14 +394,28 @@ function saveColormap(oldUuid, artifactJson) {
         }
     }
 
+    currentVisAssetJson = artifactJson;
+    currentColormapUuid = newUuid
+
     return newUuid;
+}
+
+async function saveColormapToLibrary(vaUuid) {
+    return fetch('/api/save-local-visasset/' + vaUuid, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'X-CSRFToken': csrftoken,
+        },
+        mode: 'same-origin'
+    });
 }
 
 function updateColormap() {
     updateSpectrum();
     activeColormap = getColormapFromThumbs();
-    updateColormapDisplay();
     updateColorThumbPositions();
+    updateColormapDisplay();
 }
 
 function getColormapFromThumbs() {
@@ -316,20 +441,50 @@ function updateColorThumbPositions() {
         let pt = c[0];
         let color = floatToHex(c[1]);
         $('#color-slider').append(ColorThumb(pt, color, () => {
-            updateColormap()
+            updateColormap();
+            saveColormap();
         }));
     });
     updateSpectrum();
 }
 
 function updateSpectrum() {
+    // Remove all old spectrum containers
+    $('.sp-container').remove();
     $('.color-input').spectrum({
         type: "color",
         showPalette: false,
         showAlpha: false,
         showButtons: false,
         allowEmpty: false,
+        showInitial: true,
+        showInput: true,
+        showPalette: true,
         preferredFormat: 'hex',
+    });
+}
+
+// Move the slider labels as the slider handles are dragged.
+// ? Why do it like this: 
+//     A different way to do this is to nest each label inside each handle, 
+//     but this will trigger the 'slide' event every time we type in the label text boxes
+//     -> trigger 'slide' callback
+//     -> reset labels' <input> values before we finish typing
+// ! Note:
+//     Need to find a way to stop repeatedly querying for objects
+function updateSliderLabelsPosition() {
+    let $sliderMinLabel = $('#slider-minLabel');
+    let $sliderMaxLabel = $('#slider-maxLabel');
+    let $sliderMinHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(2)');
+    let $sliderMaxHandle = $('#data-remapper > .data-remapping-slider > .ui-slider-handle:nth-child(3)');
+
+    $sliderMinLabel.offset({
+        top: $sliderMinHandle.offset().top - 36,
+        left: $sliderMinHandle.offset().left - 40,
+    });
+    $sliderMaxLabel.offset({
+        top: $sliderMaxHandle.offset().top - 36,
+        left: $sliderMaxHandle.offset().left - 40,
     });
 }
 
@@ -385,19 +540,26 @@ function updateHistogram(minm, maxm) {
         .slider('values', 1, maxm)
         .slider('option', 'slide', (evt, ui) => {
             let [filterMin, filterMax] = ui.values;
-            $('.variable-labels #slider-minLabel').text(filterMin);
-            $('.variable-labels #slider-maxLabel').text(filterMax);
+            $('#slider-minLabel').val(filterMin);
+            $('#slider-maxLabel').val(filterMax);
+            updateSliderLabelsPosition();
         });
 
     // Update the numbers to reflect
-    $('.variable-labels #slider-minLabel').text(minm.toFixed(4));
-    $('.variable-labels #slider-maxLabel').text(maxm.toFixed(4));
+    $('#slider-minLabel').val(minm.toFixed(4));
+    $('#slider-maxLabel').val(maxm.toFixed(4));
 
-    currentMinMax = {
-        min: minm,
-        max: maxm,
-    }
+    updateSliderLabelsPosition();
+
+    currentMinMax.min = minm;
+    currentMinMax.max = maxm;
 
     // Update the Server with the min/max from this slider
-    globals.stateManager.update(`dataRanges/scalarRanges/"${currentVarPath}"`, currentMinMax);
+    if (customRange) {
+        // If it's a custom range for the key data, update the scalar range inside of keydata
+        globals.stateManager.update(`dataRanges/specificScalarRanges/"${currentKeyDataPath}"/"${currentVarPath}"`, currentMinMax);
+    } else {
+        // Otherwise, update the systemwide variable min/max
+        globals.stateManager.update(`dataRanges/scalarRanges/"${currentVarPath}"`, currentMinMax);
+    }
 }

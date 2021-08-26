@@ -20,6 +20,8 @@ fine for self-contained apps, but should we want to deploy to a proper server
 such a purpose (see [abr_server_nginx.conf](./abr_server_nginx.conf) and
 uwsgi_params.)
 
+Check out [CONTRIBUTING.md](./CONTRIBUTING.md) if you want to make changes to the server.
+
 
 ## Installation and setup
 
@@ -39,9 +41,14 @@ The server can be run local-only (on localhost:8000 by default):
 python manage.py runserver
 ```
 
-
 The server can also be broadcast to other devices:
 
 ```
 python manage.py runserver 0.0.0.0:8000
+```
+
+To enable live-reloading (automatically refresh browser when a file is changed), run:
+
+```
+python manage.py livereload
 ```
