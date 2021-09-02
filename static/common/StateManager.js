@@ -228,6 +228,24 @@ export class StateManager {
         }
     }
 
+    // Find the length of a particular path in the state
+    // e.g. (['primitiveGradients']) => 5
+    length(pathArray) {
+        let obj = this.state;
+        for (let i = 0; i < pathArray.length; i++) {
+            obj = obj[pathArray[i]];
+        }
+        if (obj) {
+            if (Array.isArray(obj)) {
+                return obj.length;
+            } else if (typeof(obj) == 'object') {
+                return Object.keys(obj).length;
+            }
+        } else {
+            return -1;
+        }
+    }
+
     subscribe($element) {
         this._subscribers.push($element);
     }
