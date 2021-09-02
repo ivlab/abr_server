@@ -22,11 +22,13 @@ import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
 import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
+import { GradientDialog } from "./ColormapEditor/GradientDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
 
 const cssObjectFitMap = {
     'IVLab.ABREngine.ColormapVisAsset': 'fill',
+    'IVLab.ABREngine.PrimitiveGradient': 'fill',
     'IVLab.ABREngine.LineTextureVisAsset': 'cover',
     'IVLab.ABREngine.SurfaceTextureVisAsset': 'contain',
     'IVLab.ABREngine.GlyphVisAsset': 'contain',
@@ -280,6 +282,20 @@ export function InputPuzzlePiece(inputName, inputProps) {
     } else if (resolvedProps.inputGenre == 'Primitive') {
         $el = PrimitiveInput(inputName, shortInputName, resolvedProps);
         $el.addClass('no-drag');
+    } else if (resolvedProps.inputGenre == 'PrimitiveGradient') {
+        let gradientIndex = null;
+        if (resolvedProps && resolvedProps.inputValue) {
+            $el = PuzzlePiece(resolvedProps.inputValue, resolvedProps.inputType);
+            $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
+            gradientIndex = resolvedProps.inputValue;
+        } else {
+            $el = PuzzlePiece(shortInputName, resolvedProps.inputType);
+            $el.attr('title', 'Click to edit gradient');
+            $el.css('cursor', 'pointer');
+        }
+        $el.on('click', (evt) => {
+            GradientDialog(gradientIndex);
+        });
     }
 
     // Assign the constant data (NOTHING from state)
