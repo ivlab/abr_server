@@ -102,7 +102,7 @@ div.inline {
     width: 0.8rem;
 }
 
-.puzzle-piece .puzzle-label .input-scrubbable {
+.input-scrubbable {
     cursor: ew-resize;
     background-color: #eeeeee;
 }

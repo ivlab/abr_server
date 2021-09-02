@@ -127,9 +127,16 @@ export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
         $(evt.target).attr('disabled', true);
     });
 
+    let $label = ScrubbableInput($input, resolvedProps.inputType);
 
-        let $label = $('<label>');
+    $el.append($label);
+    let $container = $('<div>', { class: 'puzzle-piece rounded' });
+    $container.append($el);
+    return $container;
+}
 
+export function ScrubbableInput($input, inputType) {
+    let $label = $('<label>');
     $label.append($input);
 
     let dragging = false;
@@ -146,9 +153,9 @@ export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
         if (dragging) {
             let newValue = $input.val();
             if (evt.clientX > previousX) {
-                newValue = incrementPrimitive(newValue, resolvedProps.inputType, true);
+                newValue = incrementPrimitive(newValue, inputType, true);
             } else {
-                newValue = incrementPrimitive(newValue, resolvedProps.inputType, false);
+                newValue = incrementPrimitive(newValue, inputType, false);
             }
             $input.val(newValue);
         }
@@ -160,8 +167,5 @@ export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
         }
     });
 
-    $el.append($label);
-    let $container = $('<div>', { class: 'puzzle-piece rounded' });
-    $container.append($el);
-    return $container;
+    return $label;
 }
