@@ -33,7 +33,7 @@ const MESH_TOPOLOGY_MAP = {
     3: 'IVLab.ABREngine.LineKeyData',
     4: 'IVLab.ABREngine.LineKeyData',
     5: 'IVLab.ABREngine.PointKeyData',
-    100: 'IVLab.ABREngine.PointKeyData', // TODO: support this
+    100: 'IVLab.ABREngine.VolumeKeyData',
 };
 
 export function DataPanel() {
