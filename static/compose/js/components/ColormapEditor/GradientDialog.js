@@ -26,8 +26,9 @@ import { uuid } from '../../../../common/UUID.js';
 import { DataPath } from '../../../../common/DataPath.js';
 import { ColorMap, floatToHex, hexToFloat } from './color.js';
 import { ColorThumb, DataRemappingSlider } from './components.js';
+import { ScrubbableInput } from '../Primitives.js';
 
-const margin = { top: 10, right: 0, bottom: 20, left: 0 };
+const margin = { top: 10, right: 50, bottom: 20, left: 50 };
 const dialogWidth = 700;
 const width = dialogWidth - margin.left - margin.right;
 const height = 100 - margin.top - margin.bottom;
@@ -38,30 +39,35 @@ const DEFAULT_GRADIENT = {
         1.0,
     ],
     "values": [
-        0.0,
-        1.0
+        '0%',
+        '100%'
     ],
 };
 
 var currentGradient = null;
-var currentGradientIndex = null;
+var currentGradientUuid = null;
 
-export async function GradientDialog(gradientIndex) {
+export async function GradientDialog(gradientUuid) {
 
-    if (gradientIndex == null) {
-        gradientIndex = 0;
+    if (gradientUuid == null) {
+        gradientUuid = uuid();
         currentGradient = DEFAULT_GRADIENT;
     } else {
         let numGradients = globals.stateManager.length(['primitiveGradients']);
-        if (gradientIndex < numGradients) {
-            currentGradient = globals.stateManager.state['primitiveGradients'][gradientIndex];
+        if (gradientUuid < numGradients) {
+            currentGradient = globals.stateManager.state['primitiveGradients'][gradientUuid];
         } else {
             alert('No gradient to edit!');
             return;
         }
     }
 
-    currentGradientIndex = gradientIndex;
+    if (currentGradient.points.length != currentGradient.values.length) {
+        alert('Gradient is incorrectly formatted.');
+        return;
+    }
+
+    currentGradientUuid = gradientUuid;
 
     // There can only be one colormap editor
     if ($('.gradient-editor').length > 0 && $('.gradient-editor').dialog('isOpen')) {
@@ -76,6 +82,7 @@ export async function GradientDialog(gradientIndex) {
     let $gradientEditor = $('<div>', {
         id: 'gradient-editor',
         class: 'gradient-editor',
+        css: { padding: '0' }
     });
 
     $gradientEditor.dialog({
@@ -83,10 +90,15 @@ export async function GradientDialog(gradientIndex) {
         'minWidth': dialogWidth,
     });
 
-    // Append the color swatch area
+    // Append the gradient view area
     $gradientEditor.append($('<div>', {
-        id: 'color-slider',
-        class: 'centered',
+        id: 'gradient-view',
+        height: height,
+        width: width,
+        css: {
+            position: 'relative',
+            left: margin.left
+        }
     }));
 
     let $trash = $('<img>', {
@@ -108,9 +120,56 @@ export async function GradientDialog(gradientIndex) {
     }).attr('title', 'Drop a color swatch here to discard');
 
     $gradientEditor.append($trash);
+
+    for (const i in currentGradient.points) {
+        let point = currentGradient.points[i];
+        let value = currentGradient.values[i];
+
+        let $input = $('<input>', {
+            class: 'primitive-input no-drag',
+            type: 'text',
+            val: value,
+            width: '3em',
+        });
+        $input.on('dragstart', (evt) => evt.stopPropagation() && console.log('start'));
+        $input.on('drag', (evt) => evt.stopPropagation() && console.log('drag'));
+        $input.on('dragstop', (evt) => evt.stopPropagation() && console.log('stop'));
+
+        let $label = ScrubbableInput($input, 'IVLab.ABREngine.PercentPrimitive');
+        $label.addClass('gradient-stop');
+        $('#gradient-view').append($label)
+        $label.draggable({
+            axis: 'x',
+            stop: (evt, ui) => {
+                saveGradient();
+            },
+        });
+
+        let mapWidth = width;
+        let positionX = (point * mapWidth) - ($label.width() / 2.0);
+        $label.css('position', 'absolute');
+        $label.css('left', positionX);
+    }
+
 }
 
 async function saveGradient() {
+    currentGradient = gradientFromStops();
+    globals.stateManager.update('primitiveGradients/' + currentGradientUuid, currentGradient);
+}
+
+function gradientFromStops() {
+    let points = [];
+    let values = [];
+    $('.gradient-stop').each((i, el) => {
+        let percentage = ($(el).position().left + $(el).width() / 2.0) / width;
+        points.push(percentage);
+        values.push($(el).find('input').val());
+    });
+    return {
+        points,
+        values
+    };
 }
 
 function updateGradient() {

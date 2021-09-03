@@ -143,7 +143,7 @@ export function ScrubbableInput($input, inputType) {
     let previousX = null;
     $label.append(
         $('<span>', {
-            class: 'input-scrubbable ui-icon ui-icon-triangle-2-e-w',
+            class: 'input-scrubbable no-drag ui-icon ui-icon-triangle-2-e-w',
         }).on('mousedown', (evt) => {
             dragging = true;
         })
