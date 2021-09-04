@@ -94,6 +94,10 @@ export function GradientDialog(gradientUuid) {
         id: 'gradient-vis',
         width,
         height,
+        css: {
+            position: 'relative',
+            left: margin.left
+        }
     }));
 
     // Append the gradient view area
