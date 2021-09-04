@@ -47,14 +47,13 @@ const DEFAULT_GRADIENT = {
 var currentGradient = null;
 var currentGradientUuid = null;
 
-export async function GradientDialog(gradientUuid) {
-
+// Returns the new uuid if there is one
+export function GradientDialog(gradientUuid) {
     if (gradientUuid == null) {
         gradientUuid = uuid();
         currentGradient = DEFAULT_GRADIENT;
     } else {
-        let numGradients = globals.stateManager.length(['primitiveGradients']);
-        if (gradientUuid < numGradients) {
+        if (globals.stateManager.state['primitiveGradients'] && globals.stateManager.state['primitiveGradients'][gradientUuid]) {
             currentGradient = globals.stateManager.state['primitiveGradients'][gradientUuid];
         } else {
             alert('No gradient to edit!');
@@ -150,7 +149,7 @@ export async function GradientDialog(gradientUuid) {
         $label.css('position', 'absolute');
         $label.css('left', positionX);
     }
-
+    return currentGradientUuid;
 }
 
 async function saveGradient() {

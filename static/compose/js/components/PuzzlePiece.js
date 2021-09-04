@@ -174,7 +174,6 @@ export function InputPuzzlePiece(inputName, inputProps) {
             if (resolvedProps.inputType == 'IVLab.ABREngine.ColormapVisAsset') {
                 $el.attr('title', $el.attr('title') + '\nClick to customize');
                 $el.addClass('hover-bright');
-                let dragging = false;
                 $el.on('dragstart', () => dragging = true);
                 $el.on('dragend', () => dragging = false);
                 $el.css('cursor', 'pointer');
@@ -283,22 +282,33 @@ export function InputPuzzlePiece(inputName, inputProps) {
         $el = PrimitiveInput(inputName, shortInputName, resolvedProps);
         $el.addClass('no-drag');
     } else if (resolvedProps.inputGenre == 'PrimitiveGradient') {
-        let gradientIndex = null;
+        let gradientUuid = null;
         if (resolvedProps && resolvedProps.inputValue) {
             $el = PuzzlePiece(resolvedProps.inputValue, resolvedProps.inputType);
             $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
-            gradientIndex = resolvedProps.inputValue;
+            gradientUuid = resolvedProps.inputValue;
         } else {
             $el = PuzzlePiece(shortInputName, resolvedProps.inputType);
             $el.attr('title', 'Click to edit gradient');
-            $el.css('cursor', 'pointer');
         }
+        $el.css('cursor', 'pointer');
+
+        let dragging = false;
+        $el.on('dragstart', () => dragging = true);
+        $el.on('dragend', () => dragging = false);
+
         $el.on('click', (evt) => {
-            GradientDialog(gradientIndex);
+            if (dragging) {
+                return;
+            }
+            let impressionUuid = $(evt.target).parents('.data-impression').data('uuid');
+            // Reassign uuid if it's changed and update state if necessary
+            let gradientUuidValue = GradientDialog(gradientUuid);
+            resolvedProps.inputValue = gradientUuidValue;
+            globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
         });
     }
 
-    // Assign the constant data (NOTHING from state)
     $el.data('inputName', inputName);
     $el.data('parameterName', resolvedProps.parameterName);
     $el.data('inputGenre', resolvedProps.inputGenre);
