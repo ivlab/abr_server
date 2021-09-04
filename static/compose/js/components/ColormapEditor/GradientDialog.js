@@ -89,6 +89,13 @@ export function GradientDialog(gradientUuid) {
         'minWidth': dialogWidth,
     });
 
+    // Add the visualization of the gradient
+    $gradientEditor.append($('<img>', {
+        id: 'gradient-vis',
+        width,
+        height,
+    }));
+
     // Append the gradient view area
     $gradientEditor.append($('<div>', {
         id: 'gradient-view',
@@ -152,9 +159,12 @@ export function GradientDialog(gradientUuid) {
     return currentGradientUuid;
 }
 
-async function saveGradient() {
+function saveGradient() {
     currentGradient = gradientFromStops();
     globals.stateManager.update('primitiveGradients/' + currentGradientUuid, currentGradient);
+    let colormap = gradientToColormap(currentGradient);
+    let b64 = colormap.toBase64(true);
+    $('#gradient-vis').attr('src', b64);
 }
 
 function gradientFromStops() {
@@ -169,6 +179,24 @@ function gradientFromStops() {
         points,
         values
     };
+}
+
+function gradientToColormap(gradient) {
+    let c = new ColorMap();
+    if (gradient.points.length != gradient.values.length) {
+        console.error('Gradient points must be the same length as gradient values');
+        return null;
+    }
+
+    for (const i in gradient.points) {
+        let floatValue = (+gradient.values[i].replace('%', '')) / 100.0;
+        c.addControlPt(gradient.points[i], {
+            r: floatValue,
+            g: floatValue,
+            b: floatValue,
+        });
+    }
+    return c;
 }
 
 function updateGradient() {
