@@ -146,6 +146,7 @@ export function ScrubbableInput($input, inputType) {
             class: 'input-scrubbable no-drag ui-icon ui-icon-triangle-2-e-w',
         }).on('mousedown', (evt) => {
             dragging = true;
+            evt.stopPropagation();
         })
     );
 
@@ -158,12 +159,14 @@ export function ScrubbableInput($input, inputType) {
                 newValue = incrementPrimitive(newValue, inputType, false);
             }
             $input.val(newValue);
+            evt.stopPropagation();
         }
         previousX = evt.clientX;
     }).on('mouseup', (evt) => {
         if (dragging) {
             $input.trigger('change');
             dragging = false;
+            evt.stopPropagation();
         }
     });
 

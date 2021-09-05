@@ -141,9 +141,6 @@ export function GradientDialog(gradientUuid) {
             val: value,
             width: '3em',
         });
-        $input.on('dragstart', (evt) => evt.stopPropagation() && console.log('start'));
-        $input.on('drag', (evt) => evt.stopPropagation() && console.log('drag'));
-        $input.on('dragstop', (evt) => evt.stopPropagation() && console.log('stop'));
 
         let $label = ScrubbableInput($input, 'IVLab.ABREngine.PercentPrimitive');
         $label.addClass('gradient-stop');
