@@ -33,6 +33,9 @@ const dialogWidth = 700;
 const width = dialogWidth - margin.left - margin.right;
 const height = 100 - margin.top - margin.bottom;
 
+// Label width + 2 * padding width
+const labelWidth = 60 + 2 * 10;
+
 const DEFAULT_GRADIENT = {
     "points": [
         0.0,
@@ -103,6 +106,7 @@ export function GradientDialog(gradientUuid) {
     // Append the gradient view area
     $gradientEditor.append($('<div>', {
         id: 'gradient-view',
+        title: 'Double click to add a new gradient stop',
         height: height,
         width: width,
         css: {
@@ -127,10 +131,48 @@ export function GradientDialog(gradientUuid) {
         out: (_evt, ui) => {
             $(ui.helper).css('opacity', '100%');
         }
-    }).attr('title', 'Drop a color swatch here to discard');
+    }).attr('title', 'Drop a gradient stop here to discard');
 
     $gradientEditor.append($trash);
 
+    stopsFromGradient();
+
+    $('#gradient-view').on('dblclick', (evt) => {
+        let viewLeft = evt.target.getBoundingClientRect().x;
+        let viewWidth = width;
+        let clickPoint = (evt.clientX - viewLeft) / viewWidth;
+        let clickValue = '0%';
+        currentGradient.points.push(clickPoint);
+        currentGradient.values.push(clickValue);
+        stopsFromGradient();
+        updateGradientVis();
+    });
+
+    updateGradientVis();
+    return currentGradientUuid;
+}
+
+function saveGradient() {
+    currentGradient = gradientFromStops();
+    globals.stateManager.update('primitiveGradients/' + currentGradientUuid, currentGradient);
+}
+
+function gradientFromStops() {
+    let points = [];
+    let values = [];
+    $('.gradient-stop').each((i, el) => {
+        let percentage = ($(el).position().left + $(el).width() / 2.0) / width;
+        points.push(percentage);
+        values.push($(el).find('input').val());
+    });
+    return {
+        points,
+        values
+    };
+}
+
+function stopsFromGradient() {
+    $('#gradient-view').empty();
     for (const i in currentGradient.points) {
         let point = currentGradient.points[i];
         let value = currentGradient.values[i];
@@ -169,31 +211,10 @@ export function GradientDialog(gradientUuid) {
         });
 
         let mapWidth = width;
-        let positionX = (point * mapWidth) - ($label.width() / 2.0);
+        let positionX = (point * mapWidth) - labelWidth / 2.0;
         $label.css('position', 'absolute');
         $label.css('left', positionX);
     }
-    updateGradientVis();
-    return currentGradientUuid;
-}
-
-function saveGradient() {
-    currentGradient = gradientFromStops();
-    globals.stateManager.update('primitiveGradients/' + currentGradientUuid, currentGradient);
-}
-
-function gradientFromStops() {
-    let points = [];
-    let values = [];
-    $('.gradient-stop').each((i, el) => {
-        let percentage = ($(el).position().left + $(el).width() / 2.0) / width;
-        points.push(percentage);
-        values.push($(el).find('input').val());
-    });
-    return {
-        points,
-        values
-    };
 }
 
 function gradientToColormap(gradient) {
