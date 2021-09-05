@@ -144,11 +144,27 @@ export function GradientDialog(gradientUuid) {
 
         let $label = ScrubbableInput($input, 'IVLab.ABREngine.PercentPrimitive');
         $label.addClass('gradient-stop');
-        $('#gradient-view').append($label)
+        $label.addClass('rounded');
+        $label.prepend($('<div>', {
+            css: {
+                'width': 0,
+                'height': 20,
+                'margin': 'auto',
+                'border': '1px solid black',
+            }
+        }));
+
+        $label.on('change', (evt) => {
+            saveGradient();
+            updateGradientVis();
+        });
+
+        $('#gradient-view').append($label);
         $label.draggable({
             axis: 'x',
             stop: (evt, ui) => {
                 saveGradient();
+                updateGradientVis();
             },
         });
 
@@ -157,15 +173,13 @@ export function GradientDialog(gradientUuid) {
         $label.css('position', 'absolute');
         $label.css('left', positionX);
     }
+    updateGradientVis();
     return currentGradientUuid;
 }
 
 function saveGradient() {
     currentGradient = gradientFromStops();
     globals.stateManager.update('primitiveGradients/' + currentGradientUuid, currentGradient);
-    let colormap = gradientToColormap(currentGradient);
-    let b64 = colormap.toBase64(true);
-    $('#gradient-vis').attr('src', b64);
 }
 
 function gradientFromStops() {
@@ -200,5 +214,8 @@ function gradientToColormap(gradient) {
     return c;
 }
 
-function updateGradient() {
+function updateGradientVis() {
+    let colormap = gradientToColormap(currentGradient);
+    let b64 = colormap.toBase64(true);
+    $('#gradient-vis').attr('src', b64);
 }

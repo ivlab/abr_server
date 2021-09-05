@@ -117,8 +117,9 @@
 }
 
 .gradient-stop {
-    border: 0.75rem solid gray;
+    border: 0.75rem solid #bbb;
+    border-top: none;
     cursor: grab;
     width: 5rem;
-    background-color: gray;
+    background-color: #bbb;
 }
