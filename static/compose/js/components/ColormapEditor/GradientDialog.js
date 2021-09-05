@@ -27,6 +27,7 @@ import { DataPath } from '../../../../common/DataPath.js';
 import { ColorMap, floatToHex, hexToFloat } from './color.js';
 import { ColorThumb, DataRemappingSlider } from './components.js';
 import { ScrubbableInput } from '../Primitives.js';
+import { STATE_UPDATE_EVENT } from '../../../../common/StateManager.js';
 
 const margin = { top: 10, right: 50, bottom: 20, left: 50 };
 const dialogWidth = 700;
@@ -52,24 +53,12 @@ var currentGradientUuid = null;
 
 // Returns the new uuid if there is one
 export function GradientDialog(gradientUuid) {
-    if (gradientUuid == null) {
-        gradientUuid = uuid();
-        currentGradient = DEFAULT_GRADIENT;
-    } else {
-        if (globals.stateManager.state['primitiveGradients'] && globals.stateManager.state['primitiveGradients'][gradientUuid]) {
-            currentGradient = globals.stateManager.state['primitiveGradients'][gradientUuid];
-        } else {
-            alert('No gradient to edit!');
-            return;
-        }
-    }
+    setCurrentGradient(gradientUuid);
 
     if (currentGradient.points.length != currentGradient.values.length) {
         alert('Gradient is incorrectly formatted.');
         return;
     }
-
-    currentGradientUuid = gradientUuid;
 
     // There can only be one colormap editor
     if ($('.gradient-editor').length > 0 && $('.gradient-editor').dialog('isOpen')) {
@@ -135,6 +124,12 @@ export function GradientDialog(gradientUuid) {
 
     $gradientEditor.append($trash);
 
+    globals.stateManager.subscribe($('#gradient-view'));
+    $('#gradient-view').on(STATE_UPDATE_EVENT, (evt) => {
+        setCurrentGradient(gradientUuid);
+        stopsFromGradient();
+    });
+
     stopsFromGradient();
 
     $('#gradient-view').on('dblclick', (evt) => {
@@ -150,6 +145,21 @@ export function GradientDialog(gradientUuid) {
 
     updateGradientVis();
     return currentGradientUuid;
+}
+
+function setCurrentGradient(gradientUuid) {
+    if (gradientUuid == null) {
+        gradientUuid = uuid();
+        currentGradient = DEFAULT_GRADIENT;
+    } else {
+        if (globals.stateManager.state['primitiveGradients'] && globals.stateManager.state['primitiveGradients'][gradientUuid]) {
+            currentGradient = globals.stateManager.state['primitiveGradients'][gradientUuid];
+        } else {
+            alert('No gradient to edit!');
+            return;
+        }
+    }
+    currentGradientUuid = gradientUuid;
 }
 
 function saveGradient() {

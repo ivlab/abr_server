@@ -116,6 +116,10 @@
     width: 100px;
 }
 
+/* Gradient editor */
+#gradient-vis {
+    border: 1px solid black;
+}
 .gradient-stop {
     padding: 10px;
     padding-top: 0;
