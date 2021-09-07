@@ -178,6 +178,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
             if (resolvedProps.inputType == 'IVLab.ABREngine.ColormapVisAsset') {
                 $el.attr('title', $el.attr('title') + '\nClick to customize');
                 $el.addClass('hover-bright');
+                let dragging = false;
                 $el.on('dragstart', () => dragging = true);
                 $el.on('dragend', () => dragging = false);
                 $el.css('cursor', 'pointer');
@@ -314,9 +315,10 @@ export function InputPuzzlePiece(inputName, inputProps) {
             }
             let impressionUuid = $(evt.target).parents('.data-impression').data('uuid');
             // Reassign uuid if it's changed and update state if necessary
-            let gradientUuidValue = GradientDialog(gradientUuid);
-            resolvedProps.inputValue = gradientUuidValue;
-            globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+            GradientDialog(gradientUuid).then((gradientUuidValue) => {
+                resolvedProps.inputValue = gradientUuidValue;
+                globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+            });
         });
     }
 

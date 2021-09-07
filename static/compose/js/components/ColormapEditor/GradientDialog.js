@@ -52,7 +52,7 @@ var currentGradient = null;
 var currentGradientUuid = null;
 
 // Returns the new uuid if there is one
-export function GradientDialog(gradientUuid) {
+export async function GradientDialog(gradientUuid) {
     setCurrentGradient(gradientUuid);
 
     if (currentGradient.points.length != currentGradient.values.length) {
@@ -66,7 +66,8 @@ export function GradientDialog(gradientUuid) {
         return;
     }
 
-    saveGradient();
+    // Wait until the state is ready before constructing dialog
+    await saveGradient();
 
     // Get rid of any previous instances of the gradient editor that were hidden
     // jQuery UI dialogs just hide the dialog when it's closed
@@ -82,6 +83,53 @@ export function GradientDialog(gradientUuid) {
         'title': 'Opacity Map Editor',
         'minWidth': dialogWidth,
     });
+
+    // Add the visualization of the current colormap, if there is one
+    let pairedColormapUuid = null;
+    let impressions = globals.stateManager.findAll((s) => {
+        if (s.inputValues && s.inputValues.Opacitymap && s.inputValues.Opacitymap.inputValue) {
+            return s.inputValues.Opacitymap.inputValue == currentGradientUuid;
+        } else {
+            return false;
+        }
+    });
+    // we did not find the impression
+    if (impressions.length == 0) {
+        return;
+    }
+    // assume we found the impression that has this opacity map
+    let impression = impressions[0];
+
+    // Attempt to find colormap, if it exists
+    if (impression.inputValues && impression.inputValues.Colormap && impression.inputValues.Colormap.inputValue) {
+        pairedColormapUuid = impression.inputValues.Colormap.inputValue;
+    }
+
+    let thumbUrl = '';
+    if (pairedColormapUuid) {
+        let visassets = globals.stateManager.getCache('visassets');
+        let localVisAssets = globals.stateManager.state.localVisAssets;
+        if (visassets && visassets[pairedColormapUuid]) {
+            let previewImg = visassets[pairedColormapUuid]['preview'];
+            thumbUrl = `/media/visassets/${pairedColormapUuid}/${previewImg}`;
+        } else if (localVisAssets && localVisAssets[pairedColormapUuid]) {
+            // TODO assuming colormap xml for now
+            let colormapXml = localVisAssets[pairedColormapUuid].artifactDataContents['colormap.xml'];
+            let colormapObj = ColorMap.fromXML(colormapXml);
+            thumbUrl = colormapObj.toBase64(true);
+        }
+    }
+
+    $gradientEditor.append($('<img>', {
+        id: 'colormap-gradient-vis',
+        src: thumbUrl,
+        width,
+        height,
+        css: {
+            position: 'relative',
+            left: margin.left
+        }
+    }));
 
     // Add the visualization of the gradient
     $gradientEditor.append($('<img>', {
@@ -165,8 +213,8 @@ function setCurrentGradient(gradientUuid) {
     currentGradientUuid = gradientUuid;
 }
 
-function saveGradient() {
-    globals.stateManager.update('primitiveGradients/' + currentGradientUuid, currentGradient);
+async function saveGradient() {
+    await globals.stateManager.update('primitiveGradients/' + currentGradientUuid, currentGradient);
 }
 
 function gradientFromStops() {
