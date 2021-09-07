@@ -159,9 +159,11 @@ export async function GradientDialog(gradientUuid) {
         src: `${STATIC_URL}compose/trash.svg`,
     }).droppable({
         tolerance: 'touch',
-        accept: '.color-thumb',
+        accept: '.gradient-stop',
         drop: (evt, ui) => {
             $(ui.draggable).remove();
+            currentGradient = gradientFromStops();
+            saveGradient();
         },
         // Indicate that it's about to be deleted
         over: (_evt, ui) => {
@@ -265,7 +267,7 @@ function stopsFromGradient() {
 
         $('#gradient-view').append($label);
         $label.draggable({
-            axis: 'x',
+            containment: '.gradient-editor',
             stop: (evt, ui) => {
                 currentGradient = gradientFromStops();
                 saveGradient();
