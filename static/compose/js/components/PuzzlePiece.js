@@ -22,7 +22,7 @@ import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
 import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
-import { GradientDialog } from "./ColormapEditor/GradientDialog.js";
+import { GradientDialog, gradientToColormap } from "./ColormapEditor/GradientDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
 
@@ -69,6 +69,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
     let thumbUrl;
     let visassets = globals.stateManager.getCache('visassets');
     let localVisAssets = globals.stateManager.state.localVisAssets;
+    let gradients = globals.stateManager.state.primitiveGradients;
     if (visassets && visassets[uuid]) {
         let previewImg = visassets[uuid]['preview'];
         thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
@@ -77,6 +78,9 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
         let colormapXml = localVisAssets[uuid].artifactDataContents['colormap.xml'];
         let colormapObj = ColorMap.fromXML(colormapXml);
         thumbUrl = colormapObj.toBase64(true);
+    } else if (gradients && gradients[uuid]) {
+        let colormap = gradientToColormap(gradients[uuid]);
+        thumbUrl = colormap.toBase64(true);
     } else {
         thumbUrl = `${STATIC_URL}compose/${inputType}_default.png`;
     }
@@ -283,13 +287,20 @@ export function InputPuzzlePiece(inputName, inputProps) {
         $el.addClass('no-drag');
     } else if (resolvedProps.inputGenre == 'PrimitiveGradient') {
         let gradientUuid = null;
+        let args = [
+            resolvedProps.inputValue,
+            resolvedProps.inputType,
+            false,
+            '',
+            'fill'
+        ];
         if (resolvedProps && resolvedProps.inputValue) {
-            $el = PuzzlePiece(resolvedProps.inputValue, resolvedProps.inputType);
-            $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
+            $el = PuzzlePieceWithThumbnail(...args);
+            $el.attr('title', 'Click to edit gradient');
             gradientUuid = resolvedProps.inputValue;
         } else {
             $el = PuzzlePiece(shortInputName, resolvedProps.inputType);
-            $el.attr('title', 'Click to edit gradient');
+            $el.attr('title', 'Click to add gradient');
         }
         $el.css('cursor', 'pointer');
 

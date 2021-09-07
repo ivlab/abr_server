@@ -232,7 +232,7 @@ function stopsFromGradient() {
     }
 }
 
-function gradientToColormap(gradient) {
+export function gradientToColormap(gradient) {
     let c = new ColorMap();
     if (gradient.points.length != gradient.values.length) {
         console.error('Gradient points must be the same length as gradient values');
