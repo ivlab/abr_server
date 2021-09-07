@@ -66,6 +66,8 @@ export function GradientDialog(gradientUuid) {
         return;
     }
 
+    saveGradient();
+
     // Get rid of any previous instances of the gradient editor that were hidden
     // jQuery UI dialogs just hide the dialog when it's closed
     $('.gradient-editor').remove();
@@ -77,7 +79,7 @@ export function GradientDialog(gradientUuid) {
     });
 
     $gradientEditor.dialog({
-        'title': 'Gradient Editor',
+        'title': 'Opacity Map Editor',
         'minWidth': dialogWidth,
     });
 
@@ -126,7 +128,7 @@ export function GradientDialog(gradientUuid) {
 
     globals.stateManager.subscribe($('#gradient-view'));
     $('#gradient-view').on(STATE_UPDATE_EVENT, (evt) => {
-        setCurrentGradient(gradientUuid);
+        setCurrentGradient(currentGradientUuid);
         stopsFromGradient();
     });
 
@@ -141,6 +143,7 @@ export function GradientDialog(gradientUuid) {
         currentGradient.values.push(clickValue);
         stopsFromGradient();
         updateGradientVis();
+        saveGradient();
     });
 
     updateGradientVis();
@@ -163,7 +166,6 @@ function setCurrentGradient(gradientUuid) {
 }
 
 function saveGradient() {
-    currentGradient = gradientFromStops();
     globals.stateManager.update('primitiveGradients/' + currentGradientUuid, currentGradient);
 }
 
@@ -171,7 +173,8 @@ function gradientFromStops() {
     let points = [];
     let values = [];
     $('.gradient-stop').each((i, el) => {
-        let percentage = ($(el).position().left + $(el).width() / 2.0) / width;
+        let stopWidth = $(el).get(0).clientWidth;
+        let percentage = ($(el).position().left + stopWidth / 2.0) / width;
         points.push(percentage);
         values.push($(el).find('input').val());
     });
@@ -207,6 +210,7 @@ function stopsFromGradient() {
         }));
 
         $label.on('change', (evt) => {
+            currentGradient = gradientFromStops();
             saveGradient();
             updateGradientVis();
         });
@@ -215,6 +219,7 @@ function stopsFromGradient() {
         $label.draggable({
             axis: 'x',
             stop: (evt, ui) => {
+                currentGradient = gradientFromStops();
                 saveGradient();
                 updateGradientVis();
             },
