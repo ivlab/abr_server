@@ -193,8 +193,9 @@ export async function GradientDialog(gradientUuid) {
 
     $('#gradient-view').on('dblclick', (evt) => {
         let viewLeft = evt.target.getBoundingClientRect().x;
-        let viewWidth = width;
-        let clickPoint = (evt.clientX - viewLeft) / viewWidth;
+        let viewTop = evt.target.getBoundingClientRect().y;
+        let clickPoint = (evt.clientX - viewLeft) / width;
+        let clickValue = 1.0 - ((evt.clientY - viewTop) / (height * 2));
 
         // insert in the correct place, sorted
         let i = 0;
@@ -202,31 +203,8 @@ export async function GradientDialog(gradientUuid) {
             i++;
         }
 
-        let clickValue = '0%';
-        if (i == 0) {
-            // first point
-            currentGradient.points.unshift(clickPoint);
-            currentGradient.values.unshift(clickValue);
-        } else if (i == currentGradient.points.length) {
-            // last point
-            currentGradient.points.push(clickPoint);
-            currentGradient.values.push(clickValue);
-        } else {
-            // somewhere in the middle, interpolate correct click value
-            let leftPoint = currentGradient.points[i - 1];
-            let leftVal = currentGradient.values[i - 1]
-            let rightPoint = currentGradient.points[i];
-            let rightVal = currentGradient.values[i]
-
-            let floatLeftVal = getFloatVal(leftVal, 'PercentPrimitive');
-            let floatRightVal = getFloatVal(rightVal, 'PercentPrimitive');
-            let percBetween = (clickPoint - leftPoint) / (rightPoint - leftPoint);
-            let clickValue = ((floatRightVal - floatLeftVal) * percBetween) + floatLeftVal;
-            let clickValueStr = getDisplayVal(clickValue, 'PercentPrimitive');
-
-            currentGradient.points.splice(i, 0, clickPoint);
-            currentGradient.values.splice(i, 0, clickValueStr);
-        }
+        currentGradient.points.splice(i, 0, clickPoint);
+        currentGradient.values.splice(i, 0, getDisplayVal(clickValue, 'PercentPrimitive'));
 
         stopsFromGradient();
         updateGradientVis();
@@ -263,6 +241,10 @@ function gradientFromStops() {
         let percentage = ($(el).position().left + stopWidth / 2.0) / width;
         let stopHeight = $(el).get(0).clientHeight;
         let value = 1.0 - (($(el).position().top + stopHeight / 2.0) / (height * 2));
+
+        // validate that the percentages are 0-1
+        value = Math.max(0, Math.min(1, value));
+
         pointValuePairs.push([
             percentage,
             getDisplayVal(value, 'PercentPrimitive'),
