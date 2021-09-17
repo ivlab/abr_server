@@ -32,14 +32,31 @@ const PRIMITIVE_INCREMENTS = {
     'IntegerPrimitive': 1,
 };
 
+export function getFloatVal(primitiveString, shortType) {
+    let typeUnitsRegex = new RegExp(globals.schema.definitions.InputStringTypes[shortType].pattern);
+    let matches = primitiveString.match(typeUnitsRegex);
+
+    let floatValue = null;
+    if (matches && matches.length == 3) {
+        let unitStr = matches[2];
+        let strNoUnits = primitiveString.replace(unitStr, '');
+        floatValue = +strNoUnits;
+    } else {
+        floatValue = +primitiveString;
+    }
+
+    // Convert to actual float value
+    if (PRIMITIVE_VALUE_MULTIPLIERS.hasOwnProperty(shortType)) {
+        floatValue /= PRIMITIVE_VALUE_MULTIPLIERS[shortType];
+    }
+    return floatValue;
+
+}
+
 // Increment a primitive value (e.g. 1m) up or down (positive / negative increment)
 function incrementPrimitive(primitiveString, inputType, positive) {
     let shortType = inputType.replace('IVLab.ABREngine.', '');
-    let typeUnitsRegex = new RegExp(globals.schema.definitions.InputStringTypes[shortType].pattern);
-    let matches = primitiveString.match(typeUnitsRegex);
-    let unitStr = matches[2];
-    let strNoUnits = primitiveString.replace(unitStr, '');
-    let floatValue = +strNoUnits;
+    let floatValue = getFloatVal(primitiveString, shortType);
 
     // Determine the amount that we should increment by
     let amount = 0.01;
@@ -49,12 +66,6 @@ function incrementPrimitive(primitiveString, inputType, positive) {
     if (!positive) {
         amount *= -1.0;
     }
-
-    // Convert to actual float value
-    if (PRIMITIVE_VALUE_MULTIPLIERS.hasOwnProperty(shortType)) {
-        floatValue /= PRIMITIVE_VALUE_MULTIPLIERS[shortType];
-    }
-
     // Increment
     let newValue = floatValue + amount;
 
