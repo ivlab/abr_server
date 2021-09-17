@@ -131,6 +131,18 @@ export async function GradientDialog(gradientUuid) {
         }));
     }
 
+    // Append the gradient view area
+    $gradientEditor.append($('<div>', {
+        id: 'gradient-view',
+        title: 'Double click to add a new gradient stop',
+        height: height * 2,
+        width: width,
+        css: {
+            position: 'relative',
+            left: margin.left
+        }
+    }));
+
     // Add the visualization of the gradient
     $gradientEditor.append($('<img>', {
         id: 'gradient-vis',
@@ -142,21 +154,15 @@ export async function GradientDialog(gradientUuid) {
         }
     }));
 
-    // Append the gradient view area
-    $gradientEditor.append($('<div>', {
-        id: 'gradient-view',
-        title: 'Double click to add a new gradient stop',
-        height: height,
-        width: width,
-        css: {
-            position: 'relative',
-            left: margin.left
-        }
-    }));
 
     let $trash = $('<img>', {
         id: 'trash',
         src: `${STATIC_URL}compose/trash.svg`,
+        css: {
+            position: 'absolute',
+            left: 0,
+            bottom: 0
+        }
     }).droppable({
         tolerance: 'touch',
         accept: '.gradient-stop',
@@ -180,6 +186,7 @@ export async function GradientDialog(gradientUuid) {
     $('#gradient-view').on(STATE_UPDATE_EVENT, (evt) => {
         setCurrentGradient(currentGradientUuid);
         stopsFromGradient();
+        updateGradientVis();
     });
 
     stopsFromGradient();
@@ -200,7 +207,7 @@ export async function GradientDialog(gradientUuid) {
             // first point
             currentGradient.points.unshift(clickPoint);
             currentGradient.values.unshift(clickValue);
-        } else if (i == currentGradient.points.length - 1) {
+        } else if (i == currentGradient.points.length) {
             // last point
             currentGradient.points.push(clickPoint);
             currentGradient.values.push(clickValue);
@@ -255,7 +262,7 @@ function gradientFromStops() {
         let stopWidth = $(el).get(0).clientWidth;
         let percentage = ($(el).position().left + stopWidth / 2.0) / width;
         let stopHeight = $(el).get(0).clientHeight;
-        let value = 1.0 - (($(el).position().top + stopHeight / 2.0) / height);
+        let value = 1.0 - (($(el).position().top + stopHeight / 2.0) / (height * 2));
         pointValuePairs.push([
             percentage,
             getDisplayVal(value, 'PercentPrimitive'),
@@ -275,13 +282,13 @@ function stopsFromGradient() {
     $('#gradient-view').empty();
     let $svg = $(createSvg('svg'))
         .attr('width', width)
-        .attr('height', height)
+        .attr('height', height * 2)
         .css('position', 'absolute')
         .css('top', 0)
         .css('left', 0);
     let $pointCanvas = $('<div>')
         .css('width', width)
-        .css('height', height)
+        .css('height', height * 2)
         .css('position', 'absolute')
         .css('top', 0)
         .css('left', 0);
@@ -292,7 +299,7 @@ function stopsFromGradient() {
         let floatValue = getFloatVal(currentGradient.values[i], 'PercentPrimitive');
 
         // center x, y
-        let [x, y] = [point * width, height - floatValue * height]
+        let [x, y] = [point * width, (height * 2) - floatValue * height * 2]
 
         const pointSize = 15;
         let $point = $('<div>', {
