@@ -188,9 +188,39 @@ export async function GradientDialog(gradientUuid) {
         let viewLeft = evt.target.getBoundingClientRect().x;
         let viewWidth = width;
         let clickPoint = (evt.clientX - viewLeft) / viewWidth;
+
+        // insert in the correct place, sorted
+        let i = 0;
+        while (currentGradient.points[i] < clickPoint) {
+            i++;
+        }
+
         let clickValue = '0%';
-        currentGradient.points.push(clickPoint);
-        currentGradient.values.push(clickValue);
+        if (i == 0) {
+            // first point
+            currentGradient.points.unshift(clickPoint);
+            currentGradient.values.unshift(clickValue);
+        } else if (i == currentGradient.points.length - 1) {
+            // last point
+            currentGradient.points.push(clickPoint);
+            currentGradient.values.push(clickValue);
+        } else {
+            // somewhere in the middle, interpolate correct click value
+            let leftPoint = currentGradient.points[i - 1];
+            let leftVal = currentGradient.values[i - 1]
+            let rightPoint = currentGradient.points[i];
+            let rightVal = currentGradient.values[i]
+
+            let floatLeftVal = getFloatVal(leftVal, 'PercentPrimitive');
+            let floatRightVal = getFloatVal(rightVal, 'PercentPrimitive');
+            let percBetween = (clickPoint - leftPoint) / (rightPoint - leftPoint);
+            let clickValue = ((floatRightVal - floatLeftVal) * percBetween) + floatLeftVal;
+            let clickValueStr = getDisplayVal(clickValue, 'PercentPrimitive');
+
+            currentGradient.points.splice(i, 0, clickPoint);
+            currentGradient.values.splice(i, 0, clickValueStr);
+        }
+
         stopsFromGradient();
         updateGradientVis();
         saveGradient();
@@ -220,19 +250,24 @@ async function saveGradient() {
 }
 
 function gradientFromStops() {
-    let points = [];
-    let values = [];
+    let pointValuePairs = [];
     $('.gradient-stop').each((i, el) => {
         let stopWidth = $(el).get(0).clientWidth;
         let percentage = ($(el).position().left + stopWidth / 2.0) / width;
         let stopHeight = $(el).get(0).clientHeight;
         let value = 1.0 - (($(el).position().top + stopHeight / 2.0) / height);
-        points.push(percentage);
-        values.push(getDisplayVal(value, 'PercentPrimitive'));
+        pointValuePairs.push([
+            percentage,
+            getDisplayVal(value, 'PercentPrimitive'),
+        ]);
     });
+
+    // Sort gradient for display / nicity
+    pointValuePairs.sort();
+
     return {
-        points,
-        values
+        points: pointValuePairs.map((pv) => pv[0]),
+        values: pointValuePairs.map((pv) => pv[1]),
     };
 }
 
@@ -293,48 +328,7 @@ function stopsFromGradient() {
         });
 
         $pointCanvas.append($point);
-
         [prevX, prevY] = [x, y];
-
-    //     let $input = $('<input>', {
-    //         class: 'primitive-input no-drag',
-    //         type: 'text',
-    //         val: value,
-    //         width: '3em',
-    //     });
-
-    //     let $label = ScrubbableInput($input, 'IVLab.ABREngine.PercentPrimitive');
-    //     $label.addClass('gradient-stop');
-    //     $label.addClass('rounded');
-    //     $label.prepend($('<div>', {
-    //         css: {
-    //             'width': 0,
-    //             'height': 20,
-    //             'margin': 'auto',
-    //             'border': '1px solid black',
-    //         }
-    //     }));
-
-    //     $label.on('change', (evt) => {
-    //         currentGradient = gradientFromStops();
-    //         saveGradient();
-    //         updateGradientVis();
-    //     });
-
-    //     $('#gradient-view').append($label);
-    //     $label.draggable({
-    //         containment: '.gradient-editor',
-    //         stop: (evt, ui) => {
-    //             currentGradient = gradientFromStops();
-    //             saveGradient();
-    //             updateGradientVis();
-    //         },
-    //     });
-
-    //     let mapWidth = width;
-    //     let positionX = (point * mapWidth) - labelWidth / 2.0;
-    //     $label.css('position', 'absolute');
-    //     $label.css('left', positionX);
     }
     $('#gradient-view').append($svg);
     $('#gradient-view').append($pointCanvas);
