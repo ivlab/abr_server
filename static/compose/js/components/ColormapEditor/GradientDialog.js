@@ -26,8 +26,9 @@ import { uuid } from '../../../../common/UUID.js';
 import { DataPath } from '../../../../common/DataPath.js';
 import { ColorMap, floatToHex, hexToFloat } from './color.js';
 import { ColorThumb, DataRemappingSlider } from './components.js';
-import { ScrubbableInput } from '../Primitives.js';
+import { getDisplayVal, getFloatVal, ScrubbableInput } from '../Primitives.js';
 import { STATE_UPDATE_EVENT } from '../../../../common/StateManager.js';
+import { createSvg } from '../../../../common/helpers.js';
 
 const margin = { top: 10, right: 50, bottom: 20, left: 50 };
 const dialogWidth = 700;
@@ -224,8 +225,10 @@ function gradientFromStops() {
     $('.gradient-stop').each((i, el) => {
         let stopWidth = $(el).get(0).clientWidth;
         let percentage = ($(el).position().left + stopWidth / 2.0) / width;
+        let stopHeight = $(el).get(0).clientHeight;
+        let value = 1.0 - (($(el).position().top + stopHeight / 2.0) / height);
         points.push(percentage);
-        values.push($(el).find('input').val());
+        values.push(getDisplayVal(value, 'PercentPrimitive'));
     });
     return {
         points,
@@ -235,37 +238,52 @@ function gradientFromStops() {
 
 function stopsFromGradient() {
     $('#gradient-view').empty();
+    let $svg = $(createSvg('svg'))
+        .attr('width', width)
+        .attr('height', height)
+        .css('position', 'absolute')
+        .css('top', 0)
+        .css('left', 0);
+    let $pointCanvas = $('<div>')
+        .css('width', width)
+        .css('height', height)
+        .css('position', 'absolute')
+        .css('top', 0)
+        .css('left', 0);
+
+    let [prevX, prevY] = [null, null];
     for (const i in currentGradient.points) {
         let point = currentGradient.points[i];
-        let value = currentGradient.values[i];
+        let floatValue = getFloatVal(currentGradient.values[i], 'PercentPrimitive');
 
-        let $input = $('<input>', {
-            class: 'primitive-input no-drag',
-            type: 'text',
-            val: value,
-            width: '3em',
-        });
+        // center x, y
+        let [x, y] = [point * width, height - floatValue * height]
 
-        let $label = ScrubbableInput($input, 'IVLab.ABREngine.PercentPrimitive');
-        $label.addClass('gradient-stop');
-        $label.addClass('rounded');
-        $label.prepend($('<div>', {
+        const pointSize = 15;
+        let $point = $('<div>', {
+            class: 'gradient-stop',
+            width: pointSize,
+            height: pointSize,
             css: {
-                'width': 0,
-                'height': 20,
-                'margin': 'auto',
-                'border': '1px solid black',
+                'cursor': 'grab',
+                'position': 'absolute',
+                'background-color': 'black',
+                'left': x - pointSize / 2,
+                'top': y - pointSize / 2,
             }
-        }));
-
-        $label.on('change', (evt) => {
-            currentGradient = gradientFromStops();
-            saveGradient();
-            updateGradientVis();
         });
 
-        $('#gradient-view').append($label);
-        $label.draggable({
+        if (prevX != null && prevY != null) {
+            let $line = $(createSvg('line'))
+                .attr('x1', prevX)
+                .attr('y1', prevY)
+                .attr('x2', x)
+                .attr('y2', y)
+                .css('stroke', 'black');
+            $svg.append($line);
+        }
+
+        $point.draggable({
             containment: '.gradient-editor',
             stop: (evt, ui) => {
                 currentGradient = gradientFromStops();
@@ -274,11 +292,52 @@ function stopsFromGradient() {
             },
         });
 
-        let mapWidth = width;
-        let positionX = (point * mapWidth) - labelWidth / 2.0;
-        $label.css('position', 'absolute');
-        $label.css('left', positionX);
+        $pointCanvas.append($point);
+
+        [prevX, prevY] = [x, y];
+
+    //     let $input = $('<input>', {
+    //         class: 'primitive-input no-drag',
+    //         type: 'text',
+    //         val: value,
+    //         width: '3em',
+    //     });
+
+    //     let $label = ScrubbableInput($input, 'IVLab.ABREngine.PercentPrimitive');
+    //     $label.addClass('gradient-stop');
+    //     $label.addClass('rounded');
+    //     $label.prepend($('<div>', {
+    //         css: {
+    //             'width': 0,
+    //             'height': 20,
+    //             'margin': 'auto',
+    //             'border': '1px solid black',
+    //         }
+    //     }));
+
+    //     $label.on('change', (evt) => {
+    //         currentGradient = gradientFromStops();
+    //         saveGradient();
+    //         updateGradientVis();
+    //     });
+
+    //     $('#gradient-view').append($label);
+    //     $label.draggable({
+    //         containment: '.gradient-editor',
+    //         stop: (evt, ui) => {
+    //             currentGradient = gradientFromStops();
+    //             saveGradient();
+    //             updateGradientVis();
+    //         },
+    //     });
+
+    //     let mapWidth = width;
+    //     let positionX = (point * mapWidth) - labelWidth / 2.0;
+    //     $label.css('position', 'absolute');
+    //     $label.css('left', positionX);
     }
+    $('#gradient-view').append($svg);
+    $('#gradient-view').append($pointCanvas);
 }
 
 export function gradientToColormap(gradient) {
@@ -289,7 +348,7 @@ export function gradientToColormap(gradient) {
     }
 
     for (const i in gradient.points) {
-        let floatValue = (+gradient.values[i].replace('%', '')) / 100.0;
+        let floatValue = getFloatVal(gradient.values[i], 'PercentPrimitive');
         c.addControlPt(gradient.points[i], {
             r: floatValue,
             g: floatValue,

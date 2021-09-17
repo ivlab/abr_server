@@ -120,11 +120,3 @@
 #gradient-vis {
     border: 1px solid black;
 }
-.gradient-stop {
-    padding: 10px;
-    padding-top: 0;
-    cursor: grab;
-    white-space: nowrap;
-    width: 60px;
-    background-color: #bbb;
-}
