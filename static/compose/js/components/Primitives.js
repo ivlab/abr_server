@@ -50,7 +50,30 @@ export function getFloatVal(primitiveString, shortType) {
         floatValue /= PRIMITIVE_VALUE_MULTIPLIERS[shortType];
     }
     return floatValue;
+}
 
+export function getDisplayVal(newValue, shortType) {
+    let typeUnitsString = globals.schema.definitions.InputStringTypes[shortType].pattern;
+    let unitGroupStart = typeUnitsString.lastIndexOf('(') + 1;
+    let unitStr = '';
+    if (unitGroupStart > 0) {
+        let unitGroupEnd = typeUnitsString.lastIndexOf(')');
+        unitStr = typeUnitsString.slice(unitGroupStart, unitGroupEnd);
+    }
+
+    // Convert back to display value
+    if (PRIMITIVE_VALUE_MULTIPLIERS.hasOwnProperty(shortType)) {
+        newValue *= PRIMITIVE_VALUE_MULTIPLIERS[shortType];
+    }
+    let truncatedValue = newValue.toFixed(2);
+    let intValue = parseInt(newValue, 10);
+    if (Math.abs(truncatedValue - intValue) < 0.01) {
+        newValue = intValue;
+    } else {
+        newValue = truncatedValue;
+    }
+
+    return newValue + unitStr;
 }
 
 // Increment a primitive value (e.g. 1m) up or down (positive / negative increment)
@@ -69,19 +92,7 @@ function incrementPrimitive(primitiveString, inputType, positive) {
     // Increment
     let newValue = floatValue + amount;
 
-    // Convert back to display value
-    if (PRIMITIVE_VALUE_MULTIPLIERS.hasOwnProperty(shortType)) {
-        newValue *= PRIMITIVE_VALUE_MULTIPLIERS[shortType];
-    }
-    let truncatedValue = newValue.toFixed(2);
-    let intValue = parseInt(newValue, 10);
-    if (Math.abs(truncatedValue - intValue) < 0.01) {
-        newValue = intValue;
-    } else {
-        newValue = truncatedValue;
-    }
-
-    return newValue + unitStr;
+    return getDisplayVal(newValue, shortType);
 }
 
 export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
