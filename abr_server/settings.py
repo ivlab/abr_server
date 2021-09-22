@@ -176,6 +176,7 @@ VISASSET_JSON = 'artifact.json'
 VISASSET_LIBRARY = 'http://sculptingvis.tacc.utexas.edu/static/Artifacts/'
 
 WS_SEND_SCHEMA = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/abr-server-websocket-send.json'
+WS_RECEIVE_SCHEMA = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/abr-server-websocket-receive.json'
 
 # Issue for windows loading .js files
 if DEBUG:

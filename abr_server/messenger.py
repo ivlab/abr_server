@@ -33,6 +33,12 @@ class ClientMessenger(WebsocketConsumer):
             return
         self.outgoing_schema = resp.json()
 
+        resp = requests.get(settings.WS_RECEIVE_SCHEMA)
+        if resp.status_code != 200:
+            logger.error('Unable to load schema from url {0}'.format(settings.WS_RECEIVE_SCHEMA))
+            return
+        self.incoming_schema = resp.json()
+
         self.id = None
         super().__init__(*args, **kwargs)
 
