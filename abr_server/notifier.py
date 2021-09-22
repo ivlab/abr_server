@@ -48,28 +48,27 @@ class NotifierMessage:
 
 class StateNotifier:
     def __init__(self):
-        self._subscriber_lock = Lock()
-
-        self.ws_subscribers = {}
+        self._connection_lock = Lock()
+        self.ws_connections = {}
 
     def subscribe_ws(self, ws):
         sub_id = uuid.uuid4()
-        with self._subscriber_lock:
-            self.ws_subscribers[str(sub_id)] = ws
+        with self._connection_lock:
+            self.ws_connections[str(sub_id)] = ws
         logger.debug('Subscribed notifier WebSocket')
         return sub_id
 
     def unsubscribe_ws(self, sub_id):
-        with self._subscriber_lock:
-            if str(sub_id) in self.ws_subscribers:
-                del self.ws_subscribers[str(sub_id)]
+        with self._connection_lock:
+            if str(sub_id) in self.ws_connections:
+                del self.ws_connections[str(sub_id)]
         logger.debug('Unsubscribed notifier WebSocket')
 
     def notify(self, message):
         '''
             Send out a message to all connected parties on WebSocket
         '''
-        for _id, ws in self.ws_subscribers.items():
+        for _id, ws in self.ws_connections.items():
             ws.send_json(message.to_json())
 
 notifier = StateNotifier()

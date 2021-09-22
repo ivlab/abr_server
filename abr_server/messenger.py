@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from weakref import KeyedRef
 from channels.generic.websocket import WebsocketConsumer
 import logging
 import json
