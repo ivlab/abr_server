@@ -184,37 +184,8 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 $el.css('cursor', 'pointer');
                 let clickEvt = (evt) => {
                     if (!dragging) {
-                        let impressionUuid = $el.parents('.data-impression').data('uuid');
-
-                        let colorVars = globals.stateManager.findPath((s) => {
-                            return s.hasOwnProperty('inputGenre') &&
-                                s['inputGenre'] == 'Variable' && 
-                            s.hasOwnProperty('inputType') &&
-                                s['inputType'] == 'IVLab.ABREngine.ScalarDataVariable' && 
-                            s.hasOwnProperty('parameterName') &&
-                                s['parameterName'] == 'Color'
-                        });
-
-                        let colorVarPath = colorVars.find((p) => p.split('/')[2] == impressionUuid);
-
-                        let keyDatas = globals.stateManager.findPath((s) => {
-                            return s.hasOwnProperty('inputGenre') &&
-                                s['inputGenre'] == 'KeyData' && 
-                            s.hasOwnProperty('parameterName') &&
-                                s['parameterName'] == 'Key Data'
-                        });
-
-                        let keyDataPath = keyDatas.find((p) => p.split('/')[2] == impressionUuid);
-
-                        let colorVar = null;
-                        let keyData = null;
-                        if (colorVarPath) { 
-                            colorVar = globals.stateManager.getPath(colorVarPath);
-                        }
-                        if (keyDataPath) {
-                            keyData = globals.stateManager.getPath(keyDataPath);
-                        }
-
+                        let colorVar = getColorVar($el);
+                        let keyData = getKeyData($el);
                         ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
                     }
                 };
@@ -315,7 +286,9 @@ export function InputPuzzlePiece(inputName, inputProps) {
             }
             let impressionUuid = $(evt.target).parents('.data-impression').data('uuid');
             // Reassign uuid if it's changed and update state if necessary
-            GradientDialog(gradientUuid).then((gradientUuidValue) => {
+            let colorVar = getColorVar($el);
+            let keyData = getKeyData($el);
+            GradientDialog(gradientUuid, colorVar, keyData).then((gradientUuidValue) => {
                 resolvedProps.inputValue = gradientUuidValue;
                 globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
             });
@@ -379,4 +352,44 @@ function PuzzleLabel(name) {
     } else {
         return $('<div>', { class: 'puzzle-label rounded' }).append($('<p>', { text: name }));
     }
+}
+
+// Get the color variable for the data impression this input is associated with
+function getColorVar($el) {
+    let impressionUuid = $el.parents('.data-impression').data('uuid');
+    let colorVars = globals.stateManager.findPath((s) => {
+        return s.hasOwnProperty('inputGenre') &&
+            s['inputGenre'] == 'Variable' && 
+        s.hasOwnProperty('inputType') &&
+            s['inputType'] == 'IVLab.ABREngine.ScalarDataVariable' && 
+        s.hasOwnProperty('parameterName') &&
+            s['parameterName'] == 'Color'
+    });
+    let colorVarPath = colorVars.find((p) => p.split('/')[2] == impressionUuid);
+
+
+    let colorVar = null;
+    if (colorVarPath) { 
+        colorVar = globals.stateManager.getPath(colorVarPath);
+    }
+    return colorVar;
+}
+
+
+// Get the key data for the data impression this input is associated with
+function getKeyData($el) {
+    let impressionUuid = $el.parents('.data-impression').data('uuid');
+    let keyDatas = globals.stateManager.findPath((s) => {
+        return s.hasOwnProperty('inputGenre') &&
+            s['inputGenre'] == 'KeyData' && 
+        s.hasOwnProperty('parameterName') &&
+            s['parameterName'] == 'Key Data'
+    });
+
+    let keyDataPath = keyDatas.find((p) => p.split('/')[2] == impressionUuid);
+    let keyData = null;
+    if (keyDataPath) {
+        keyData = globals.stateManager.getPath(keyDataPath);
+    }
+    return keyData;
 }

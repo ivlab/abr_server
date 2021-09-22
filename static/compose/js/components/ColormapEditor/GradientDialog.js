@@ -27,6 +27,7 @@ import { ColorMap } from './color.js';
 import { getDisplayVal, getFloatVal } from '../Primitives.js';
 import { STATE_UPDATE_EVENT } from '../../../../common/StateManager.js';
 import { createSvg } from '../../../../common/helpers.js';
+import { DataPath } from '../../../../common/DataPath.js';
 
 const margin = { top: 10, right: 50, bottom: 20, left: 50 };
 const dialogWidth = 700;
@@ -49,9 +50,12 @@ const DEFAULT_GRADIENT = {
 
 var currentGradient = null;
 var currentGradientUuid = null;
+var currentVarPath = null;
+var currentKeyDataPath = null;
+var currentMinMax = null;
 
 // Returns the new uuid if there is one
-export async function GradientDialog(gradientUuid) {
+export async function GradientDialog(gradientUuid, variableInput, keyDataInput) {
     setCurrentGradient(gradientUuid);
 
     if (currentGradient.points.length != currentGradient.values.length) {
@@ -67,6 +71,70 @@ export async function GradientDialog(gradientUuid) {
 
     // Wait until the state is ready before constructing dialog
     await saveGradient();
+
+    // Label the min/max of the histogram (only if there's a variable attached)
+    let $variableLabel = null;
+    if (variableInput) {
+        currentVarPath = variableInput.inputValue;
+        let variableName = DataPath.getName(currentVarPath);
+        currentKeyDataPath = keyDataInput.inputValue;
+        let keyDataName = DataPath.getName(currentKeyDataPath);
+
+        // Fetch the histogram from the server
+        let url = new URL(`${window.location}api/histogram/${currentKeyDataPath}/${variableName}`);
+        url.search = new URLSearchParams(currentMinMax);
+
+        let zippedHistogram = await fetch(url).then((resp) => resp.json());
+
+        // Try to get the current min/max from state if it's been redefined
+        if (globals.stateManager.state.dataRanges) {
+            // Try to get keydata-specific custom range first
+            if (globals.stateManager.state.dataRanges.specificScalarRanges && globals.stateManager.state.dataRanges.specificScalarRanges[currentKeyDataPath]) {
+                currentMinMax = globals.stateManager.state.dataRanges.specificScalarRanges[currentKeyDataPath][currentVarPath];
+            }
+
+            // Then if that fails, see if there's a global range for this var
+            if (!currentMinMax && globals.stateManager.state.dataRanges.scalarRanges)
+            {
+                currentMinMax = globals.stateManager.state.dataRanges.scalarRanges[currentVarPath];
+            }
+        }
+
+        // If we still can't find data ranges, use defaults from histogram
+        if (!currentMinMax) {
+            currentMinMax = {
+                min: zippedHistogram.keyDataMin,
+                max: zippedHistogram.keyDataMax,
+            }
+        }
+
+        let $dataLabel = $('<div>', { id: 'opacity-data-label' }).append(
+            // Add the actual label
+            $('<p>', {
+                html: `<em>${keyDataName} &rarr; <strong>${variableName}</strong></em>`,
+            })
+        );
+
+        $variableLabel = $('<div>', {
+            class: 'centered',
+            css: {
+                'background-color': 'white',
+            }
+        }).append(
+            $('<div>', {
+                class: 'variable-labels',
+                css: {
+                    width,
+                }
+            }).append($('<p>', {
+                text: currentMinMax.min.toFixed(4),
+            })).append(
+                $dataLabel
+            ).append($('<p>', {
+                text: currentMinMax.max.toFixed(4),
+            }))
+        );
+    }
 
     // Get rid of any previous instances of the gradient editor that were hidden
     // jQuery UI dialogs just hide the dialog when it's closed
@@ -100,6 +168,10 @@ export async function GradientDialog(gradientUuid) {
             'background-image': 'linear-gradient(to right, #cecece 1px, transparent 1px),\nlinear-gradient(to top, #cecece 1px, white 1px)'
         }
     });
+
+    if ($variableLabel) {
+        $gradientEditor.append($variableLabel);
+    }
 
     $gradientEditor.append($gradientView);
 
