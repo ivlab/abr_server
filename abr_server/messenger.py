@@ -14,9 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from weakref import KeyedRef
 from channels.generic.websocket import WebsocketConsumer
 import logging
 import json
+import uuid
 import jsonschema
 import requests
 from django.conf import settings
@@ -39,8 +41,29 @@ class ClientMessenger(WebsocketConsumer):
             return
         self.incoming_schema = resp.json()
 
+        # Dictionary of routes for {target -> {uuid1: fn, uuid2: fn, uuid3: fn}}
+        # For example: {'state-thumbnail': [<function that saves a png>]}
+        self.targets = {}
+
         self.id = None
         super().__init__(*args, **kwargs)
+
+    def add_action(self, target_route, action_fn):
+        '''Add an action to be performed when `target_route` receives a payload
+        over the WebSocket. `action_fn` should take a single argument: the
+        received message. Returns a new UUID associated with this action, can be
+        used to remove from actions'''
+        action_id = uuid.uuid4()
+        target_actions = self.targets.get(target_route, {})
+        target_actions[action_id] = action_fn
+        return action_fn
+
+    def remove_action(self, target_route, action_id):
+        try:
+            del self.targets[target_route][action_id]
+            return True
+        except KeyError:
+            return False
 
     def connect(self):
         self.accept()
@@ -53,6 +76,20 @@ class ClientMessenger(WebsocketConsumer):
 
     def receive(self, text_data=None, bytes_data=None):
         default_ret = super().receive(text_data=text_data, bytes_data=bytes_data)
+        incoming_json = json.loads(text_data)
+        try:
+            jsonschema.validate(incoming_json, self.incoming_schema)
+        except jsonschema.ValidationError as e:
+            logger.error('Incoming WebSocket JSON failed to validate: ' + str(e))
+
+        # Perform all actions assocated with this particular route
+        route = incoming_json['target']
+        if route in self.targets:
+            for action in self.targets[route]:
+                action(incoming_json)
+        else:
+            logger.error('Incoming WebSocket route `{}` does not exist'.format(route))
+
         return default_ret
 
     def send_json(self, msg_json):
