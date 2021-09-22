@@ -28,35 +28,11 @@ import logging
 
 logger = logging.getLogger('django.server')
 
-DEFAULT_ADDRESS = '0.0.0.0'
-DEFAULT_PORT = 8001 # Need to know port ahead of time so Docker can forward it
-LOCAL_ADDRESSES = {
-    DEFAULT_ADDRESS,
-    '127.0.0.1',
-    'localhost'
-}
-
 class StateNotifier:
     def __init__(self):
         self._subscriber_lock = Lock()
 
         self.ws_subscribers = {}
-
-    def subscribe_socket(self, client_ip):
-        '''
-            Socket (usually Unity) connection for sending notifications that the
-            state was updated. We assign an address/port and return it over HTTP
-            to the client who just subscribed.
-        '''
-
-        same_machine = client_ip in LOCAL_ADDRESSES
-        ret = self.unity_connector.new_subscriber_info()
-
-        # If we're on the same machine, add the local data path
-        if same_machine:
-            ret['localDataPath'] = os.path.realpath(settings.MEDIA_ROOT)
-        return ret
-
 
     def subscribe_ws(self, ws):
         sub_id = uuid.uuid4()
