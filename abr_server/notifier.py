@@ -25,8 +25,26 @@ from threading import Lock
 from django.conf import settings
 import os
 import logging
+from enum import Enum
 
 logger = logging.getLogger('django.server')
+
+class MessageTarget(str, Enum):
+    State = "state"
+    VisAssetsCache = "CacheUpdate-visassets"
+
+class NotifierMessage:
+    def __init__(self, target):
+        self.target = target
+
+    def to_json(self):
+        return {
+            '$schema': settings.WS_SEND_SCHEMA,
+            'target': self.target
+        }
+
+    def __str__(self):
+        return json.dumps(self.to_json())
 
 class StateNotifier:
     def __init__(self):
@@ -51,9 +69,7 @@ class StateNotifier:
         '''
             Send out a message to all connected parties on WebSocket
         '''
-        message = json.dumps(message)
-
         for _id, ws in self.ws_subscribers.items():
-            ws.send(message)
+            ws.send_json(message.to_json())
 
 notifier = StateNotifier()

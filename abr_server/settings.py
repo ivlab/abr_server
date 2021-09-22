@@ -175,6 +175,8 @@ if not VISASSET_PATH.exists():
 VISASSET_JSON = 'artifact.json'
 VISASSET_LIBRARY = 'http://sculptingvis.tacc.utexas.edu/static/Artifacts/'
 
+WS_SEND_SCHEMA = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/abr-server-websocket-send.json'
+
 # Issue for windows loading .js files
 if DEBUG:
     import mimetypes

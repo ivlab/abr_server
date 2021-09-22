@@ -32,7 +32,7 @@ from django.conf import settings
 from pathlib import Path
 from threading import Lock
 
-from .notifier import notifier
+from .notifier import MessageTarget, NotifierMessage, notifier
 from .visasset_manager import download_visasset
 
 logger = logging.getLogger('django.server')
@@ -118,7 +118,7 @@ class State():
                     self._state = deepcopy(self._pending_state)
 
             # Tell any connected clients that we've updated the state
-            notifier.notify({ 'target': 'state' })
+            notifier.notify(NotifierMessage(MessageTarget.State))
 
             return ''
         except jsonschema.ValidationError as e:
@@ -174,7 +174,7 @@ class State():
             if len(vis_asset_fails) > 0:
                 vis_asset_fails = '\nFailed to download VisAssets: ' + vis_asset_fails
             logger.warning(vis_asset_fails)
-            notifier.notify({ 'target': 'CacheUpdate-visassets' })
+            notifier.notify(NotifierMessage(MessageTarget.VisAssetsCache))
 
         return final_result
 
@@ -290,7 +290,7 @@ class State():
         self.redo_stack.append(diff_w_previous)
 
         # Tell any connected clients that we've updated the state
-        notifier.notify({ 'target': 'state' })
+        notifier.notify(NotifierMessage(MessageTarget.State))
 
         return ''
 
@@ -313,7 +313,7 @@ class State():
         self.undo_stack.append(diff_w_next)
 
         # Tell any connected clients that we've updated the state
-        notifier.notify({ 'target': 'state' })
+        notifier.notify(NotifierMessage(MessageTarget.State))
 
         return ''
 
