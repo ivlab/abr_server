@@ -23,10 +23,8 @@
 
 import { globals } from '../../../../common/globals.js';
 import { uuid } from '../../../../common/UUID.js';
-import { DataPath } from '../../../../common/DataPath.js';
-import { ColorMap, floatToHex, hexToFloat } from './color.js';
-import { ColorThumb, DataRemappingSlider } from './components.js';
-import { getDisplayVal, getFloatVal, ScrubbableInput } from '../Primitives.js';
+import { ColorMap } from './color.js';
+import { getDisplayVal, getFloatVal } from '../Primitives.js';
 import { STATE_UPDATE_EVENT } from '../../../../common/StateManager.js';
 import { createSvg } from '../../../../common/helpers.js';
 
@@ -132,22 +130,28 @@ export async function GradientDialog(gradientUuid) {
     }
 
     // Append the gradient view area
-    $gradientEditor.append($('<div>', {
+    let $gradientView = $('<div>', {
         id: 'gradient-view',
         title: 'Double click to add a new gradient stop',
         height: height * 2,
         width: width,
         css: {
             position: 'relative',
-            left: margin.left
+            left: margin.left,
+            margin: '1em 0',
+            'border-top': '1px solid #cecece',
+            'background-size': 'calc(100% - 1px) 25%',
+            'background-image': 'linear-gradient(to right, #cecece 1px, transparent 1px),\nlinear-gradient(to top, #cecece 1px, white 1px)'
         }
-    }));
+    });
+
+    $gradientEditor.append($gradientView);
 
     // Add the visualization of the gradient
     $gradientEditor.append($('<img>', {
         id: 'gradient-vis',
         width,
-        height,
+        height: height / 3,
         css: {
             position: 'relative',
             left: margin.left
@@ -288,6 +292,7 @@ function stopsFromGradient() {
             class: 'gradient-stop',
             width: pointSize,
             height: pointSize,
+            title: `Data Value: ${point}, Opacity: ${floatValue}`,
             css: {
                 'cursor': 'grab',
                 'position': 'absolute',
@@ -321,6 +326,20 @@ function stopsFromGradient() {
     }
     $('#gradient-view').append($svg);
     $('#gradient-view').append($pointCanvas);
+
+    // Append y axis labels
+    for (const p of [0.0, 0.25, 0.50, 0.75, 1.0]) {
+        $('#gradient-view').append($('<p>', {
+            text: `${100 * p}%`,
+            css: {
+                position: 'absolute',
+                top: `${(1.0 - p) * 100}%`,
+                left: 0,
+                'font-size': '75%',
+                'margin-left': '0.5em'
+            }
+        }));
+    }
 }
 
 export function gradientToColormap(gradient) {
