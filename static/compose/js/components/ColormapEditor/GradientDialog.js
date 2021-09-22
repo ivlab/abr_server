@@ -84,50 +84,6 @@ export async function GradientDialog(gradientUuid) {
     });
 
     // Add the visualization of the current colormap, if there is one
-    let pairedColormapUuid = null;
-    let impressions = globals.stateManager.findAll((s) => {
-        if (s.inputValues && s.inputValues.Opacitymap && s.inputValues.Opacitymap.inputValue) {
-            return s.inputValues.Opacitymap.inputValue == currentGradientUuid;
-        } else {
-            return false;
-        }
-    });
-    // we did not find the impression
-    if (impressions.length > 0) {
-        // assume we found the impression that has this opacity map
-        let impression = impressions[0];
-
-        // Attempt to find colormap, if it exists
-        if (impression.inputValues && impression.inputValues.Colormap && impression.inputValues.Colormap.inputValue) {
-            pairedColormapUuid = impression.inputValues.Colormap.inputValue;
-        }
-
-        let thumbUrl = '';
-        if (pairedColormapUuid) {
-            let visassets = globals.stateManager.getCache('visassets');
-            let localVisAssets = globals.stateManager.state.localVisAssets;
-            if (visassets && visassets[pairedColormapUuid]) {
-                let previewImg = visassets[pairedColormapUuid]['preview'];
-                thumbUrl = `/media/visassets/${pairedColormapUuid}/${previewImg}`;
-            } else if (localVisAssets && localVisAssets[pairedColormapUuid]) {
-                // TODO assuming colormap xml for now
-                let colormapXml = localVisAssets[pairedColormapUuid].artifactDataContents['colormap.xml'];
-                let colormapObj = ColorMap.fromXML(colormapXml);
-                thumbUrl = colormapObj.toBase64(true);
-            }
-        }
-
-        $gradientEditor.append($('<img>', {
-            id: 'colormap-gradient-vis',
-            src: thumbUrl,
-            width,
-            height,
-            css: {
-                position: 'relative',
-                left: margin.left
-            }
-        }));
-    }
 
     // Append the gradient view area
     let $gradientView = $('<div>', {
@@ -191,6 +147,8 @@ export async function GradientDialog(gradientUuid) {
         setCurrentGradient(currentGradientUuid);
         stopsFromGradient();
         updateGradientVis();
+        $gradientEditor.find('#colormap-gradient-vis').remove();
+        $gradientEditor.prepend(getPairedColormap());
     });
 
     stopsFromGradient();
@@ -217,6 +175,54 @@ export async function GradientDialog(gradientUuid) {
 
     updateGradientVis();
     return currentGradientUuid;
+}
+
+function getPairedColormap() {
+    let pairedColormapUuid = null;
+    let impressions = globals.stateManager.findAll((s) => {
+        if (s.inputValues && s.inputValues.Opacitymap && s.inputValues.Opacitymap.inputValue) {
+            return s.inputValues.Opacitymap.inputValue == currentGradientUuid;
+        } else {
+            return false;
+        }
+    });
+    // we did not find the impression
+    if (impressions.length > 0) {
+        // assume we found the impression that has this opacity map
+        let impression = impressions[0];
+
+        // Attempt to find colormap, if it exists
+        if (impression.inputValues && impression.inputValues.Colormap && impression.inputValues.Colormap.inputValue) {
+            pairedColormapUuid = impression.inputValues.Colormap.inputValue;
+        }
+
+        let thumbUrl = '';
+        if (pairedColormapUuid) {
+            let visassets = globals.stateManager.getCache('visassets');
+            let localVisAssets = globals.stateManager.state.localVisAssets;
+            if (visassets && visassets[pairedColormapUuid]) {
+                let previewImg = visassets[pairedColormapUuid]['preview'];
+                thumbUrl = `/media/visassets/${pairedColormapUuid}/${previewImg}`;
+            } else if (localVisAssets && localVisAssets[pairedColormapUuid]) {
+                // TODO assuming colormap xml for now
+                let colormapXml = localVisAssets[pairedColormapUuid].artifactDataContents['colormap.xml'];
+                let colormapObj = ColorMap.fromXML(colormapXml);
+                thumbUrl = colormapObj.toBase64(true);
+            }
+        }
+
+        let $colormapVis = $('<img>', {
+            id: 'colormap-gradient-vis',
+            src: thumbUrl,
+            width,
+            height,
+            css: {
+                position: 'relative',
+                left: margin.left
+            }
+        });
+        return $colormapVis;
+    }
 }
 
 function setCurrentGradient(gradientUuid) {
@@ -246,8 +252,9 @@ function gradientFromStops() {
         let stopHeight = $(el).get(0).clientHeight;
         let value = 1.0 - (($(el).position().top + stopHeight / 2.0) / (height * 2));
 
-        // validate that the percentages are 0-1
+        // validate that the values and points are 0-1
         value = Math.max(0, Math.min(1, value));
+        percentage = Math.max(0, Math.min(1, percentage));
 
         pointValuePairs.push([
             percentage,
@@ -292,7 +299,7 @@ function stopsFromGradient() {
             class: 'gradient-stop',
             width: pointSize,
             height: pointSize,
-            title: `Data Value: ${point}, Opacity: ${floatValue}`,
+            title: `Data Value: ${point.toFixed(2)}, Opacity: ${(floatValue* 100).toFixed(0)}%`,
             css: {
                 'cursor': 'grab',
                 'position': 'absolute',
