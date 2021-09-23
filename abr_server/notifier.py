@@ -24,7 +24,6 @@ from threading import Lock
 from django.conf import settings
 import logging
 from enum import Enum
-import inspect
 
 logger = logging.getLogger('django.server')
 
@@ -51,7 +50,7 @@ class StateNotifier:
         self.ws_connections = {}
 
         # Dictionary of routes for {target -> {uuid1: fn, uuid2: fn, uuid3: fn}}
-        # For example: {'state-thumbnail': [<function that saves a png>]}
+        # For example: {'thumbnail': [<function that saves a png>]}
         self.targets = {}
 
 
@@ -80,29 +79,22 @@ class StateNotifier:
         # Perform all actions assocated with this particular route
         route = incoming_json['target']
         if route in self.targets:
-            for action in self.targets[route]:
-                # Check if the function should receive the WebSocket's ID and supply it if so
-                params_length = len(inspect.signature(action).parameters)
-                if params_length == 2:
-                    action(incoming_json)
-                elif params_length == 3:
-                    action(incoming_json, ws_id)
+            for (_action_id, action) in self.targets[route].items():
+                action(incoming_json)
         else:
             logger.error('Incoming WebSocket route `{}` does not exist'.format(route))
 
     def add_action(self, target_route, action_fn):
         '''Add an action to be performed when `target_route` receives a payload
         over the WebSocket. `action_fn` should take one or two arguments: the
-        received message and optionally the ID of the WebSocket that sent it.
-        Returns a new UUID associated with this action, can be used to remove
-        from actions'''
-        params_length = len(inspect.signature(action_fn).parameters)
-        if params_length != 2 and params_length != 3:
-            raise Exception('`{}`: `action_fn` must take one or two arguments.'.format(target_route))
+        received message.  Returns a new UUID associated with this action, can
+        be used to remove from actions'''
         action_id = uuid.uuid4()
         target_actions = self.targets.get(target_route, {})
         target_actions[action_id] = action_fn
-        return action_fn
+        self.targets[target_route] = target_actions
+        print(self.targets)
+        return action_id
 
     def remove_action(self, target_route, action_id):
         try:

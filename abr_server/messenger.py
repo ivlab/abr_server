@@ -54,13 +54,17 @@ class ClientMessenger(WebsocketConsumer):
 
     def receive(self, text_data=None, bytes_data=None):
         default_ret = super().receive(text_data=text_data, bytes_data=bytes_data)
-        incoming_json = json.loads(text_data)
-        try:
-            jsonschema.validate(incoming_json, self.incoming_schema)
-        except jsonschema.ValidationError as e:
-            logger.error('Incoming WebSocket JSON failed to validate: ' + str(e))
 
-        notifier.receive(incoming_json, self.id)
+        if len(text_data) > 0:
+            try:
+                incoming_json = json.loads(text_data)
+                jsonschema.validate(incoming_json, self.incoming_schema)
+            except json.decoder.JSONDecodeError:
+                logger.error('Incoming WebSocket message is not JSON')
+            except jsonschema.ValidationError as e:
+                logger.error('Incoming WebSocket JSON failed to validate: ' + str(e))
+            else:
+                notifier.receive(incoming_json, self.id)
 
         return default_ret
 
