@@ -16,6 +16,8 @@
 
 import logging
 from django.conf import settings
+import base64
+from pathlib import Path
 
 from .notifier import notifier
 
@@ -25,7 +27,17 @@ class ImageManager:
     def __init__(self):
         notifier.add_action('thumbnail', self.save_thumbnail)
 
-    def save_thumbnail(self, msg_content):
-        print(msg_content)
+    def save_thumbnail(self, msg, sender_id):
+        content = msg['content']
+        content_binary = base64.b64decode(content)
+        thumbnail_path = settings.THUMBNAILS_PATH
+        if not thumbnail_path.exists():
+            thumbnail_path.mkdir(parents=True)
+        # Write the thumbnail from a particular sender
+        with open(thumbnail_path.joinpath('latest-thumbnail_' + str(sender_id) + '.png'), 'wb') as fout:
+            fout.write(content_binary)
+        # Write the thumbnail for most-recent
+        with open(thumbnail_path.joinpath('latest-thumbnail.png'), 'wb') as fout:
+            fout.write(content_binary)
 
 image_manager = ImageManager()

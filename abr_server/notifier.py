@@ -80,20 +80,19 @@ class StateNotifier:
         route = incoming_json['target']
         if route in self.targets:
             for (_action_id, action) in self.targets[route].items():
-                action(incoming_json)
+                action(incoming_json, ws_id)
         else:
             logger.error('Incoming WebSocket route `{}` does not exist'.format(route))
 
     def add_action(self, target_route, action_fn):
         '''Add an action to be performed when `target_route` receives a payload
-        over the WebSocket. `action_fn` should take one or two arguments: the
-        received message.  Returns a new UUID associated with this action, can
-        be used to remove from actions'''
+        over the WebSocket. `action_fn` should take two arguments: the
+        received message and the sender's ID.  Returns a new UUID associated
+        with this action, can be used to remove from actions'''
         action_id = uuid.uuid4()
         target_actions = self.targets.get(target_route, {})
         target_actions[action_id] = action_fn
         self.targets[target_route] = target_actions
-        print(self.targets)
         return action_id
 
     def remove_action(self, target_route, action_id):

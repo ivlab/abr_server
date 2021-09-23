@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
+import sys
 import os
 import time
 from pathlib import Path
@@ -163,9 +164,9 @@ if not os.path.exists(MEDIA_ROOT):
 DOWNLOAD_VISASSETS = True # Download visassets from a particular state if they don't exist
 VISASSET_PATH = Path(MEDIA_ROOT).joinpath('visassets')
 DATASET_PATH = Path(MEDIA_ROOT).joinpath('datasets')
+THUMBNAILS_PATH = Path(MEDIA_ROOT).joinpath('thumbnails')
 
-print('VisAssets path:', VISASSET_PATH)
-print('Dataset path:', DATASET_PATH)
+print('Media path:', MEDIA_ROOT)
 
 if not DATASET_PATH.exists():
     DATASET_PATH.mkdir()
@@ -177,6 +178,21 @@ VISASSET_LIBRARY = 'http://sculptingvis.tacc.utexas.edu/static/Artifacts/'
 
 WS_SEND_SCHEMA = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/abr-server-websocket-send.json'
 WS_RECEIVE_SCHEMA = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/abr-server-websocket-receive.json'
+
+SCHEMA_URL = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/ABRSchema_0-2-0.json'
+
+BACKUP_LOCATIONS = {
+    'linux': Path('~/.config/abr/'),
+    'darwin': Path('~/Library/Application Support/abr'),
+    'win32': Path('~/AppData/LocalLow/abr'),
+}
+
+BACKUP_PATH = BACKUP_LOCATIONS[sys.platform] \
+    .joinpath('abr_backup.json') \
+    .expanduser()
+
+# Delete backup entries after a certain amount of time
+BACKUP_DELETE_INTERVAL = 3600
 
 # Issue for windows loading .js files
 if DEBUG:
