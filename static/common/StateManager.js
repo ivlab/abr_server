@@ -61,6 +61,7 @@ export class StateManager {
         this._caches = {};
 
         this._thumbnailPoll = null;
+        this._thumbPollAttempts = 0;
         this.latestThumbnail = null;
         this.updateLatestThumbnail();
     }
@@ -105,15 +106,17 @@ export class StateManager {
                 }
             });
 
-        // Poll for updates to the thumbnail, stop trying when there's a new thumbnail
+        // Poll for updates to the thumbnail, stop trying when there's a new thumbnail or if we've tried more than 10 times
         if (!this._thumbnailPoll) {
             this._thumbnailPoll = setInterval(async () => {
                 let prevThumbnail = `${this.latestThumbnail}`;
                 await this.updateLatestThumbnail();
-                if (this.latestThumbnail != prevThumbnail) {
+                if (this._thumbPollAttempts > 10 || this.latestThumbnail != prevThumbnail) {
                     clearInterval(this._thumbnailPoll);
                     this._thumbnailPoll = null;
+                    this._thumbPollAttempts = 0;
                 }
+                this._thumbPollAttempts += 1;
             }, 500);
         }
     }

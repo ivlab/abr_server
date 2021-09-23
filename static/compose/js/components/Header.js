@@ -279,7 +279,7 @@ export function Header() {
         if (!stateName || stateName == defaultStateName) {
             $saveStateAsButton.trigger('click');
         } else {
-            localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
+            saveState(stateName);
             $('#state-header #state-name').text(stateName);
             $('.save-animation').addClass('animating');
             setTimeout(() => {
