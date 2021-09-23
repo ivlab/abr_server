@@ -59,6 +59,35 @@ export class StateManager {
         this._subscribers = [];
         this._cacheSubscribers = {};
         this._caches = {};
+
+        this._thumbnailPoll = null;
+        this._latestThumbnail = null;
+        this.updateLatestThumbnail();
+    }
+
+    // Retrieve the latest thumbnail from the server
+    async updateLatestThumbnail() {
+        let b = await fetch('/media/thumbnails/latest-thumbnail.png?' + Date.now()).then((resp) => resp.blob());
+        let updated = new Promise((resolve, reject) => {
+            let reader = new FileReader();
+            reader.readAsDataURL(b);
+            reader.onloadend = () => {
+                this._latestThumbnail = reader.result;
+                // Debugging: latest thumbnail preview
+                $('#latest-thumbnail').remove();
+                $('body').append($('<img>', {
+                    id: 'latest-thumbnail',
+                    src: this._latestThumbnail,
+                    css: {
+                        'position': 'absolute',
+                        'top': 0,
+                        'right': 0
+                    }
+                }));
+                resolve();
+            }
+        })
+        await updated;
     }
 
     async refreshState() {
@@ -75,6 +104,18 @@ export class StateManager {
                     $(sub).trigger(STATE_UPDATE_EVENT);
                 }
             });
+
+        // Poll for updates to the thumbnail, stop trying when there's a new thumbnail
+        if (!this._thumbnailPoll) {
+            this._thumbnailPoll = setInterval(async () => {
+                let prevThumbnail = `${this._latestThumbnail}`;
+                await this.updateLatestThumbnail();
+                if (this._latestThumbnail != prevThumbnail) {
+                    clearInterval(this._thumbnailPoll);
+                    this._thumbnailPoll = null;
+                }
+            }, 100);
+        }
     }
 
     async updateState(newState) {
