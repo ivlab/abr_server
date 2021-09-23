@@ -33,9 +33,15 @@ class ImageManager:
         thumbnail_path = settings.THUMBNAILS_PATH
         if not thumbnail_path.exists():
             thumbnail_path.mkdir(parents=True)
+
+        # TODO: Shouldn't do this until sender IDs are unique only across
+        # instances (e.g. Unity on the same computer should have the same ID
+        # when it's started/stopped multiple times)
+        #
         # Write the thumbnail from a particular sender
-        with open(thumbnail_path.joinpath('latest-thumbnail_' + str(sender_id) + '.png'), 'wb') as fout:
-            fout.write(content_binary)
+        # with open(thumbnail_path.joinpath('latest-thumbnail_' + str(sender_id) + '.png'), 'wb') as fout:
+        #     fout.write(content_binary)
+
         # Write the thumbnail for most-recent
         with open(thumbnail_path.joinpath('latest-thumbnail.png'), 'wb') as fout:
             fout.write(content_binary)
