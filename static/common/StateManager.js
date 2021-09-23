@@ -61,7 +61,7 @@ export class StateManager {
         this._caches = {};
 
         this._thumbnailPoll = null;
-        this._latestThumbnail = null;
+        this.latestThumbnail = null;
         this.updateLatestThumbnail();
     }
 
@@ -72,18 +72,18 @@ export class StateManager {
             let reader = new FileReader();
             reader.readAsDataURL(b);
             reader.onloadend = () => {
-                this._latestThumbnail = reader.result;
+                this.latestThumbnail = reader.result;
                 // Debugging: latest thumbnail preview
-                $('#latest-thumbnail').remove();
-                $('body').append($('<img>', {
-                    id: 'latest-thumbnail',
-                    src: this._latestThumbnail,
-                    css: {
-                        'position': 'absolute',
-                        'top': 0,
-                        'right': 0
-                    }
-                }));
+                // $('#latest-thumbnail').remove();
+                // $('body').append($('<img>', {
+                //     id: 'latest-thumbnail',
+                //     src: this.latestThumbnail,
+                //     css: {
+                //         'position': 'absolute',
+                //         'top': 0,
+                //         'right': 0
+                //     }
+                // }));
                 resolve();
             }
         })
@@ -108,13 +108,13 @@ export class StateManager {
         // Poll for updates to the thumbnail, stop trying when there's a new thumbnail
         if (!this._thumbnailPoll) {
             this._thumbnailPoll = setInterval(async () => {
-                let prevThumbnail = `${this._latestThumbnail}`;
+                let prevThumbnail = `${this.latestThumbnail}`;
                 await this.updateLatestThumbnail();
-                if (this._latestThumbnail != prevThumbnail) {
+                if (this.latestThumbnail != prevThumbnail) {
                     clearInterval(this._thumbnailPoll);
                     this._thumbnailPoll = null;
                 }
-            }, 100);
+            }, 500);
         }
     }
 
