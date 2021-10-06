@@ -47,7 +47,7 @@ class State():
 
         resp = requests.get(settings.SCHEMA_URL)
         if resp.status_code != 200:
-            logger.error('Unable to load schema from url {0}'.format(SCHEMA_URL))
+            logger.error('Unable to load schema from url {0}'.format(settings.SCHEMA_URL))
             return
 
         self.state_schema = resp.json()
