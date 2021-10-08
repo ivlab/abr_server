@@ -22,11 +22,13 @@ import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
 import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
+import { GradientDialog, gradientToColormap } from "./ColormapEditor/GradientDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
 
 const cssObjectFitMap = {
     'IVLab.ABREngine.ColormapVisAsset': 'fill',
+    'IVLab.ABREngine.PrimitiveGradient': 'fill',
     'IVLab.ABREngine.LineTextureVisAsset': 'cover',
     'IVLab.ABREngine.SurfaceTextureVisAsset': 'contain',
     'IVLab.ABREngine.GlyphVisAsset': 'contain',
@@ -67,6 +69,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
     let thumbUrl;
     let visassets = globals.stateManager.getCache('visassets');
     let localVisAssets = globals.stateManager.state.localVisAssets;
+    let gradients = globals.stateManager.state.primitiveGradients;
     if (visassets && visassets[uuid]) {
         let previewImg = visassets[uuid]['preview'];
         thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
@@ -75,6 +78,9 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
         let colormapXml = localVisAssets[uuid].artifactDataContents['colormap.xml'];
         let colormapObj = ColorMap.fromXML(colormapXml);
         thumbUrl = colormapObj.toBase64(true);
+    } else if (gradients && gradients[uuid]) {
+        let colormap = gradientToColormap(gradients[uuid]);
+        thumbUrl = colormap.toBase64(true);
     } else {
         thumbUrl = `${STATIC_URL}compose/${inputType}_default.png`;
     }
@@ -178,37 +184,8 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 $el.css('cursor', 'pointer');
                 let clickEvt = (evt) => {
                     if (!dragging) {
-                        let impressionUuid = $el.parents('.data-impression').data('uuid');
-
-                        let colorVars = globals.stateManager.findPath((s) => {
-                            return s.hasOwnProperty('inputGenre') &&
-                                s['inputGenre'] == 'Variable' && 
-                            s.hasOwnProperty('inputType') &&
-                                s['inputType'] == 'IVLab.ABREngine.ScalarDataVariable' && 
-                            s.hasOwnProperty('parameterName') &&
-                                s['parameterName'] == 'Color'
-                        });
-
-                        let colorVarPath = colorVars.find((p) => p.split('/')[2] == impressionUuid);
-
-                        let keyDatas = globals.stateManager.findPath((s) => {
-                            return s.hasOwnProperty('inputGenre') &&
-                                s['inputGenre'] == 'KeyData' && 
-                            s.hasOwnProperty('parameterName') &&
-                                s['parameterName'] == 'Key Data'
-                        });
-
-                        let keyDataPath = keyDatas.find((p) => p.split('/')[2] == impressionUuid);
-
-                        let colorVar = null;
-                        let keyData = null;
-                        if (colorVarPath) { 
-                            colorVar = globals.stateManager.getPath(colorVarPath);
-                        }
-                        if (keyDataPath) {
-                            keyData = globals.stateManager.getPath(keyDataPath);
-                        }
-
+                        let colorVar = getColorVar($el);
+                        let keyData = getKeyData($el);
                         ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
                     }
                 };
@@ -280,9 +257,44 @@ export function InputPuzzlePiece(inputName, inputProps) {
     } else if (resolvedProps.inputGenre == 'Primitive') {
         $el = PrimitiveInput(inputName, shortInputName, resolvedProps);
         $el.addClass('no-drag');
+    } else if (resolvedProps.inputGenre == 'PrimitiveGradient') {
+        let gradientUuid = null;
+        let args = [
+            resolvedProps.inputValue,
+            resolvedProps.inputType,
+            false,
+            '',
+            'fill'
+        ];
+        if (resolvedProps && resolvedProps.inputValue) {
+            $el = PuzzlePieceWithThumbnail(...args);
+            $el.attr('title', 'Click to edit gradient');
+            gradientUuid = resolvedProps.inputValue;
+        } else {
+            $el = PuzzlePiece(shortInputName, resolvedProps.inputType);
+            $el.attr('title', 'Click to add gradient');
+        }
+        $el.css('cursor', 'pointer');
+
+        let dragging = false;
+        $el.on('dragstart', () => dragging = true);
+        $el.on('dragend', () => dragging = false);
+
+        $el.on('click', (evt) => {
+            if (dragging) {
+                return;
+            }
+            let impressionUuid = $(evt.target).parents('.data-impression').data('uuid');
+            // Reassign uuid if it's changed and update state if necessary
+            let colorVar = getColorVar($el);
+            let keyData = getKeyData($el);
+            GradientDialog(gradientUuid, colorVar, keyData).then((gradientUuidValue) => {
+                resolvedProps.inputValue = gradientUuidValue;
+                globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+            });
+        });
     }
 
-    // Assign the constant data (NOTHING from state)
     $el.data('inputName', inputName);
     $el.data('parameterName', resolvedProps.parameterName);
     $el.data('inputGenre', resolvedProps.inputGenre);
@@ -340,4 +352,44 @@ function PuzzleLabel(name) {
     } else {
         return $('<div>', { class: 'puzzle-label rounded' }).append($('<p>', { text: name }));
     }
+}
+
+// Get the color variable for the data impression this input is associated with
+function getColorVar($el) {
+    let impressionUuid = $el.parents('.data-impression').data('uuid');
+    let colorVars = globals.stateManager.findPath((s) => {
+        return s.hasOwnProperty('inputGenre') &&
+            s['inputGenre'] == 'Variable' && 
+        s.hasOwnProperty('inputType') &&
+            s['inputType'] == 'IVLab.ABREngine.ScalarDataVariable' && 
+        s.hasOwnProperty('parameterName') &&
+            s['parameterName'] == 'Color'
+    });
+    let colorVarPath = colorVars.find((p) => p.split('/')[2] == impressionUuid);
+
+
+    let colorVar = null;
+    if (colorVarPath) { 
+        colorVar = globals.stateManager.getPath(colorVarPath);
+    }
+    return colorVar;
+}
+
+
+// Get the key data for the data impression this input is associated with
+function getKeyData($el) {
+    let impressionUuid = $el.parents('.data-impression').data('uuid');
+    let keyDatas = globals.stateManager.findPath((s) => {
+        return s.hasOwnProperty('inputGenre') &&
+            s['inputGenre'] == 'KeyData' && 
+        s.hasOwnProperty('parameterName') &&
+            s['parameterName'] == 'Key Data'
+    });
+
+    let keyDataPath = keyDatas.find((p) => p.split('/')[2] == impressionUuid);
+    let keyData = null;
+    if (keyDataPath) {
+        keyData = globals.stateManager.getPath(keyDataPath);
+    }
+    return keyData;
 }

@@ -115,3 +115,8 @@
 .sp-initial span {
     width: 100px;
 }
+
+/* Gradient editor */
+#gradient-vis {
+    border: 1px solid black;
+}

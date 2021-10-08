@@ -32,31 +32,34 @@ const PRIMITIVE_INCREMENTS = {
     'IntegerPrimitive': 1,
 };
 
-// Increment a primitive value (e.g. 1m) up or down (positive / negative increment)
-function incrementPrimitive(primitiveString, inputType, positive) {
-    let shortType = inputType.replace('IVLab.ABREngine.', '');
+export function getFloatVal(primitiveString, shortType) {
     let typeUnitsRegex = new RegExp(globals.schema.definitions.InputStringTypes[shortType].pattern);
     let matches = primitiveString.match(typeUnitsRegex);
-    let unitStr = matches[2];
-    let strNoUnits = primitiveString.replace(unitStr, '');
-    let floatValue = +strNoUnits;
 
-    // Determine the amount that we should increment by
-    let amount = 0.01;
-    if (PRIMITIVE_INCREMENTS.hasOwnProperty(shortType)) {
-        amount = PRIMITIVE_INCREMENTS[shortType];
-    }
-    if (!positive) {
-        amount *= -1.0;
+    let floatValue = null;
+    if (matches && matches.length == 3) {
+        let unitStr = matches[2];
+        let strNoUnits = primitiveString.replace(unitStr, '');
+        floatValue = +strNoUnits;
+    } else {
+        floatValue = +primitiveString;
     }
 
     // Convert to actual float value
     if (PRIMITIVE_VALUE_MULTIPLIERS.hasOwnProperty(shortType)) {
         floatValue /= PRIMITIVE_VALUE_MULTIPLIERS[shortType];
     }
+    return floatValue;
+}
 
-    // Increment
-    let newValue = floatValue + amount;
+export function getDisplayVal(newValue, shortType) {
+    let typeUnitsString = globals.schema.definitions.InputStringTypes[shortType].pattern;
+    let unitGroupStart = typeUnitsString.lastIndexOf('(') + 1;
+    let unitStr = '';
+    if (unitGroupStart > 0) {
+        let unitGroupEnd = typeUnitsString.lastIndexOf(')');
+        unitStr = typeUnitsString.slice(unitGroupStart, unitGroupEnd);
+    }
 
     // Convert back to display value
     if (PRIMITIVE_VALUE_MULTIPLIERS.hasOwnProperty(shortType)) {
@@ -71,6 +74,25 @@ function incrementPrimitive(primitiveString, inputType, positive) {
     }
 
     return newValue + unitStr;
+}
+
+// Increment a primitive value (e.g. 1m) up or down (positive / negative increment)
+function incrementPrimitive(primitiveString, inputType, positive) {
+    let shortType = inputType.replace('IVLab.ABREngine.', '');
+    let floatValue = getFloatVal(primitiveString, shortType);
+
+    // Determine the amount that we should increment by
+    let amount = 0.01;
+    if (PRIMITIVE_INCREMENTS.hasOwnProperty(shortType)) {
+        amount = PRIMITIVE_INCREMENTS[shortType];
+    }
+    if (!positive) {
+        amount *= -1.0;
+    }
+    // Increment
+    let newValue = floatValue + amount;
+
+    return getDisplayVal(newValue, shortType);
 }
 
 export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
@@ -127,18 +149,26 @@ export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
         $(evt.target).attr('disabled', true);
     });
 
+    let $label = ScrubbableInput($input, resolvedProps.inputType);
 
-        let $label = $('<label>');
+    $el.append($label);
+    let $container = $('<div>', { class: 'puzzle-piece rounded' });
+    $container.append($el);
+    return $container;
+}
 
+export function ScrubbableInput($input, inputType) {
+    let $label = $('<label>');
     $label.append($input);
 
     let dragging = false;
     let previousX = null;
     $label.append(
         $('<span>', {
-            class: 'input-scrubbable ui-icon ui-icon-triangle-2-e-w',
+            class: 'input-scrubbable no-drag ui-icon ui-icon-triangle-2-e-w',
         }).on('mousedown', (evt) => {
             dragging = true;
+            evt.stopPropagation();
         })
     );
 
@@ -146,22 +176,21 @@ export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
         if (dragging) {
             let newValue = $input.val();
             if (evt.clientX > previousX) {
-                newValue = incrementPrimitive(newValue, resolvedProps.inputType, true);
+                newValue = incrementPrimitive(newValue, inputType, true);
             } else {
-                newValue = incrementPrimitive(newValue, resolvedProps.inputType, false);
+                newValue = incrementPrimitive(newValue, inputType, false);
             }
             $input.val(newValue);
+            evt.stopPropagation();
         }
         previousX = evt.clientX;
     }).on('mouseup', (evt) => {
         if (dragging) {
             $input.trigger('change');
             dragging = false;
+            evt.stopPropagation();
         }
     });
 
-    $el.append($label);
-    let $container = $('<div>', { class: 'puzzle-piece rounded' });
-    $container.append($el);
-    return $container;
+    return $label;
 }

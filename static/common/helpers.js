@@ -73,3 +73,9 @@ export function downloadPng(filename, blob) {
         document.body.removeChild(link);
     }
 }
+
+// https://stackoverflow.com/a/64773665
+// Enable SVGs to be used with jQuery
+export function createSvg(tagName) {
+    return document.createElementNS("http://www.w3.org/2000/svg", tagName);
+}
