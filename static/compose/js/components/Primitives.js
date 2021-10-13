@@ -79,6 +79,13 @@ export function getDisplayVal(newValue, shortType) {
 // Increment a primitive value (e.g. 1m) up or down (positive / negative increment)
 function incrementPrimitive(primitiveString, inputType, positive) {
     let shortType = inputType.replace('IVLab.ABREngine.', '');
+
+    // Boolean scrubbing
+    if (shortType == "BooleanPrimitive") {
+        return positive;
+    }
+
+    // Float & Other primitives scrubbing
     let floatValue = getFloatVal(primitiveString, shortType);
 
     // Determine the amount that we should increment by
@@ -91,6 +98,11 @@ function incrementPrimitive(primitiveString, inputType, positive) {
     }
     // Increment
     let newValue = floatValue + amount;
+
+    // LengthPrimitive shouldn't be negative
+    if (shortType == "LengthPrimitive") {
+        newValue = (newValue < 0) ? 0 : newValue;
+    }
 
     return getDisplayVal(newValue, shortType);
 }
