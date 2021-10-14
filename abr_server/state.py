@@ -32,37 +32,22 @@ from django.conf import settings
 from pathlib import Path
 from threading import Lock
 
-from .notifier import notifier
+from .notifier import MessageTarget, NotifierMessage, notifier
 from .visasset_manager import download_visasset
 
 logger = logging.getLogger('django.server')
 
-SCHEMA_URL = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/ABRSchema_0-2-0.json'
-
-BACKUP_LOCATIONS = {
-    'linux': Path('~/.config/abr/'),
-    'darwin': Path('~/Library/Application Support/abr'),
-    'win32': Path('~/AppData/LocalLow/abr'),
-}
-
-BACKUP_PATH = BACKUP_LOCATIONS[sys.platform] \
-    .joinpath('abr_backup.json') \
-    .expanduser()
-
-# Delete backup entries after a certain amount of time
-BACKUP_DELETE_INTERVAL = 3600
-
 class State():
     def __init__(self):
         # Make sure the backup location exists
-        if not BACKUP_PATH.parent.exists():
-            os.makedirs(BACKUP_PATH.parent)
-        BACKUP_PATH.touch()
-        self.backup_path = BACKUP_PATH.resolve()
+        if not settings.BACKUP_PATH.parent.exists():
+            os.makedirs(settings.BACKUP_PATH.parent)
+        settings.BACKUP_PATH.touch()
+        self.backup_path = settings.BACKUP_PATH.resolve()
 
-        resp = requests.get(SCHEMA_URL)
+        resp = requests.get(settings.SCHEMA_URL)
         if resp.status_code != 200:
-            logger.error('Unable to load schema from url {0}'.format(SCHEMA_URL))
+            logger.error('Unable to load schema from url {0}'.format(settings.SCHEMA_URL))
             return
 
         self.state_schema = resp.json()
@@ -118,7 +103,7 @@ class State():
                     self._state = deepcopy(self._pending_state)
 
             # Tell any connected clients that we've updated the state
-            notifier.notify({ 'target': 'state' })
+            notifier.notify(NotifierMessage(MessageTarget.State))
 
             return ''
         except jsonschema.ValidationError as e:
@@ -174,7 +159,7 @@ class State():
             if len(vis_asset_fails) > 0:
                 vis_asset_fails = '\nFailed to download VisAssets: ' + vis_asset_fails
             logger.warning(vis_asset_fails)
-            notifier.notify({ 'target': 'CacheUpdate-visassets' })
+            notifier.notify(NotifierMessage(MessageTarget.VisAssetsCache))
 
         return final_result
 
@@ -252,7 +237,7 @@ class State():
         to_delete = set()
         for time_key in backup_json:
             t = float(time_key)
-            if time.time() - t > BACKUP_DELETE_INTERVAL:
+            if time.time() - t > settings.BACKUP_DELETE_INTERVAL:
                 to_delete.add(time_key)
         for time_key in to_delete:
             del backup_json[time_key]
@@ -290,7 +275,7 @@ class State():
         self.redo_stack.append(diff_w_previous)
 
         # Tell any connected clients that we've updated the state
-        notifier.notify({ 'target': 'state' })
+        notifier.notify(NotifierMessage(MessageTarget.State))
 
         return ''
 
@@ -313,7 +298,7 @@ class State():
         self.undo_stack.append(diff_w_next)
 
         # Tell any connected clients that we've updated the state
-        notifier.notify({ 'target': 'state' })
+        notifier.notify(NotifierMessage(MessageTarget.State))
 
         return ''
 

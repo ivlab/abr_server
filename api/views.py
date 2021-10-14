@@ -25,7 +25,7 @@ from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 
 from abr_server.state import state
-from abr_server.notifier import notifier
+from abr_server.notifier import MessageTarget, NotifierMessage, notifier
 from abr_server import visasset_manager
 
 VISASSET_CACHE = {}
@@ -157,7 +157,7 @@ def download_visasset(request, uuid):
     if request.method == 'POST':
         failed_downloads = visasset_manager.download_visasset(uuid)
         if len(failed_downloads) == 0:
-            notifier.notify({ 'target': 'CacheUpdate-visassets' })
+            notifier.notify(NotifierMessage(MessageTarget.VisAssetsCache))
             return HttpResponse('Downloaded files', status=200)
         else:
             return HttpResponse('Failed to download files: {}'.format(failed_downloads), status=500)
@@ -170,7 +170,7 @@ def save_visasset(request, uuid):
         visasset_data = state.get_path(['localVisAssets', uuid])
         save_success = visasset_manager.save_from_local(visasset_data)
         if save_success:
-            notifier.notify({ 'target': 'CacheUpdate-visassets' })
+            notifier.notify(NotifierMessage(MessageTarget.VisAssetsCache))
             return HttpResponse('Saved visasset', status=200)
         else:
             return HttpResponse('Unable to save Local VisAsset', status=400)
@@ -182,7 +182,7 @@ def remove_visasset(request, uuid):
     if request.method == 'DELETE':
         visasset_manager.remove_visasset(uuid)
         del VISASSET_CACHE[uuid]
-        notifier.notify({ 'target': 'CacheUpdate-visassets' })
+        notifier.notify(NotifierMessage(MessageTarget.VisAssetsCache))
         return HttpResponse()
     else:
         return HttpResponse('Method for download must be DELETE', status=400)

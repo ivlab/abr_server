@@ -23,6 +23,7 @@ import { globals } from "../../../common/globals.js";
 import { download } from "../../../common/helpers.js";
 
 const STORAGE_STATE_PREFIX = '_state_';
+const STORAGE_THUMB_PREFIX = '_thumb_';
 
 export function Header() {
     let defaultStateName = globals.schema.properties.name.default;
@@ -53,10 +54,7 @@ export function Header() {
                     "Save": function () {
                         let $input = $(this).find('input');
                         let stateName = $input.val();
-                        globals.stateManager.update('/name', stateName).then(() => {
-                            localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
-                            $('#state-header #state-name').text(stateName);
-                        });
+                        saveState(stateName);
                         $(this).dialog('destroy');
                     },
                     "Cancel": function () {
@@ -81,9 +79,7 @@ export function Header() {
                     if (evt.key == 'Enter') {
                         let $input = $(evt.target);
                         let stateName = $input.val();
-                        globals.stateManager.update('/name', stateName);
-                        localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
-                        $('#state-header #state-name').text(stateName);
+                        saveState(stateName);
                         $(evt.target).parents('#save-as-dialog').dialog('destroy');
                     }
                 })
@@ -239,6 +235,11 @@ export function Header() {
                         .filter((i, el) => $(el).text() == 'Load')
                         .css('background-color', '#ceedff');
                 }).append(
+                    $('<img>', {
+                        class: 'state-thumbnail',
+                        src: localStorage[STORAGE_THUMB_PREFIX + stateName],
+                    })
+                ).append(
                     $('<p>', {
                         class: 'state-name',
                         text: stateName
@@ -278,7 +279,7 @@ export function Header() {
         if (!stateName || stateName == defaultStateName) {
             $saveStateAsButton.trigger('click');
         } else {
-            localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
+            saveState(stateName);
             $('#state-header #state-name').text(stateName);
             $('.save-animation').addClass('animating');
             setTimeout(() => {
@@ -365,4 +366,12 @@ export function Header() {
     $header.append($screenshotHeader);
 
     return $header;
+}
+
+function saveState(stateName) {
+    globals.stateManager.update('/name', stateName).then(() => {
+        localStorage[STORAGE_STATE_PREFIX + stateName] = JSON.stringify(globals.stateManager.state);
+        localStorage[STORAGE_THUMB_PREFIX + stateName] = globals.stateManager.latestThumbnail;
+        $('#state-header #state-name').text(stateName);
+    });
 }

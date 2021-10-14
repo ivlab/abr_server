@@ -16,6 +16,11 @@
 
 from channels.generic.websocket import WebsocketConsumer
 import logging
+import json
+import uuid
+import jsonschema
+import requests
+from django.conf import settings
 
 from .notifier import notifier
 
@@ -23,6 +28,18 @@ logger = logging.getLogger('django.server')
 
 class ClientMessenger(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
+        resp = requests.get(settings.WS_SEND_SCHEMA)
+        if resp.status_code != 200:
+            logger.error('Unable to load schema from url {0}'.format(settings.WS_SEND_SCHEMA))
+            return
+        self.outgoing_schema = resp.json()
+
+        resp = requests.get(settings.WS_RECEIVE_SCHEMA)
+        if resp.status_code != 200:
+            logger.error('Unable to load schema from url {0}'.format(settings.WS_RECEIVE_SCHEMA))
+            return
+        self.incoming_schema = resp.json()
+
         self.id = None
         super().__init__(*args, **kwargs)
 
@@ -34,3 +51,27 @@ class ClientMessenger(WebsocketConsumer):
     def disconnect(self, status):
         logger.debug('WebSocket client disconnected: {}'.format(status))
         notifier.unsubscribe_ws(self.id)
+
+    def receive(self, text_data=None, bytes_data=None):
+        default_ret = super().receive(text_data=text_data, bytes_data=bytes_data)
+
+        if len(text_data) > 0:
+            try:
+                incoming_json = json.loads(text_data)
+                jsonschema.validate(incoming_json, self.incoming_schema)
+            except json.decoder.JSONDecodeError:
+                logger.error('Incoming WebSocket message is not JSON')
+            except jsonschema.ValidationError as e:
+                logger.error('Incoming WebSocket JSON failed to validate: ' + str(e))
+            else:
+                notifier.receive(incoming_json, self.id)
+
+        return default_ret
+
+    def send_json(self, msg_json):
+        try:
+            jsonschema.validate(msg_json, self.outgoing_schema)
+        except jsonschema.ValidationError as e:
+            logger.error('Outgoing WebSocket JSON failed to validate: ' + str(e))
+        else:
+            self.send(json.dumps(msg_json))

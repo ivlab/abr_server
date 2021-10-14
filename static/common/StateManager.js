@@ -59,6 +59,36 @@ export class StateManager {
         this._subscribers = [];
         this._cacheSubscribers = {};
         this._caches = {};
+
+        this._thumbnailPoll = null;
+        this._thumbPollAttempts = 0;
+        this.latestThumbnail = null;
+        this.updateLatestThumbnail();
+    }
+
+    // Retrieve the latest thumbnail from the server
+    async updateLatestThumbnail() {
+        let b = await fetch('/media/thumbnails/latest-thumbnail.png?' + Date.now()).then((resp) => resp.blob());
+        let updated = new Promise((resolve, reject) => {
+            let reader = new FileReader();
+            reader.readAsDataURL(b);
+            reader.onloadend = () => {
+                this.latestThumbnail = reader.result;
+                // Debugging: latest thumbnail preview
+                // $('#latest-thumbnail').remove();
+                // $('body').append($('<img>', {
+                //     id: 'latest-thumbnail',
+                //     src: this.latestThumbnail,
+                //     css: {
+                //         'position': 'absolute',
+                //         'top': 0,
+                //         'right': 0
+                //     }
+                // }));
+                resolve();
+            }
+        })
+        await updated;
     }
 
     async refreshState() {
@@ -75,6 +105,20 @@ export class StateManager {
                     $(sub).trigger(STATE_UPDATE_EVENT);
                 }
             });
+
+        // Poll for updates to the thumbnail, stop trying when there's a new thumbnail or if we've tried more than 10 times
+        if (!this._thumbnailPoll) {
+            this._thumbnailPoll = setInterval(async () => {
+                let prevThumbnail = `${this.latestThumbnail}`;
+                await this.updateLatestThumbnail();
+                if (this._thumbPollAttempts > 10 || this.latestThumbnail != prevThumbnail) {
+                    clearInterval(this._thumbnailPoll);
+                    this._thumbnailPoll = null;
+                    this._thumbPollAttempts = 0;
+                }
+                this._thumbPollAttempts += 1;
+            }, 500);
+        }
     }
 
     async updateState(newState) {
