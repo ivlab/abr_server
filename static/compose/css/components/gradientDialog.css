@@ -1,0 +1,39 @@
+/* gradientDialog.css
+ * 
+ * Copyright (c) 2021, University of Minnesota
+ * Author: Bridger Herman <herma582@umn.edu>
+ */
+
+.gradient-panel {
+    border: 1px solid black;
+    height: 8rem;
+    width: 100%;
+}
+
+.resizable-section {
+    background-color: #ddd;
+    border-right: 1px solid gray;
+    float: left;
+    height: 100%;
+    position: relative;
+}
+
+.resizable-section img {
+    display: block;
+    margin: auto;
+    max-height: 60%;
+}
+
+.resizable-section p {
+    vertical-align: middle;
+    margin: 0 0.5rem;
+    position: absolute;
+    top: 0;
+}
+
+.right-section-label {
+    right: 0;
+}
+.left-section-label {
+    left: 0;
+}
