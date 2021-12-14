@@ -40,10 +40,18 @@ export function resolveSchemaConsts(data) {
     let resolvedData = {};
     for (const field in data) {
         if (typeof(data[field]) === 'object') {
+            // If it has a const, take it
             if (data[field].const) {
                 resolvedData[field] = data[field].const;
+            // If it has a default, take it
             } else if (data[field].default) {
                 resolvedData[field] = data[field].default;
+            // If it has a oneOf with a const, take the first one
+            } else if (data[field].oneOf) {
+                let oneOf = data[field].oneOf;
+                if (oneOf.length > 0 && oneOf[0].const) {
+                    resolvedData[field] = oneOf[0].const;
+                }
             }
         } else if (typeof(data[field] === 'string')) {
             resolvedData[field] = data[field];
