@@ -183,9 +183,16 @@ function InputSocket(inputName, inputProps) {
                 inputState = defaultInputs;
             }
 
-            // Ensure the dropped type matches the actual type
+            // Ensure the dropped type matches the actual type -- account for
+            // polymorphic VisAsset types that can take gradients or regular
             let droppedType = ui.draggable.data('inputType');
-            if (droppedType == inputProps.inputType.const) {
+            let validTypes;
+            if (inputProps.inputType.oneOf) {
+                validTypes = inputProps.inputType.oneOf.map(t => t.const);
+            } else {
+                validTypes = [inputProps.inputType.const];
+            }
+            if (validTypes.indexOf(droppedType) >= 0) {
                 // Update the inputState
                 let droppedValue = ui.draggable.data('inputValue');
                 inputState['inputValue'] = droppedValue;
