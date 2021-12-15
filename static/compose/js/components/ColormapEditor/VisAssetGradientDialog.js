@@ -136,7 +136,6 @@ function addGradientStopRelative(uuid, abrType, existingUuid, leftOf) {
 
     // insert the new uuid to the left (or right) of existing uuid
     let newPoint = (nextPercentage - thisPercentage) / 2.0 + thisPercentage;
-    console.log(`t: ${thisIndex}, p: ${pointsIndex}, t%: ${thisPercentage}, n%: ${nextPercentage}, newPoint: ${newPoint}, left: ${leftOf}`);
     currentGradient.points.splice(thisIndex, 0, newPoint);
     if (leftOf) {
         currentGradient.visAssets.splice(thisIndex, 0, uuid);
@@ -230,4 +229,6 @@ export function VisAssetGradientDialog(gradientUuid) {
             visAssets: [],
         }
     }
+
+    updateGradientDisplay();
 }

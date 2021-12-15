@@ -22,6 +22,7 @@ import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
 import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
+import { VisAssetGradientDialog } from "./ColormapEditor/VisAssetGradientDialog.js";
 import { GradientDialog, gradientToColormap } from "./ColormapEditor/GradientDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
@@ -214,6 +215,24 @@ export function InputPuzzlePiece(inputName, inputProps) {
                         let colorVar = getColorVar($el);
                         let keyData = getKeyData($el);
                         ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
+                    }
+                };
+                $el.on('dblclick', clickEvt);
+                $el.on('click', clickEvt);
+            }
+
+            // Allow the gradient to be edited
+            if (Object.values(gradientTypeMap).indexOf(resolvedProps.inputType) >= 0) {
+                $el.attr('title', $el.attr('title') + '\nClick to customize');
+                $el.addClass('hover-bright');
+                let dragging = false;
+                $el.on('dragstart', () => dragging = true);
+                $el.on('dragend', () => dragging = false);
+                $el.css('cursor', 'pointer');
+                let clickEvt = (evt) => {
+                    if (!dragging) {
+                        let gradUuid = $el.data('inputValue');
+                        VisAssetGradientDialog(gradUuid);
                     }
                 };
                 $el.on('dblclick', clickEvt);
