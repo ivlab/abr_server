@@ -140,7 +140,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
         timer = setTimeout(() => $tooltip.css('visibility', 'hidden'), 2000);
     }).on('mousemove', (evt) => {
         $tooltip.css('top', `${evt.pageY - $clone.height() - tooltipOffset}px`);
-        $tooltip.css('left', `${evt.pageX - $clone.width() / 2}px`);
+        $tooltip.css('left', `${evt.pageX - $clone.width()}px`);
         clearTimeout(timer);
         timer = setTimeout(() => $tooltip.css('visibility', 'hidden'), 2000);
     }).on('mouseout', (_evt) => {
