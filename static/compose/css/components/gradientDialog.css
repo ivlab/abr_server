@@ -16,22 +16,32 @@
 
 .quick-drop {
     position: absolute;
-    width: 50%;
+    width: 25%;
     height: 100%;
     top: 0;
 }
 .quick-drop.quick-drop-left {
     left: 0;
 }
+.quick-drop.quick-drop-center {
+    left: 25%;
+    width: 50%;
+}
+.quick-drop.quick-drop-center.active {
+    background-color: #ffd4ce;
+}
+.quick-drop.quick-drop-center.active::after {
+    content: '-';
+}
 .quick-drop.quick-drop-right {
-    left: 50%;
+    left: 75%;
 }
 
-.gradient-panel.ui-droppable-hover, .quick-drop.active {
+.gradient-panel.active, .quick-drop.active {
     background-color: #ceedff;
     text-align: center;
 }
-.gradient-panel.ui-droppable-hover::after, .quick-drop.active::after {
+.gradient-panel.active::after, .quick-drop.active::after {
     width: 100%;
     font-size: 35px;
     content: '+';
@@ -78,4 +88,10 @@
 .vis-asset-gradient-thumb img {
     object-fit: cover;
     height: calc(0.9 * 3rem); /* same as puzzle piece */
+}
+
+#visasset-trash {
+    width: 2em;
+    height: 2em;
+    margin: 1rem;
 }

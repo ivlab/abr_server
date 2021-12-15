@@ -49,11 +49,17 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
     let $leftDrop = $('<div>', {
         class: 'quick-drop quick-drop-left',
     });
+    let $centerDrop = $('<div>', {
+        class: 'quick-drop quick-drop-center',
+    });
     let $rightDrop = $('<div>', {
         class: 'quick-drop quick-drop-right',
     });
+
     let dropIndicatorOver = (evt, ui) => $(evt.target).addClass('active');
     let dropIndicatorOut = (evt, ui) => $(evt.target).removeClass('active');
+
+    // Left and right drop zones add new visassets
     let dropIndicatorDrop = (evt, ui) => {
         $(evt.target).removeClass('active');
         let left = $(evt.target).hasClass('quick-drop-left');
@@ -64,8 +70,26 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
         updateGradientDisplay();
         saveGradient();
     };
+    // Center zone replaces current visAsset
+    let dropIndicatorCenter = (evt, ui) => {
+        $(evt.target).removeClass('active');
+        let newVisAssetUuid = $(ui.draggable).data('inputValue');
+        let newVisAssetType = $(ui.draggable).data('inputType');
+        if (!gradientTypeValid(newVisAssetType)) {
+            return;
+        }
+        let thisUuid = $section.data('uuid');
+        let thisIndex = currentGradient.visAssets.indexOf(thisUuid);
+        if (thisIndex >= 0) {
+            currentGradient.visAssets[thisIndex] = newVisAssetUuid;
+            updateGradientDisplay();
+            saveGradient();
+        }
+    };
+
     let dropParams = {
         tolerance: 'intersect',
+        accept: '.puzzle-piece',
         over: dropIndicatorOver,
         out: dropIndicatorOut,
         drop: dropIndicatorDrop,
@@ -73,7 +97,16 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
 
     $leftDrop.droppable(dropParams);
     $rightDrop.droppable(dropParams);
+    $centerDrop.droppable({
+        tolerance: 'intersect',
+        accept: '.puzzle-piece',
+        over: dropIndicatorOver,
+        out: dropIndicatorOut,
+        drop: dropIndicatorCenter,
+    });
+
     $section.append($leftDrop);
+    $section.append($centerDrop);
     $section.append($rightDrop);
 
     $section.append($('<p>', {
@@ -92,6 +125,10 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
         class: 'right-section-label',
         text: `${Math.round(rightPerc * 100)}%`
     }));
+
+    $section.draggable({
+        helper: 'clone'
+    });
 
     let percentage = 0;
     let startWidth = 0;
@@ -218,8 +255,20 @@ export function VisAssetGradientDialog(gradientUuid) {
         class: 'gradient-panel rounded',
     }).droppable({
         tolerance: 'touch',
+        accept: '.puzzle-piece',
+        over: (evt, ui) => {
+            if (currentGradient.visAssets.length == 0) {
+                $(evt.target).addClass('active');
+            }
+        },
+        out: (evt, ui) => {
+            if (currentGradient.visAssets.length == 0) {
+                $(evt.target).removeClass('active');
+            }
+        },
         drop: (evt, ui) => {
             if (currentGradient.visAssets.length == 0) {
+                $(evt.target).removeClass('active');
                 let visAssetUuid = $(ui.draggable).data('inputValue');
                 let visAssetType = $(ui.draggable).data('inputType');
                 addGradientStop(visAssetUuid, visAssetType, 0.0);
@@ -230,6 +279,35 @@ export function VisAssetGradientDialog(gradientUuid) {
     });
 
     $visAssetGradientDialog.append($gradient);
+
+    let $trash = $('<img>', {
+        id: 'visasset-trash',
+        src: `${STATIC_URL}compose/trash.svg`,
+    }).droppable({
+        tolerance: 'touch',
+        accept: '.resizable-section',
+        drop: (evt, ui) => {
+            let sectionUuid = $(ui.draggable).data('uuid');
+            $(ui.draggable).remove();
+            let thisIndex = currentGradient.visAssets.indexOf(sectionUuid);
+            if (thisIndex >= 0) {
+                currentGradient.visAssets.splice(thisIndex, 1);
+                if (currentGradient.points.length > 0) {
+                    currentGradient.points.splice(thisIndex, 1);
+                }
+                updateGradientDisplay();
+                saveGradient();
+            }
+        },
+        // Indicate that it's about to be deleted
+        over: (_evt, ui) => {
+            $(ui.helper).css('opacity', '25%');
+        },
+        out: (_evt, ui) => {
+            $(ui.helper).css('opacity', '100%');
+        }
+    }).attr('title', 'Drop a section here to discard');
+    $visAssetGradientDialog.append($trash);
 
     // Retrieve gradient from state, if any
     if (globals.stateManager.state.visAssetGradients && globals.stateManager.state.visAssetGradients[gradientUuid]) {
