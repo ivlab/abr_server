@@ -360,6 +360,21 @@ export function SwatchInputPuzzlePiece(inputName, inputProps) {
     return InputPuzzlePiece(inputName, inputProps).draggable({
         helper: 'clone',
         cursor: 'grabbing',
+        drag: (evt, ui) => {
+            let $d = $('.puzzle-piece-overlay-dialog');
+            if ($d.length > 0) {
+                let pos = $(ui.helper).position();
+                let dPos = $d.parents('.ui-dialog').position();
+                let gPos = $d.position();
+                let cPos = {left: dPos.left - gPos.left, top: dPos.top - gPos.top};
+                if (pos.left > cPos.left && pos.left < cPos.left + $d.width() &&
+                    pos.top > cPos.top && pos.top < cPos.top + $d.height()
+                ) {
+                    $(ui.helper).appendTo($d);
+                    $(ui.helper).css('position', 'fixed');
+                }
+            }
+        }
     })
 }
 

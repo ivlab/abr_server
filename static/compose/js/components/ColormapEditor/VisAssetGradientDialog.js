@@ -17,6 +17,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { globals } from "../../../../common/globals.js";
+import { uuid } from "../../../../common/UUID.js";
+import { gradientTypeMap, typeMap } from "../PuzzlePiece.js";
+
 const dialogWidth = 1000;
 const GLYPHS = [
     '1af02cb2-f1ed-11e9-a623-8c85900fd4af',
@@ -24,6 +28,8 @@ const GLYPHS = [
     '1af030a4-f1ed-11e9-a623-8c85900fd4af',
     '1af035ea-f1ed-11e9-a623-8c85900fd4af',
 ];
+
+var currentGradient = null;
 
 function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
     let $section = $('<div>', {
@@ -77,37 +83,88 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
     return $section;
 }
 
-export function VisAssetGradientDialog() {
+function addGradientStop(uuid, abrType, position) {
+    // Check type is valid
+    let vaType = Object.keys(typeMap).find(k => typeMap[k] == abrType && (!typeMap[currentGradient.gradientType] || typeMap[currentGradient.gradientType] == abrType));
+    let gradValid = Object.keys(gradientTypeMap).indexOf(vaType) >= 0;
+    if (!vaType || !gradValid) {
+        return;
+    }
+    currentGradient.gradientType = vaType;
+    currentGradient.visAssets.push(uuid);
+    if (currentGradient.visAssets.length > 1) {
+        currentGradient.points.push(position);
+    }
+}
+
+function updateGradientDisplay() {
+    let $gradient = $('#the-gradient');
+    $gradient.empty();
+
+    // Take borders into account
+    let panelWidth = $gradient.width() - currentGradient.visAssets.length;
+    for (let vaIndex = 0; vaIndex < currentGradient.visAssets.length; vaIndex++) {
+        let thisPercentage = currentGradient.points[vaIndex - 1] || 0.0;
+        let nextPercentage = currentGradient.points[vaIndex] || 1.0;
+        $gradient.append(
+            ResizableSection(
+                panelWidth * (nextPercentage - thisPercentage),
+                currentGradient.visAssets[vaIndex],
+                thisPercentage,
+                nextPercentage,
+                vaIndex < currentGradient.visAssets.length - 1
+            )
+        );
+    }
+}
+
+export function VisAssetGradientDialog(gradientUuid) {
+    $('#vis-asset-gradient-dialog').remove();
+
     let $visAssetGradientDialog = $('<div>', {
         id: 'vis-asset-gradient-dialog',
+        class: 'puzzle-piece-overlay-dialog'
     });
 
     $visAssetGradientDialog.dialog({
         'title': 'VisAsset Gradient Editor',
         'minWidth': dialogWidth,
+        close: (evt, ui) => {
+            $('#vis-asset-gradient-dialog').remove();
+        }
     })
 
+    // Build the gradient and allow it to respond to new VisAssets that are drag-n-dropped
     let $gradient = $('<div>', {
         id: 'the-gradient',
         class: 'gradient-panel',
+    }).droppable({
+        tolerance: 'touch',
+        drop: (evt, ui) => {
+            if (currentGradient.visAssets.length == 0) {
+                let visAssetUuid = $(ui.draggable).data('inputValue');
+                let visAssetType = $(ui.draggable).data('inputType');
+                addGradientStop(visAssetUuid, visAssetType, 0.0);
+                updateGradientDisplay();
+            }
+        }
     });
 
     $visAssetGradientDialog.append($gradient);
 
-    // Take borders into account
-    let panelWidth = $gradient.width() - GLYPHS.length;
-
-    for (let g = 0; g < GLYPHS.length; g++) {
-        let thisPercentage = (g / GLYPHS.length);
-        let nextPercentage = ((g + 1) / GLYPHS.length);
-        $gradient.append(
-            ResizableSection(
-                panelWidth / GLYPHS.length,
-                GLYPHS[g],
-                thisPercentage,
-                nextPercentage,
-                g < GLYPHS.length - 1
-            )
-        );
+    // Retrieve gradient from state, if any
+    if (globals.stateManager.state.visAssetGradients && globals.stateManager.state.visAssetGradients[gradientUuid]) {
+        currentGradient = globals.stateManager.state.visAssetGradients[gradientUuid];
+    } else {
+        // Otherwise, set up default
+        gradientUuid = uuid();
+        currentGradient = {
+            uuid: gradientUuid,
+            gradientScale: 'discrete',
+            gradientType: null, // will be defined once we drag-n-drop visassets
+            points: [],
+            visAssets: [],
+        }
     }
+    console.log(currentGradient);
 }

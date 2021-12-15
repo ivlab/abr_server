@@ -4,10 +4,25 @@
  * Author: Bridger Herman <herma582@umn.edu>
  */
 
+#vis-asset-gradient-dialog {
+    overflow: hidden;
+}
+
 .gradient-panel {
-    border: 1px solid black;
+    border: 1px solid #3d3d3d;
     height: 8rem;
     width: 100%;
+}
+
+.gradient-panel.ui-droppable-hover {
+    background-color: #ceedff;
+    text-align: center;
+    font-size: 35px;
+    vertical-align: middle;
+}
+.gradient-panel.ui-droppable-hover::after {
+    width: 100%;
+    content: '+';
 }
 
 .resizable-section {
