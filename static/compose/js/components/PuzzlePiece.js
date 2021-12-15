@@ -70,7 +70,7 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
         // Find all drop zones that match this input type
         let elType = $(evt.target).data('inputType');
         let $dropZones = $('.input-socket .puzzle-piece.drop-zone');
-        let validTypes;
+        let validTypes = [elType];
         let isVisAsset = Object.keys(typeMap)
             .map((t) => { return {'visAssetType': t, 'abrType': typeMap[t]}})
             .find((tt) => tt['abrType'] == elType);
@@ -78,10 +78,10 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
             .map((t) => { return {'visAssetType': t, 'abrType': gradientTypeMap[t]}})
             .find((tt) => tt['abrType'] == elType);
         if (isVisAsset) {
-            validTypes = [isVisAsset['abrType'], gradientTypeMap[isVisAsset['visAssetType']]];
+            validTypes = validTypes + [isVisAsset['abrType'], gradientTypeMap[isVisAsset['visAssetType']]];
         }
         if (isGradient) {
-            validTypes = [isGradient['abrType'], typeMap[isGradient['visAssetType']]];
+            validTypes = validTypes + [isGradient['abrType'], typeMap[isGradient['visAssetType']]];
         }
         let $sameTypeZones = $dropZones.filter((i, el) => validTypes.indexOf($(el).data('inputType')) >= 0);
         $sameTypeZones.addClass('highlighted');
