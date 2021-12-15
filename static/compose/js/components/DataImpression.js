@@ -21,7 +21,7 @@
 
 import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
-import { CACHE_UPDATE } from '../../../common/StateManager.js';
+import { CACHE_UPDATE, resolveSchemaConsts } from '../../../common/StateManager.js';
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
 import { InputPuzzlePiece, AssignedInputPuzzlePiece } from "./PuzzlePiece.js";
 
@@ -166,10 +166,7 @@ function InputSocket(inputName, inputProps) {
             // Get the default values for this input, in case there's nothing
             // there already
             let defaultInputsSchema = globals.schema.definitions.Plates[plateType].properties[inputName].properties;
-            let defaultInputs = {};
-            for (const p in defaultInputsSchema) {
-                defaultInputs[p] = defaultInputsSchema[p].const;
-            }
+            let defaultInputs = resolveSchemaConsts(defaultInputsSchema);
 
             // See if there's an input there already, if not assign the defaults
             let impressionState;
@@ -193,9 +190,11 @@ function InputSocket(inputName, inputProps) {
                 validTypes = [inputProps.inputType.const];
             }
             if (validTypes.indexOf(droppedType) >= 0) {
-                // Update the inputState
+                // Update the inputState with value and type (type may be
+                // different, but compatible)
                 let droppedValue = ui.draggable.data('inputValue');
                 inputState['inputValue'] = droppedValue;
+                inputState['inputType'] = droppedType;
 
                 // Send the update to the server
                 globals.stateManager.update(`impressions/${impressionId}/inputValues/${inputName}`, inputState);

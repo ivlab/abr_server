@@ -34,6 +34,20 @@ const cssObjectFitMap = {
     'IVLab.ABREngine.GlyphVisAsset': 'contain',
 }
 
+export const typeMap = {
+    'colormap': 'IVLab.ABREngine.ColormapVisAsset',
+    'glyph': 'IVLab.ABREngine.GlyphVisAsset',
+    'line': 'IVLab.ABREngine.LineTextureVisAsset',
+    'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
+};
+
+export const gradientTypeMap = {
+    'glyph': 'IVLab.ABREngine.GlyphGradient',
+    'line': 'IVLab.ABREngine.LineTextureGradient',
+    'texture': 'IVLab.ABREngine.SurfaceTextureGradient',
+};
+
+
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     let $element = $('<div>', {
         class: 'puzzle-piece rounded ' + addClasses,
@@ -56,7 +70,20 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
         // Find all drop zones that match this input type
         let elType = $(evt.target).data('inputType');
         let $dropZones = $('.input-socket .puzzle-piece.drop-zone');
-        let $sameTypeZones = $dropZones.filter((i, el) => $(el).data('inputType') == elType );
+        let validTypes;
+        let isVisAsset = Object.keys(typeMap)
+            .map((t) => { return {'visAssetType': t, 'abrType': typeMap[t]}})
+            .find((tt) => tt['abrType'] == elType);
+        let isGradient = Object.keys(gradientTypeMap)
+            .map((t) => { return {'visAssetType': t, 'abrType': gradientTypeMap[t]}})
+            .find((tt) => tt['abrType'] == elType);
+        if (isVisAsset) {
+            validTypes = [isVisAsset['abrType'], gradientTypeMap[isVisAsset['visAssetType']]];
+        }
+        if (isGradient) {
+            validTypes = [isGradient['abrType'], typeMap[isGradient['visAssetType']]];
+        }
+        let $sameTypeZones = $dropZones.filter((i, el) => validTypes.indexOf($(el).data('inputType')) >= 0);
         $sameTypeZones.addClass('highlighted');
     });
     $element.on('dragstop', (evt, ui) => {

@@ -24,13 +24,7 @@
 import * as Components from './Components.js';
 import { globals } from '../../../common/globals.js';
 import { CACHE_UPDATE } from '../../../common/StateManager.js';
-
-const typeMap = {
-    'colormap': 'IVLab.ABREngine.ColormapVisAsset',
-    'glyph': 'IVLab.ABREngine.GlyphVisAsset',
-    'line': 'IVLab.ABREngine.LineTextureVisAsset',
-    'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
-};
+import { typeMap, gradientTypeMap } from './PuzzlePiece.js';
 
 export function DesignPanel() {
     let $designPanel = $('<div>', {
@@ -126,7 +120,25 @@ export function DesignPanel() {
     for (const t in typeMap) {
         visassetsByType[t] = [];
     }
-    
+
+    // First, add VisAsset Gradients to their respective types
+    let gradients = globals.stateManager.state.visAssetGradients;
+    if (gradients) {
+        for (const t in visassetsByType) {
+            let gradientsOfType = Object.values(gradients).filter((g) => g.gradientType == t);
+            for (const g of gradientsOfType) {
+                let mockInput = {
+                    inputGenre: 'VisAsset',
+                    inputValue: g.uuid,
+                    inputType: gradientTypeMap[t]
+                }
+                let $puzzlePiece = Components.SwatchInputPuzzlePiece(gradientTypeMap[t], mockInput);
+                visassetsByType[t].push($puzzlePiece);
+            }
+        }
+    }
+
+    // ... Then, add the individual VisAssets
     for (const va in visassetsCopy) {
         let type = visassetsCopy[va].type;
         let artifactType = visassetsCopy[va].artifactType;
