@@ -14,14 +14,26 @@
     width: 100%;
 }
 
-.gradient-panel.ui-droppable-hover {
+.quick-drop {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    top: 0;
+}
+.quick-drop.quick-drop-left {
+    left: 0;
+}
+.quick-drop.quick-drop-right {
+    left: 50%;
+}
+
+.gradient-panel.ui-droppable-hover, .quick-drop.active {
     background-color: #ceedff;
     text-align: center;
-    font-size: 35px;
-    vertical-align: middle;
 }
-.gradient-panel.ui-droppable-hover::after {
+.gradient-panel.ui-droppable-hover::after, .quick-drop.active::after {
     width: 100%;
+    font-size: 35px;
     content: '+';
 }
 

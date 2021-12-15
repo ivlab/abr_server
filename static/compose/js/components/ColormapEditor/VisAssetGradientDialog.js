@@ -22,12 +22,6 @@ import { uuid } from "../../../../common/UUID.js";
 import { gradientTypeMap, typeMap } from "../PuzzlePiece.js";
 
 const dialogWidth = 1000;
-const GLYPHS = [
-    '1af02cb2-f1ed-11e9-a623-8c85900fd4af',
-    '1af025aa-f1ed-11e9-a623-8c85900fd4af',
-    '1af030a4-f1ed-11e9-a623-8c85900fd4af',
-    '1af035ea-f1ed-11e9-a623-8c85900fd4af',
-];
 
 var currentGradient = null;
 
@@ -36,6 +30,36 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
         class: 'resizable-section',
         width: sectionWidth,
     });
+    $section.data({uuid});
+    let $leftDrop = $('<div>', {
+        class: 'quick-drop quick-drop-left',
+    });
+    let $rightDrop = $('<div>', {
+        class: 'quick-drop quick-drop-right',
+    });
+    let dropIndicatorOver = (evt, ui) => $(evt.target).addClass('active');
+    let dropIndicatorOut = (evt, ui) => $(evt.target).removeClass('active');
+    let dropIndicatorDrop = (evt, ui) => {
+        $(evt.target).removeClass('active');
+        let left = $(evt.target).hasClass('quick-drop-left');
+        let newVisAssetUuid = $(ui.draggable).data('inputValue');
+        let newVisAssetType = $(ui.draggable).data('inputType');
+        let thisUuid = $section.data('uuid');
+        addGradientStopRelative(newVisAssetUuid, newVisAssetType, thisUuid, left);
+        updateGradientDisplay();
+        saveGradient();
+    };
+    let dropParams = {
+        tolerance: 'intersect',
+        over: dropIndicatorOver,
+        out: dropIndicatorOut,
+        drop: dropIndicatorDrop,
+    };
+
+    $leftDrop.droppable(dropParams);
+    $rightDrop.droppable(dropParams);
+    $section.append($leftDrop);
+    $section.append($rightDrop);
 
     $section.append($('<p>', {
         class: 'left-section-label',
@@ -76,6 +100,14 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
                 let percFormat = `${(percentage * 100).toFixed(0)}%`;
                 $(evt.target).find('.right-section-label').text(percFormat);
                 $(evt.target).next().find('.left-section-label').text(percFormat);
+            },
+            stop: (evt, ui) => {
+                // Update the actual gradient
+                let visAssetIndex = currentGradient.visAssets.indexOf($section.data('uuid'));
+                if (visAssetIndex >= 0 && visAssetIndex < currentGradient.points.length) {
+                    currentGradient.points[visAssetIndex] = percentage;
+                    saveGradient();
+                }
             }
         });
     }
@@ -83,14 +115,41 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
     return $section;
 }
 
-function addGradientStop(uuid, abrType, position) {
-    // Check type is valid
-    let vaType = Object.keys(typeMap).find(k => typeMap[k] == abrType && (!typeMap[currentGradient.gradientType] || typeMap[currentGradient.gradientType] == abrType));
+function getVisAssetType(abrType) {
+    return Object.keys(typeMap).find(k => typeMap[k] == abrType && (!typeMap[currentGradient.gradientType] || typeMap[currentGradient.gradientType] == abrType));
+}
+
+function gradientTypeValid(abrType) {
+    let vaType = getVisAssetType(abrType);
     let gradValid = Object.keys(gradientTypeMap).indexOf(vaType) >= 0;
-    if (!vaType || !gradValid) {
+    return vaType && gradValid;
+}
+
+function addGradientStopRelative(uuid, abrType, existingUuid, leftOf) {
+    if (!gradientTypeValid(abrType)) {
         return;
     }
-    currentGradient.gradientType = vaType;
+    let thisIndex = currentGradient.visAssets.indexOf(existingUuid);
+    let pointsIndex = thisIndex - 1;
+    let thisPercentage = pointsIndex >= 0 ? currentGradient.points[pointsIndex] : 0.0;
+    let nextPercentage = thisIndex < currentGradient.points.length ? currentGradient.points[thisIndex] : 1.0;
+
+    // insert the new uuid to the left (or right) of existing uuid
+    let newPoint = (nextPercentage - thisPercentage) / 2.0 + thisPercentage;
+    console.log(`t: ${thisIndex}, p: ${pointsIndex}, t%: ${thisPercentage}, n%: ${nextPercentage}, newPoint: ${newPoint}, left: ${leftOf}`);
+    currentGradient.points.splice(thisIndex, 0, newPoint);
+    if (leftOf) {
+        currentGradient.visAssets.splice(thisIndex, 0, uuid);
+    } else {
+        currentGradient.visAssets.splice(thisIndex + 1, 0, uuid);
+    }
+}
+
+function addGradientStop(uuid, abrType, position) {
+    if (!gradientTypeValid(abrType)) {
+        return;
+    }
+    currentGradient.gradientType = getVisAssetType(abrType);
     currentGradient.visAssets.push(uuid);
     if (currentGradient.visAssets.length > 1) {
         currentGradient.points.push(position);
@@ -116,6 +175,10 @@ function updateGradientDisplay() {
             )
         );
     }
+}
+
+function saveGradient() {
+    globals.stateManager.update(`visAssetGradients/${currentGradient.uuid}`, currentGradient);
 }
 
 export function VisAssetGradientDialog(gradientUuid) {
@@ -146,6 +209,7 @@ export function VisAssetGradientDialog(gradientUuid) {
                 let visAssetType = $(ui.draggable).data('inputType');
                 addGradientStop(visAssetUuid, visAssetType, 0.0);
                 updateGradientDisplay();
+                saveGradient();
             }
         }
     });
@@ -166,5 +230,4 @@ export function VisAssetGradientDialog(gradientUuid) {
             visAssets: [],
         }
     }
-    console.log(currentGradient);
 }
