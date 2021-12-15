@@ -36,8 +36,14 @@
     font-size: 35px;
     content: '+';
 }
+.gradient-panel .ui-resizable-handle {
+    width: 2rem;
+    height: 100%;
+    left: 100%;
+}
 
 .resizable-section {
+    display: flex;
     background-color: #ddd;
     border-right: 1px solid gray;
     float: left;
@@ -48,7 +54,7 @@
 .resizable-section img {
     display: block;
     margin: auto;
-    max-height: 60%;
+    max-height: 90%;
 }
 
 .resizable-section p {
@@ -63,4 +69,13 @@
 }
 .left-section-label {
     left: 0;
+}
+
+.vis-asset-gradient-thumb {
+    display: flex;
+}
+
+.vis-asset-gradient-thumb img {
+    object-fit: cover;
+    height: calc(0.9 * 3rem); /* same as puzzle piece */
 }

@@ -22,7 +22,7 @@ import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
 import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
-import { VisAssetGradientDialog } from "./ColormapEditor/VisAssetGradientDialog.js";
+import { gradientPreviewThumbnail, VisAssetGradientDialog } from "./ColormapEditor/VisAssetGradientDialog.js";
 import { GradientDialog, gradientToColormap } from "./ColormapEditor/GradientDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
@@ -98,24 +98,28 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
     let visassets = globals.stateManager.getCache('visassets');
     let localVisAssets = globals.stateManager.state.localVisAssets;
     let gradients = globals.stateManager.state.primitiveGradients;
+    let visAssetGradients = globals.stateManager.state.visAssetGradients;
+
+    let $thumb = $('<img>', {
+        class: 'artifact-thumbnail rounded',
+        src: `${STATIC_URL}compose/${inputType}_default.png`,
+    });
+
     if (visassets && visassets[uuid]) {
         let previewImg = visassets[uuid]['preview'];
-        thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
+        $thumb.attr('src', `/media/visassets/${uuid}/${previewImg}`);
     } else if (localVisAssets && localVisAssets[uuid]) {
         // TODO assuming colormap xml for now
         let colormapXml = localVisAssets[uuid].artifactDataContents['colormap.xml'];
         let colormapObj = ColorMap.fromXML(colormapXml);
-        thumbUrl = colormapObj.toBase64(true);
+        $thumb.attr('src', colormapObj.toBase64(true));
     } else if (gradients && gradients[uuid]) {
         let colormap = gradientToColormap(gradients[uuid]);
-        thumbUrl = colormap.toBase64(true);
-    } else {
-        thumbUrl = `${STATIC_URL}compose/${inputType}_default.png`;
+        $thumb.attr('src', colormap.toBase64(true));
+    } else if (visAssetGradients && visAssetGradients[uuid]) {
+        $thumb = gradientPreviewThumbnail(visAssetGradients[uuid], 300, 50);
     }
-    let $thumb = $('<img>', {
-        class: 'artifact-thumbnail rounded',
-        src: thumbUrl,
-    });
+
     if (cssObjectFit) {
         $thumb.css('object-fit', cssObjectFit);
     }
@@ -148,12 +152,19 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 
     let $ret = PuzzlePiece($thumb, inputType, leftConnector, addClasses);
 
-    // If it's a localVisAsset, indicate it as such
+    // If it's a localVisAsset or visAsset Gradient, indicate it as such
     if (globals.stateManager.keyExists(['localVisAssets'], uuid)) {
         $ret.find('.puzzle-label').append($('<p>', {
             class: 'custom-indicator rounded',
             attr: { title: 'This colormap is custom' },
             text: 'C',
+        }));
+    }
+    if (globals.stateManager.keyExists(['visAssetGradients'], uuid)) {
+        $ret.find('.puzzle-label').append($('<p>', {
+            class: 'custom-indicator rounded',
+            attr: { title: 'VisAsset Gradient' },
+            text: 'G',
         }));
     }
 

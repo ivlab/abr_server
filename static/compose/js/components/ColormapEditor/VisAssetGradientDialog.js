@@ -25,6 +25,21 @@ const dialogWidth = 1000;
 
 var currentGradient = null;
 
+export function gradientPreviewThumbnail(gradient) {
+    let $thumb = $('<div>', {
+        class: 'vis-asset-gradient-thumb',
+    });
+
+    for (const va of gradient.visAssets) {
+        let thumbUrl = `/media/visassets/${va}/thumbnail.png`;
+        $thumb.append($('<img>', {
+            src: thumbUrl,
+            css: {'max-width': `${100 / gradient.visAssets.length}%` },
+        }));
+    }
+    return $thumb;
+}
+
 function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
     let $section = $('<div>', {
         class: 'resizable-section',
@@ -68,6 +83,7 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
 
     $section.append(
         $('<img>', {
+            class: 'rounded',
             src: `/media/visassets/${uuid}/thumbnail.png`,
         })
     );
@@ -199,7 +215,7 @@ export function VisAssetGradientDialog(gradientUuid) {
     // Build the gradient and allow it to respond to new VisAssets that are drag-n-dropped
     let $gradient = $('<div>', {
         id: 'the-gradient',
-        class: 'gradient-panel',
+        class: 'gradient-panel rounded',
     }).droppable({
         tolerance: 'touch',
         drop: (evt, ui) => {
