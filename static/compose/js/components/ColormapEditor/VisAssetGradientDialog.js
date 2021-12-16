@@ -212,8 +212,8 @@ function updateGradientDisplay() {
     let $gradient = $('#the-gradient');
     $gradient.empty();
 
-    // Take borders into account
-    let panelWidth = $gradient.width() - currentGradient.visAssets.length;
+    // Take 1px borders into account
+    let panelWidth = $gradient.width() - currentGradient.visAssets.length - 1;
     for (let vaIndex = 0; vaIndex < currentGradient.visAssets.length; vaIndex++) {
         let thisPercentage = currentGradient.points[vaIndex - 1] || 0.0;
         let nextPercentage = currentGradient.points[vaIndex] || 1.0;
@@ -233,17 +233,36 @@ function updateGradientDisplay() {
             class: 'visasset-starter-indicator',
         });
         for (const t in gradientTypeMap) {
-            $starterIndicator.append(PuzzlePiece(t[0].toUpperCase() + t.slice(1), gradientTypeMap[t], true, ''));
+            $starterIndicator.append(PuzzlePiece(t[0].toUpperCase() + t.slice(1), gradientTypeMap[t], true, 'drop-zone'));
         }
         $gradient.append($starterIndicator);
         $gradient.append($('<p>', {
             text: 'Drag and drop VisAssets to create a gradient',
             css: {
                 'text-align': 'center',
-                'margin': '1rem',
-                'color': 'gray'
+                'width': '100%',
+                'color': 'gray',
+                'position': 'absolute',
+                'top': '4rem', // puzzle piece height + margin
             }
         }));
+    } else if (currentGradient.visAssets.length == 1) {
+        let $starterIndicator = $('<div>', {
+            class: 'visasset-starter-indicator',
+        });
+        let labels = ['&lArr; +', '&olarr;', '+ &rArr;'];
+        let titles = ['Add a VisAsset to the left', 'Replace this VisAsset', 'Add a VisAsset to the right'];
+        for (let i = 0; i < 3; i++) {
+            let $puz = PuzzlePiece(
+                $('<label>', {html: labels[i], css: {'text-align': 'center', 'font-style': 'bold'}}),
+                gradientTypeMap[currentGradient.gradientType],
+                true,
+                'drop-zone'
+            );
+            $puz.attr('title', titles[i]);
+            $starterIndicator.append($puz);
+        }
+        $gradient.append($starterIndicator);
     }
 }
 
@@ -310,8 +329,10 @@ export function VisAssetGradientDialog(gradientUuid) {
             let thisIndex = currentGradient.visAssets.indexOf(sectionUuid);
             if (thisIndex >= 0) {
                 currentGradient.visAssets.splice(thisIndex, 1);
-                if (currentGradient.points.length > 0) {
-                    currentGradient.points.splice(thisIndex, 1);
+                if (currentGradient.visAssets.length > 1 && thisIndex - 1 >= 0) {
+                    currentGradient.points.splice(thisIndex - 1, 1);
+                } else {
+                    currentGradient.points = [];
                 }
                 updateGradientDisplay();
                 saveGradient();
