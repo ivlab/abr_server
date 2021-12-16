@@ -95,3 +95,9 @@
     height: 2em;
     margin: 1rem;
 }
+
+.visasset-starter-indicator {
+    display: flex;
+    width: 100%;
+    justify-content: space-around;
+}

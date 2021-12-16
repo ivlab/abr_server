@@ -19,9 +19,9 @@
 
 import { globals } from "../../../../common/globals.js";
 import { uuid } from "../../../../common/UUID.js";
-import { gradientTypeMap, typeMap } from "../PuzzlePiece.js";
+import { gradientTypeMap, PuzzlePiece, typeMap } from "../PuzzlePiece.js";
 
-const dialogWidth = 1000;
+const dialogWidth = 800;
 
 var currentGradient = null;
 
@@ -226,6 +226,24 @@ function updateGradientDisplay() {
                 vaIndex < currentGradient.visAssets.length - 1
             )
         );
+    }
+
+    if (currentGradient.visAssets.length == 0) {
+        let $starterIndicator = $('<div>', {
+            class: 'visasset-starter-indicator',
+        });
+        for (const t in gradientTypeMap) {
+            $starterIndicator.append(PuzzlePiece(t[0].toUpperCase() + t.slice(1), gradientTypeMap[t], true, ''));
+        }
+        $gradient.append($starterIndicator);
+        $gradient.append($('<p>', {
+            text: 'Drag and drop VisAssets to create a gradient',
+            css: {
+                'text-align': 'center',
+                'margin': '1rem',
+                'color': 'gray'
+            }
+        }));
     }
 }
 
