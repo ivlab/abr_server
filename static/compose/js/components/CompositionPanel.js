@@ -73,11 +73,14 @@ export function CompositionPanel() {
                 $(ui.draggable).remove();
 
                 let localVisAssets = globals.stateManager.state.localVisAssets;
+                let visAssetGradients = globals.stateManager.state.visAssetGradients;
                 if (localVisAssets && localVisAssets.hasOwnProperty(uuidVisAsset)) {
                     // Trash local VisAssets (Custom Colormaps)
                     globals.stateManager.removePath('localVisAssets/' + uuidVisAsset);
-                }
-                else {
+                } else if (visAssetGradients && visAssetGradients.hasOwnProperty(uuidVisAsset)) {
+                    // Trash VisAsset gradients
+                    globals.stateManager.removePath('visAssetGradients/' + uuidVisAsset);
+                } else {
                     // Trash other kinds of VisAssets (Colormaps, Glyphs, Line Textures, Surface Textures)
                     globals.stateManager.removeVisAsset(uuidVisAsset);
                 }

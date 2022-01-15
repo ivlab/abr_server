@@ -22,6 +22,7 @@ import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
 import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
+import { gradientPreviewThumbnail, VisAssetGradientDialog } from "./ColormapEditor/VisAssetGradientDialog.js";
 import { GradientDialog, gradientToColormap } from "./ColormapEditor/GradientDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
@@ -33,6 +34,20 @@ const cssObjectFitMap = {
     'IVLab.ABREngine.SurfaceTextureVisAsset': 'contain',
     'IVLab.ABREngine.GlyphVisAsset': 'contain',
 }
+
+export const typeMap = {
+    'colormap': 'IVLab.ABREngine.ColormapVisAsset',
+    'glyph': 'IVLab.ABREngine.GlyphVisAsset',
+    'line': 'IVLab.ABREngine.LineTextureVisAsset',
+    'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
+};
+
+export const gradientTypeMap = {
+    'glyph': 'IVLab.ABREngine.GlyphGradient',
+    'line': 'IVLab.ABREngine.LineTextureGradient',
+    'texture': 'IVLab.ABREngine.SurfaceTextureGradient',
+};
+
 
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     let $element = $('<div>', {
@@ -56,7 +71,20 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
         // Find all drop zones that match this input type
         let elType = $(evt.target).data('inputType');
         let $dropZones = $('.input-socket .puzzle-piece.drop-zone');
-        let $sameTypeZones = $dropZones.filter((i, el) => $(el).data('inputType') == elType );
+        let validTypes = [elType];
+        let isVisAsset = Object.keys(typeMap)
+            .map((t) => { return {'visAssetType': t, 'abrType': typeMap[t]}})
+            .find((tt) => tt['abrType'] == elType);
+        let isGradient = Object.keys(gradientTypeMap)
+            .map((t) => { return {'visAssetType': t, 'abrType': gradientTypeMap[t]}})
+            .find((tt) => tt['abrType'] == elType);
+        if (isVisAsset) {
+            validTypes = validTypes + [isVisAsset['abrType'], gradientTypeMap[isVisAsset['visAssetType']]];
+        }
+        if (isGradient) {
+            validTypes = validTypes + [isGradient['abrType'], typeMap[isGradient['visAssetType']]];
+        }
+        let $sameTypeZones = $dropZones.filter((i, el) => validTypes.indexOf($(el).data('inputType')) >= 0);
         $sameTypeZones.addClass('highlighted');
     });
     $element.on('dragstop', (evt, ui) => {
@@ -70,24 +98,28 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
     let visassets = globals.stateManager.getCache('visassets');
     let localVisAssets = globals.stateManager.state.localVisAssets;
     let gradients = globals.stateManager.state.primitiveGradients;
+    let visAssetGradients = globals.stateManager.state.visAssetGradients;
+
+    let $thumb = $('<img>', {
+        class: 'artifact-thumbnail rounded',
+        src: `${STATIC_URL}compose/${inputType}_default.png`,
+    });
+
     if (visassets && visassets[uuid]) {
         let previewImg = visassets[uuid]['preview'];
-        thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
+        $thumb.attr('src', `/media/visassets/${uuid}/${previewImg}`);
     } else if (localVisAssets && localVisAssets[uuid]) {
         // TODO assuming colormap xml for now
         let colormapXml = localVisAssets[uuid].artifactDataContents['colormap.xml'];
         let colormapObj = ColorMap.fromXML(colormapXml);
-        thumbUrl = colormapObj.toBase64(true);
+        $thumb.attr('src', colormapObj.toBase64(true));
     } else if (gradients && gradients[uuid]) {
         let colormap = gradientToColormap(gradients[uuid]);
-        thumbUrl = colormap.toBase64(true);
-    } else {
-        thumbUrl = `${STATIC_URL}compose/${inputType}_default.png`;
+        $thumb.attr('src', colormap.toBase64(true));
+    } else if (visAssetGradients && visAssetGradients[uuid]) {
+        $thumb = gradientPreviewThumbnail(visAssetGradients[uuid], 300, 50);
     }
-    let $thumb = $('<img>', {
-        class: 'artifact-thumbnail rounded',
-        src: thumbUrl,
-    });
+
     if (cssObjectFit) {
         $thumb.css('object-fit', cssObjectFit);
     }
@@ -108,7 +140,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
         timer = setTimeout(() => $tooltip.css('visibility', 'hidden'), 2000);
     }).on('mousemove', (evt) => {
         $tooltip.css('top', `${evt.pageY - $clone.height() - tooltipOffset}px`);
-        $tooltip.css('left', `${evt.pageX - $clone.width() / 2}px`);
+        $tooltip.css('left', `${evt.pageX - $clone.width()}px`);
         clearTimeout(timer);
         timer = setTimeout(() => $tooltip.css('visibility', 'hidden'), 2000);
     }).on('mouseout', (_evt) => {
@@ -120,12 +152,19 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 
     let $ret = PuzzlePiece($thumb, inputType, leftConnector, addClasses);
 
-    // If it's a localVisAsset, indicate it as such
+    // If it's a localVisAsset or visAsset Gradient, indicate it as such
     if (globals.stateManager.keyExists(['localVisAssets'], uuid)) {
         $ret.find('.puzzle-label').append($('<p>', {
             class: 'custom-indicator rounded',
             attr: { title: 'This colormap is custom' },
             text: 'C',
+        }));
+    }
+    if (globals.stateManager.keyExists(['visAssetGradients'], uuid)) {
+        $ret.find('.puzzle-label').append($('<p>', {
+            class: 'custom-indicator rounded',
+            attr: { title: 'VisAsset Gradient' },
+            text: 'G',
         }));
     }
 
@@ -187,6 +226,24 @@ export function InputPuzzlePiece(inputName, inputProps) {
                         let colorVar = getColorVar($el);
                         let keyData = getKeyData($el);
                         ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
+                    }
+                };
+                $el.on('dblclick', clickEvt);
+                $el.on('click', clickEvt);
+            }
+
+            // Allow the gradient to be edited
+            if (Object.values(gradientTypeMap).indexOf(resolvedProps.inputType) >= 0) {
+                $el.attr('title', $el.attr('title') + '\nClick to customize');
+                $el.addClass('hover-bright');
+                let dragging = false;
+                $el.on('dragstart', () => dragging = true);
+                $el.on('dragend', () => dragging = false);
+                $el.css('cursor', 'pointer');
+                let clickEvt = (evt) => {
+                    if (!dragging) {
+                        let gradUuid = $el.data('inputValue');
+                        VisAssetGradientDialog(gradUuid);
                     }
                 };
                 $el.on('dblclick', clickEvt);
@@ -333,6 +390,21 @@ export function SwatchInputPuzzlePiece(inputName, inputProps) {
     return InputPuzzlePiece(inputName, inputProps).draggable({
         helper: 'clone',
         cursor: 'grabbing',
+        drag: (evt, ui) => {
+            let $d = $('.puzzle-piece-overlay-dialog');
+            if ($d.length > 0) {
+                let pos = $(ui.helper).position();
+                let dPos = $d.parents('.ui-dialog').position();
+                let gPos = $d.position();
+                let cPos = {left: dPos.left - gPos.left, top: dPos.top - gPos.top};
+                if (pos.left > cPos.left && pos.left < cPos.left + $d.width() &&
+                    pos.top > cPos.top && pos.top < cPos.top + $d.height()
+                ) {
+                    $(ui.helper).appendTo($d);
+                    $(ui.helper).css('position', 'fixed');
+                }
+            }
+        }
     })
 }
 
