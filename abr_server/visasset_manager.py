@@ -62,11 +62,11 @@ def save_from_local(visasset_data):
     else:
         return False
 
-def download_visasset(uuid):
+def download_visasset(uuid, library_host):
     va_path = settings.VISASSET_PATH.joinpath(uuid)
     artifact_json_path = va_path.joinpath(settings.VISASSET_JSON)
 
-    va_url = settings.VISASSET_LIBRARY + uuid + '/'
+    va_url = library_host + uuid + '/'
     artifact_json_url = va_url + settings.VISASSET_JSON
 
     # Download the Artifact JSON
