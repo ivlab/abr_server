@@ -59,14 +59,6 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         class: 'data-impression-header rounded-top',
     }).css({ cursor: 'grabbing'}).append(
         $('<p>', { text: name, })
-    ).append(
-        $('<button>', {
-            class: 'rounded',
-            html: collapsed ? '+' : '&ndash;',
-            title: collapsed ? 'Show More' : 'Show Less'
-        }).on('click', (evt) => {
-            globals.stateManager.update(`/uiData/compose/impressionData/${uuid}/collapsed`, !collapsed);
-        })
     ));
 
     let inputValues = null;
@@ -82,6 +74,10 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     // Separate out all the inputs into their individual parameters
     let parameterMapping = {};
     for (const inputName in plateSchema) {
+        // Skip Key Data (these are constructed separately)
+        if (plateSchema[inputName].properties.inputGenre.const == 'KeyData') {
+            continue;
+        }
         let parameterName = plateSchema[inputName].properties.parameterName.const;
         if (parameterName in parameterMapping) {
             parameterMapping[parameterName].push(inputName);
@@ -91,6 +87,20 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     }
 
     $element.append(DataImpressionSummary(uuid, name, impressionData, inputValues, parameterMapping));
+
+    // Construct KeyData input
+    let kdInputName = 'Key Data';
+    let $kdParam = $('<div>', { class: 'keydata parameter rounded-bottom' });
+    let $kdSocket = InputSocket(kdInputName, plateSchema[kdInputName].properties, 'keydata');
+    if (inputValues && inputValues[kdInputName]) {
+        let $kdInput = AssignedInputPuzzlePiece(kdInputName, inputValues[kdInputName], 'keydata');
+        $kdInput.appendTo($kdSocket);
+    }
+    $kdParam.append($kdSocket);
+
+    if (!collapsed) {
+        $element.append($kdParam);
+    }
 
     let $parameterList = $('<div>', {
         class: 'parameter-list',
@@ -144,9 +154,9 @@ export function DataImpression(plateType, uuid, name, impressionData) {
 }
 
 // A socket that can be dropped into
-function InputSocket(inputName, inputProps) {
+function InputSocket(inputName, inputProps, addClass=undefined) {
     let $socket = $('<div>', {
-        class: 'input-socket',
+        class: 'input-socket ' + addClass,
     });
     // It's an input, but we can't drag it
     let $dropZone = InputPuzzlePiece(inputName, inputProps);
@@ -234,6 +244,11 @@ function Parameter(parameterName) {
 }
 
 function DataImpressionSummary(uuid, name, impressionData, inputValues, parameterMapping) {
+    let collapsed = false;
+    if (impressionData && impressionData.collapsed) {
+        collapsed = true;
+    }
+
     let oldVisibility = true;
     if (globals.stateManager.state.impressions && globals.stateManager.state.impressions[uuid]) {
         if (globals.stateManager.state.impressions[uuid].renderHints) {
@@ -241,7 +256,7 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
         }
     }
     let $el = $('<div>', {
-        class: 'data-impression-summary rounded-bottom'
+        class: 'data-impression-summary'
     }).append(
         $('<div>', { class: 'impression-controls' }).append(
             $('<button>', {
@@ -252,17 +267,13 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
                 globals.stateManager.update(`/impressions/${uuid}/renderHints/Visible`, !oldVisibility);
             })
         ).append(
-            // Pencil icon
             $('<button>', {
-                class: 'material-icons rounded',
-                text: 'edit',
-                title: 'Rename data impression'
-            }).on('click', (evt) => {
-                let newName = prompt('Rename data impression:', name);
-                if (newName) {
-                    globals.stateManager.update(`/impressions/${uuid}/name`, newName);
-                    globals.stateManager.update(`/impressions/${uuid}/isRenamedByUser`, true);
-                }
+                class: 'rounded',
+                title: collapsed ? 'Show More' : 'Show Less'
+            }).append(
+                $('<span>', { class: 'material-icons', text: collapsed ? 'lock' : 'lock_open'})
+            ).on('click', (evt) => {
+                globals.stateManager.update(`/uiData/compose/impressionData/${uuid}/collapsed`, !collapsed);
             })
         )
     );

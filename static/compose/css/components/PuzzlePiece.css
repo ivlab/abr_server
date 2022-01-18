@@ -18,10 +18,17 @@
     opacity: 50%;
 }
 
+/* keydata-specific tweaks */
 .keydata.puzzle-piece {
     width: 8rem;
+    height: 5rem;
 }
-
+.input-socket.keydata {
+    margin: auto;
+}
+.puzzle-connector.keydata {
+    width: 3rem; /* Keydata connector aspect ratio is 1:1 (match puzzle piece) */
+}
 .keydata.puzzle-piece button.solo-button:not(.soloed) {
     background-color: #999;
 }
@@ -45,14 +52,10 @@
 /* The connector of the puzzle piece (svgs) */
 .puzzle-connector {
     flex-shrink: 0;
-    height: 2rem; /* Same as parent .parameter; explicitly redefined here */
-    width: 0.8rem; /* Aspect ratio of puzzle connectors should be 2:5 */
+    height: 3rem; /* Same as parent .parameter; explicitly redefined here */
+    width: 1.2rem; /* Aspect ratio of puzzle connectors should be 2:5 */
     mask-size: contain !important; /* Unsure why `mask` is overwriting this */
     -webkit-mask-size: contain !important; /* Unsure why `mask` is overwriting this */
-}
-
-.puzzle-connector.keydata {
-    width: 2rem; /* Keydata connector aspect ratio is 1:1 */
 }
 
 .puzzle-connector.background {

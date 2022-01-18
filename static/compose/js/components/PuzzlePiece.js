@@ -362,8 +362,8 @@ export function InputPuzzlePiece(inputName, inputProps) {
 
 // A puzzle piece that's already assigned on a data impression; when it's
 // removed it will send a message to the server telling it that it's removed
-export function AssignedInputPuzzlePiece(inputName, inputProps) {
-    let $input = InputPuzzlePiece(inputName, inputProps);
+export function AssignedInputPuzzlePiece(inputName, inputProps, addClass=undefined) {
+    let $input = InputPuzzlePiece(inputName, inputProps, addClass);
     if (!$input.hasClass('no-drag')) {
         $input.draggable({
             cursor: 'grabbing',

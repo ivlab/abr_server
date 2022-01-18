@@ -1,9 +1,8 @@
 .data-impression {
-    width: 13rem;
+    width: 15rem;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    background-color: #716e6ab0;
     z-index: -1;
 }
 
@@ -12,7 +11,8 @@
 }
 
 .data-impression .data-impression-header {
-    width: 100%;
+    width: 75%;
+    margin: auto;
     background-color: #ceedff;
     display: flex;
     justify-content: space-between;
@@ -28,7 +28,8 @@
 }
 
 .data-impression .data-impression-summary {
-    width: 100%;
+    width: 75%;
+    margin: auto;
     background-color: #f8f4f4;
 }
 
@@ -49,7 +50,8 @@
 }
 
 .data-impression .data-impression-summary .puzzle-label * {
-    width: 100%;
+    width: 75%;
+    margin: auto;
 }
 
 .data-impression .data-impression-thumbnail {
@@ -75,11 +77,18 @@
     color: #3d3d3d;
 }
 
+/* keydata-specific styling */
+.data-impression .parameter.keydata {
+    width: calc(15rem * 0.75);/* to match parent data impression - margin */
+    margin: auto;
+    background-color: #f8f4f4; /* to match white bg */
+}
+
 /* The 'tower' that the sockets appear to connect to
  * Width is calculated based on tower width
  */
 .data-impression .parameter .parameter-label > p{
-    width: calc(13rem - 2*5rem - 2*0.2rem);
+    width: calc(15rem - 2*5rem - 2*0.2rem);
     margin: auto;
 }
 
@@ -99,6 +108,6 @@
     background: #f8f4f4;
     height: calc(100% - 8px);
     z-index: -1;
-    width: calc(13rem - 2*5rem - 2*0.2rem);
-    left: calc(50% - (13rem - 2*5rem - 2*0.2rem) * 0.5);
+    width: calc(15rem - 2*5rem - 2*0.2rem);
+    left: calc(50% - (15rem - 2*5rem - 2*0.2rem) * 0.5);
 }
