@@ -33,6 +33,15 @@ const EDITOR_HANDLERS = {
     'IVLab.ABREngine.ColormapVisAsset': ColormapEditor,
 };
 
+const TITLE_STRINGS = {
+    'IVLab.ABREngine.ColormapVisAsset': 'Colormap',
+    'IVLab.ABREngine.GlyphGradient': 'Glyph Gradient',
+    'IVLab.ABREngine.SurfaceTextureGradient': 'Texture Gradient',
+    'IVLab.ABREngine.LineTextureGradient': 'Line Gradient',
+    'IVLab.ABREngine.ScalarDataVariable': 'Line Gradient',
+    'IVLab.ABREngine.PrimitiveGradient': 'Opacity Map',
+};
+
 // Unified for editing anything that's assocated with a particular variable.
 //
 // Exhaustive options (all include variable range editor w/histogram):
@@ -93,7 +102,7 @@ export async function EditorDialog(inputProps, impressionUuid) {
                 s['inputGenre'] == 'Variable' && 
                 s.hasOwnProperty('parameterName') &&
                 s['parameterName'] == paramName
-        }).map((v) => v.inputValue);
+        }, `/impressions/${impressionUuid}/inputValues`).map((v) => v.inputValue);
 
         // Find every variable input that's the same as this one
         let impressionInputs = globals.stateManager.state.impressions[impressionUuid].inputValues;
@@ -106,7 +115,7 @@ export async function EditorDialog(inputProps, impressionUuid) {
                 (s['inputGenre'] == 'VisAsset' || s['inputGenre'] == 'PrimitiveGradient')  && 
                 s.hasOwnProperty('parameterName') &&
                 relevantParamNames.indexOf(s['parameterName']) >= 0
-        });
+        }, `/impressions/${impressionUuid}/inputValues`);
         inputsToConsider.push(...associatedDesignInputs);
 
         let $histogramModule = await HistogramEditor(impressionInputs[relevantInputNames[0]], keyDataInput);
@@ -114,15 +123,20 @@ export async function EditorDialog(inputProps, impressionUuid) {
     } else {
         inputsToConsider.push(inputProps);
     }
+    console.log(inputsToConsider);
 
     // Find handlers for each valid input
+    let titleString = '';
     for (const input of inputsToConsider) {
         let handler = EDITOR_HANDLERS[input.inputType];
         $editorDialog.append($('<p>', { text: `Input: ${input.inputValue}; ${handler != null}`}));
+        titleString += TITLE_STRINGS[input.inputType] + ' + ';
     }
+    titleString = titleString.slice(0, titleString.length - 2) + 'Editor';
 
     $editorDialog.dialog({
-        'title': 'Editor (CHANGE ME!!!',
+        'title': titleString,
+        position: {my: 'center top', at: 'center top', of: window},
         'minWidth': dialogWidth,
     });
 }

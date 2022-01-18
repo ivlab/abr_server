@@ -223,14 +223,22 @@ export class StateManager {
     }
 
     // Find the elements that satisfy a condition
-    findAll(condition) {
-        let [outItems, outPath] = this._findAll(condition, this.state, '', [], []);
+    findAll(condition, startPath='') {
+        let startState = this.state;
+        if (startPath.length > 0) {
+            startState = this.getPath(startPath);
+        }
+        let [outItems, outPath] = this._findAll(condition, startState, startPath, [], []);
         return outItems;
     }
 
     // Find the path(s) that satisfy a condition
-    findPath(condition) {
-        let [outItems, outPath] = this._findAll(condition, this.state, '', [], []);
+    findPath(condition, startPath='') {
+        let startState = this.state;
+        if (startPath.length > 0) {
+            startState = this.getPath(startPath);
+        }
+        let [outItems, outPath] = this._findAll(condition, startState, startPath, [], []);
         return outPath;
     }
 
