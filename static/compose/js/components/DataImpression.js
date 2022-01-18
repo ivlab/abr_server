@@ -24,6 +24,7 @@ import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from '../../../common/StateManager.js';
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
 import { InputPuzzlePiece, AssignedInputPuzzlePiece } from "./PuzzlePiece.js";
+import { uuid } from "../../../common/UUID.js";
 
 export function DataImpression(plateType, uuid, name, impressionData) {
     let $element = $('<div>', { class: 'data-impression rounded' })
@@ -271,6 +272,15 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
             ).on('click', (evt) => {
                 globals.stateManager.update(`/uiData/compose/impressionData/${uuid}/collapsed`, !collapsed);
             })
+        ).append(
+            $('<button>', {
+                class: 'rounded',
+                title: 'Duplicate this data impression'
+            }).append(
+                $('<span>', { class: 'material-icons', text: 'content_copy'})
+            ).on('click', (evt) => {
+                duplicateDataImpression(uuid);
+            })
         )
     );
 
@@ -310,4 +320,20 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
     }
 
     return $el;
+}
+
+function duplicateDataImpression(oldUuid) {
+    let oldImpressionContents = globals.stateManager.state.impressions[oldUuid];
+    let oldImpressionData = globals.stateManager.state.uiData.compose.impressionData[oldUuid];
+    let newImpression = {};
+    let newImpressionData = {};
+    Object.assign(newImpression, oldImpressionContents);
+    Object.assign(newImpressionData, oldImpressionData);
+
+    let newUuid = uuid();
+    newImpression.uuid = newUuid;
+    newImpressionData.position.top += 100;
+    newImpressionData.position.left += 100;
+    globals.stateManager.update(`/impressions/${newUuid}`, newImpression);
+    globals.stateManager.update('uiData/compose/impressionData/' + newUuid, newImpressionData);
 }
