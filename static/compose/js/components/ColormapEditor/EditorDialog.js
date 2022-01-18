@@ -81,6 +81,7 @@ export async function EditorDialog(inputProps, impressionUuid) {
     // that was clicked to edit. Only display this stuff if the input is
     // associated with a data impression.
     let inputsToConsider = [];
+    let variableEditorTitle = '';
     if (impressionUuid) {
         // First, get the key data for the data impression this input is associated with
         let keyDataInput = null;
@@ -120,23 +121,29 @@ export async function EditorDialog(inputProps, impressionUuid) {
 
         let $histogramModule = await HistogramEditor(impressionInputs[relevantInputNames[0]], keyDataInput);
         $editorDialog.append($histogramModule);
+        variableEditorTitle = ' + Data Range ';
     } else {
         inputsToConsider.push(inputProps);
     }
-    console.log(inputsToConsider);
 
     // Find handlers for each valid input
     let titleString = '';
     for (const input of inputsToConsider) {
         let handler = EDITOR_HANDLERS[input.inputType];
-        $editorDialog.append($('<p>', { text: `Input: ${input.inputValue}; ${handler != null}`}));
-        titleString += TITLE_STRINGS[input.inputType] + ' + ';
+        if (handler != null) {
+            titleString += TITLE_STRINGS[input.inputType] + ' + ';
+            let $moduleEditor = await handler(input);
+            $editorDialog.append($moduleEditor);
+        }
     }
-    titleString = titleString.slice(0, titleString.length - 2) + 'Editor';
+    titleString = titleString.slice(0, titleString.length - 2) + variableEditorTitle + 'Editor';
 
     $editorDialog.dialog({
         'title': titleString,
         position: {my: 'center top', at: 'center top', of: window},
         'minWidth': dialogWidth,
     });
+
+    // Tell each "module" it's been added to editor
+    $('.module-editor').trigger('ABR_AddedToEditor');
 }

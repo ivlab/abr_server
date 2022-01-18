@@ -30,7 +30,9 @@ var activeColormap = null;
 var currentColormapUuid = null;
 var currentVisAssetJson = null;
 
-export async function ColormapEditor(vaUuid, variableInput, keyDataInput) {
+export async function ColormapEditor(inputProps) {
+    let vaUuid = inputProps.inputValue;
+
     // Ensure all globals are zeroed out on initilization of new dialog
     activeColormap = null;
     currentColormapUuid = null;
@@ -61,27 +63,12 @@ export async function ColormapEditor(vaUuid, variableInput, keyDataInput) {
         return;
     }
 
-    // There can only be one colormap editor
-    if ($('.colormap-editor').length > 0 && $('.colormap-editor').dialog('isOpen')) {
-        alert('There is already a colormap editor open.');
-        return;
-    }
-
     currentColormapUuid = vaUuid;
     currentVisAssetJson = visassetJson;
 
-    // Get rid of any previous instances of the colormap editor that were hidden
-    // jQuery UI dialogs just hide the dialog when it's closed
-    $('.colormap-editor').remove();
-
     let $colormapEditor = $('<div>', {
         id: 'colormap-editor',
-        class: 'colormap-editor',
-    });
-
-    $colormapEditor.dialog({
-        'title': variableInput ? 'Colormap + Variable Range Editor' : 'Colormap Editor',
-        'minWidth': dialogWidth,
+        class: 'colormap-editor module-editor',
     });
 
     // Append the colormap canvas
@@ -165,17 +152,22 @@ export async function ColormapEditor(vaUuid, variableInput, keyDataInput) {
 
     $colormapEditor.append($trash);
 
-    // Populate the colors from xml
-    activeColormap = ColorMap.fromXML(colormapXml);
-    activeColormap.entries.forEach((c) => {
-        let pt = c[0];
-        let color = floatToHex(c[1]);
-        $('#color-slider').append(ColorThumb(pt, color, () => {
-            updateColormap();
-            saveColormap();
-        }));
+    // Wait to render anything until this is part of the DOM
+    $colormapEditor.on('ABR_AddedToEditor', () => {
+        // Populate the colors from xml
+        activeColormap = ColorMap.fromXML(colormapXml);
+        activeColormap.entries.forEach((c) => {
+            let pt = c[0];
+            let color = floatToHex(c[1]);
+            $('#color-slider').append(ColorThumb(pt, color, () => {
+                updateColormap();
+                saveColormap();
+            }));
+        });
+        updateColormap();
     });
-    updateColormap();
+
+    return $colormapEditor;
 }
 
 async function saveColormap() {

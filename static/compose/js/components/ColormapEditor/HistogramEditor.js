@@ -36,7 +36,8 @@ var customRange = false;
 // Histogram component to plug into the editor dialog
 export async function HistogramEditor(variableInput, keyDataInput) {
     let $histogramEditor = $('<div>', {
-        id: 'histogram-editor'
+        id: 'histogram-editor',
+        class: 'module-editor'
     });
 
     zippedHistogram = null;
@@ -194,11 +195,7 @@ export async function HistogramEditor(variableInput, keyDataInput) {
     $sliderMinHandle.append($handleMarkerBar);
     $sliderMaxHandle.append($handleMarkerBar.clone());
 
-    // Temporarily append to body so this can be rendered immediately. It will
-    // be moved to the correct place when returned.
-    $histogramEditor.appendTo($('body'));
-
-    updateHistogram(currentMinMax.min, currentMinMax.max);
+    $histogramEditor.on('ABR_AddedToEditor', () => updateHistogram(currentMinMax.min, currentMinMax.max));
 
     return $histogramEditor;
 }
