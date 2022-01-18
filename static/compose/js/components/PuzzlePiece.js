@@ -173,19 +173,13 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 }
 
 // Can be either something waiting for an input or the input itself
-export function InputPuzzlePiece(inputName, inputProps) {
+export function InputPuzzlePiece(inputName, inputProps, addClass) {
     let $el;
     let resolvedProps = resolveSchemaConsts(inputProps);
 
-    // Avoid name stuttering
-    let shortInputName = inputName;
-    if (inputName != resolvedProps.parameterName && inputName.indexOf(resolvedProps.parameterName) >= 0) {
-        shortInputName = inputName.replace(resolvedProps.parameterName, '').trim();
-    }
-
     if (resolvedProps.inputGenre == 'VisAsset') {
         if (resolvedProps && !resolvedProps.inputValue) {
-            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, true, '');
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, true, addClass);
         } else {
             let uuid = resolvedProps.inputValue;
             // Add the family / class to tooltip
@@ -206,7 +200,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 resolvedProps.inputValue,
                 resolvedProps.inputType,
                 true,
-                '',
+                addClass,
                 cssObjectFitMap[resolvedProps.inputType]
             ];
 
@@ -252,9 +246,9 @@ export function InputPuzzlePiece(inputName, inputProps) {
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
         if (resolvedProps && resolvedProps.inputValue) {
-            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, '');
+            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, addClass);
         } else {
-            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, false, '');
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, addClass);
         }
         $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : 'No Variable');
 
@@ -306,21 +300,22 @@ export function InputPuzzlePiece(inputName, inputProps) {
         })
     } else if (resolvedProps.inputGenre == 'KeyData') {
         if (resolvedProps && resolvedProps.inputValue) {
-            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, 'keydata');
+            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, 'keydata ' + addClass);
         } else {
-            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, false, 'keydata');
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata ' + addClass);
         }
         $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
     } else if (resolvedProps.inputGenre == 'Primitive') {
-        $el = PrimitiveInput(inputName, shortInputName, resolvedProps);
+        $el = PrimitiveInput(inputName, inputName, resolvedProps);
         $el.addClass('no-drag');
+        $el.addClass(addClass);
     } else if (resolvedProps.inputGenre == 'PrimitiveGradient') {
         let gradientUuid = null;
         let args = [
             resolvedProps.inputValue,
             resolvedProps.inputType,
             false,
-            '',
+            addClass,
             'fill'
         ];
         if (resolvedProps && resolvedProps.inputValue) {
@@ -328,7 +323,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
             $el.attr('title', 'Click to edit gradient');
             gradientUuid = resolvedProps.inputValue;
         } else {
-            $el = PuzzlePiece(shortInputName, resolvedProps.inputType);
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, addClass);
             $el.attr('title', 'Click to add gradient');
         }
         $el.css('cursor', 'pointer');

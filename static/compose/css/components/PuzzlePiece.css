@@ -128,6 +128,16 @@ div.inline {
     filter: drop-shadow(0px 0px 0.5rem #000);
 }
 
+/* define behaviour for summary puzzle pieces (displayed when DI is locked) */
+.puzzle-piece.summary {
+    height: 2rem;
+    position: relative !important;
+}
+.puzzle-piece.summary .puzzle-connector:not(.keydata) {
+    height: 2rem; /* maintain 2:5 ratio */
+    width: 0.8rem;
+}
+
 @keyframes pulse {
     0% {background-color: #666;}
     50% {background-color: #97aec1;}

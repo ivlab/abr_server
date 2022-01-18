@@ -68,6 +68,7 @@
     flex-wrap: wrap;
     justify-content: space-between;
     width: 100%;
+    border-bottom: 1px dotted #3d3d3d;
 }
 
 .data-impression .parameter .parameter-label {
@@ -82,6 +83,7 @@
     width: calc(15rem * 0.75);/* to match parent data impression - margin */
     margin: auto;
     background-color: #f8f4f4; /* to match white bg */
+    border: none;
 }
 
 /* The 'tower' that the sockets appear to connect to

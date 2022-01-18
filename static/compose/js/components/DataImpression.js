@@ -236,11 +236,7 @@ function InputSocket(inputName, inputProps, addClass=undefined) {
 }
 
 function Parameter(parameterName) {
-    return $('<div>', { class: 'parameter' }).append(
-        $('<div>', { class: "parameter-label" }).append(
-            $('<p>', { text: parameterName })
-        )
-    );
+    return $('<div>', { class: 'parameter' });
 }
 
 function DataImpressionSummary(uuid, name, impressionData, inputValues, parameterMapping) {
@@ -283,13 +279,15 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
         let $props = $('<div>', {
             class: 'summary-properties parameter'
         });
+        let kdInputName = 'Key Data';
+        if (inputValues && inputValues[kdInputName]) {
+            $props.append(AssignedInputPuzzlePiece(kdInputName, inputValues[kdInputName], 'summary'));
+        }
         for (const parameter in parameterMapping) {
             for (const inputName of parameterMapping[parameter]) {
                 if (inputValues && inputValues[inputName]) {
                     // Display a non-editable version of the piece in the summary block
-                    let $input = AssignedInputPuzzlePiece(inputName, inputValues[inputName]);
-                    $input.css('position', 'relative');
-                    $input.css('height', '2rem');
+                    let $input = AssignedInputPuzzlePiece(inputName, inputValues[inputName], 'summary');
                     $input.off('click');
                     if ($input.hasClass('ui-draggable')) {
                         $input.draggable('destroy');
