@@ -21,12 +21,11 @@ import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
-import { ColormapEditor } from "./ColormapEditor/ColormapEditor.js";
-import { gradientPreviewThumbnail, VisAssetGradientDialog } from "./ColormapEditor/VisAssetGradientDialog.js";
 import { GradientDialog, gradientToColormap } from "./ColormapEditor/GradientDialog.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
 import { EditorDialog } from "./ColormapEditor/EditorDialog.js";
+import { gradientPreviewThumbnail } from "./ColormapEditor/VisAssetGradientEditor.js";
 
 const cssObjectFitMap = {
     'IVLab.ABREngine.ColormapVisAsset': 'fill',
@@ -218,9 +217,6 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
                 $el.css('cursor', 'pointer');
                 let clickEvt = (evt) => {
                     if (!dragging) {
-                        let colorVar = getColorVar($el);
-                        let keyData = getKeyData($el);
-                        // ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
                         let impressionUuid = $el.parents('.data-impression').data('uuid');
                         EditorDialog(resolvedProps, impressionUuid);
                     }
@@ -239,8 +235,10 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
                 $el.css('cursor', 'pointer');
                 let clickEvt = (evt) => {
                     if (!dragging) {
-                        let gradUuid = $el.data('inputValue');
-                        VisAssetGradientDialog(gradUuid);
+                        // let gradUuid = $el.data('inputValue');
+                        // VisAssetGradientDialog(gradUuid);
+                        let impressionUuid = $el.parents('.data-impression').data('uuid');
+                        EditorDialog(resolvedProps, impressionUuid);
                     }
                 };
                 $el.on('dblclick', clickEvt);

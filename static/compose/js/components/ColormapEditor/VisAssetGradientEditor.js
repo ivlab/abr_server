@@ -1,6 +1,6 @@
-/* VisAssetGradientDialog.js
+/* VisAssetGradientEditor.js
  *
- * Copyright (C) 2021, University of Minnesota
+ * Copyright (C) 2022, University of Minnesota
  * Authors: Bridger Herman <herma582@umn.edu>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,8 +20,7 @@
 import { globals } from "../../../../common/globals.js";
 import { uuid } from "../../../../common/UUID.js";
 import { gradientTypeMap, PuzzlePiece, typeMap } from "../PuzzlePiece.js";
-
-const dialogWidth = 800;
+import { width } from "./components.js";
 
 var currentGradient = null;
 
@@ -270,21 +269,20 @@ function saveGradient() {
     globals.stateManager.update(`visAssetGradients/${currentGradient.uuid}`, currentGradient);
 }
 
-export function VisAssetGradientDialog(gradientUuid) {
-    $('#vis-asset-gradient-dialog').remove();
-
+export async function VisAssetGradientEditor(gradientUuid) {
     let $visAssetGradientDialog = $('<div>', {
         id: 'vis-asset-gradient-dialog',
-        class: 'puzzle-piece-overlay-dialog'
+        class: 'puzzle-piece-overlay-dialog module-editor',
+        width: width,
     });
 
-    $visAssetGradientDialog.dialog({
-        'title': 'VisAsset Gradient Editor',
-        'minWidth': dialogWidth,
-        close: (evt, ui) => {
-            $('#vis-asset-gradient-dialog').remove();
-        }
-    })
+    // $visAssetGradientDialog.dialog({
+    //     'title': 'VisAsset Gradient Editor',
+    //     'minWidth': dialogWidth,
+    //     close: (evt, ui) => {
+    //         $('#vis-asset-gradient-dialog').remove();
+    //     }
+    // })
 
     // Build the gradient and allow it to respond to new VisAssets that are drag-n-dropped
     let $gradient = $('<div>', {
@@ -363,5 +361,7 @@ export function VisAssetGradientDialog(gradientUuid) {
         }
     }
 
-    updateGradientDisplay();
+    $visAssetGradientDialog.on('ABR_AddedToEditor', () => updateGradientDisplay());
+
+    return $visAssetGradientDialog;
 }

@@ -25,7 +25,7 @@ import * as Components from './Components.js';
 import { globals } from '../../../common/globals.js';
 import { CACHE_UPDATE } from '../../../common/StateManager.js';
 import { typeMap, gradientTypeMap } from './PuzzlePiece.js';
-import { VisAssetGradientDialog } from './ColormapEditor/VisAssetGradientDialog.js';
+// import { VisAssetGradientDialog } from './ColormapEditor/VisAssetGradientDialog.js';
 
 export function DesignPanel() {
     let $designPanel = $('<div>', {
@@ -82,7 +82,7 @@ export function DesignPanel() {
         $('<span>', { text: 'Add gradient...'})
     ).on('click', (evt) => {
         // Open a new gradient dialog with no gradient
-        VisAssetGradientDialog(null);
+        // VisAssetGradientDialog(null);
     }));
 
     let outTimer = null;

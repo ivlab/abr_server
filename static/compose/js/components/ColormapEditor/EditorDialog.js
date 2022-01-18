@@ -28,9 +28,13 @@ import { ColorMap, floatToHex, hexToFloat } from './color.js';
 import { ColormapEditor } from './ColormapEditor.js';
 import { ColorThumb, dialogWidth, width, height } from './components.js';
 import { HistogramEditor } from './HistogramEditor.js';
+import { VisAssetGradientEditor } from './VisAssetGradientEditor.js';
 
 const EDITOR_HANDLERS = {
     'IVLab.ABREngine.ColormapVisAsset': ColormapEditor,
+    'IVLab.ABREngine.GlyphGradient': VisAssetGradientEditor,
+    'IVLab.ABREngine.SurfaceTextureGradient': VisAssetGradientEditor,
+    'IVLab.ABREngine.LineTextureGradient': VisAssetGradientEditor,
 };
 
 const TITLE_STRINGS = {
@@ -38,7 +42,6 @@ const TITLE_STRINGS = {
     'IVLab.ABREngine.GlyphGradient': 'Glyph Gradient',
     'IVLab.ABREngine.SurfaceTextureGradient': 'Texture Gradient',
     'IVLab.ABREngine.LineTextureGradient': 'Line Gradient',
-    'IVLab.ABREngine.ScalarDataVariable': 'Line Gradient',
     'IVLab.ABREngine.PrimitiveGradient': 'Opacity Map',
 };
 
