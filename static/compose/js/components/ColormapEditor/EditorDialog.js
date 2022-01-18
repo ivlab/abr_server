@@ -25,8 +25,13 @@
 import { globals } from '../../../../common/globals.js';
 import { uuid } from '../../../../common/UUID.js';
 import { ColorMap, floatToHex, hexToFloat } from './color.js';
+import { ColormapEditor } from './ColormapEditor.js';
 import { ColorThumb, dialogWidth, width, height } from './components.js';
 import { HistogramEditor } from './HistogramEditor.js';
+
+const EDITOR_HANDLERS = {
+    'IVLab.ABREngine.ColormapVisAsset': ColormapEditor,
+};
 
 // Unified for editing anything that's assocated with a particular variable.
 //
@@ -66,6 +71,7 @@ export async function EditorDialog(inputProps, impressionUuid) {
     // We need to determine the variable that is associated with the input
     // that was clicked to edit. Only display this stuff if the input is
     // associated with a data impression.
+    let inputsToConsider = [];
     if (impressionUuid) {
         // First, get the key data for the data impression this input is associated with
         let keyDataInput = null;
@@ -89,11 +95,30 @@ export async function EditorDialog(inputProps, impressionUuid) {
                 s['parameterName'] == paramName
         }).map((v) => v.inputValue);
 
+        // Find every variable input that's the same as this one
         let impressionInputs = globals.stateManager.state.impressions[impressionUuid].inputValues;
-        let relevantInputs = Object.keys(impressionInputs).filter((n) => associatedVars.indexOf(impressionInputs[n].inputValue) >= 0);
+        let relevantInputNames = Object.keys(impressionInputs).filter((n) => associatedVars.indexOf(impressionInputs[n].inputValue) >= 0);
+        let relevantParamNames = relevantInputNames.map((n) => impressionInputs[n].parameterName);
 
-        let $histogramModule = await HistogramEditor(impressionInputs[relevantInputs[0]], keyDataInput);
+        // And map it back to its design / visasset input
+        let associatedDesignInputs = globals.stateManager.findAll((s) => {
+            return s.hasOwnProperty('inputGenre') &&
+                (s['inputGenre'] == 'VisAsset' || s['inputGenre'] == 'PrimitiveGradient')  && 
+                s.hasOwnProperty('parameterName') &&
+                relevantParamNames.indexOf(s['parameterName']) >= 0
+        });
+        inputsToConsider.push(...associatedDesignInputs);
+
+        let $histogramModule = await HistogramEditor(impressionInputs[relevantInputNames[0]], keyDataInput);
         $editorDialog.append($histogramModule);
+    } else {
+        inputsToConsider.push(inputProps);
+    }
+
+    // Find handlers for each valid input
+    for (const input of inputsToConsider) {
+        let handler = EDITOR_HANDLERS[input.inputType];
+        $editorDialog.append($('<p>', { text: `Input: ${input.inputValue}; ${handler != null}`}));
     }
 
     $editorDialog.dialog({
