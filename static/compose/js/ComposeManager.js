@@ -21,7 +21,6 @@
 
 import { globals } from '../../common/globals.js';
 import { STATE_UPDATE_EVENT, CACHE_UPDATE } from '../../common/StateManager.js';
-import { ColormapDialog } from './components/ColormapEditor/ColormapDialog.js';
 import * as Components from './components/Components.js';
 import { COMPOSITION_LOADER_ID } from './components/Components.js';
 import { DataImpression } from './components/DataImpression.js';
