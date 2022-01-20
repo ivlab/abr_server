@@ -82,33 +82,6 @@ export async function GradientEditor(inputProps) {
     $gradientEditor.append($gradientView);
 
 
-    // let $trash = $('<img>', {
-    //     id: 'trash',
-    //     src: `${STATIC_URL}compose/trash.svg`,
-    //     css: {
-    //         position: 'absolute',
-    //         left: 0,
-    //         bottom: 0
-    //     }
-    // }).droppable({
-    //     tolerance: 'touch',
-    //     accept: '.gradient-stop',
-    //     drop: (evt, ui) => {
-    //         $(ui.draggable).remove();
-    //         currentGradient = gradientFromStops();
-    //         saveGradient();
-    //     },
-    //     // Indicate that it's about to be deleted
-    //     over: (_evt, ui) => {
-    //         $(ui.helper).css('opacity', '25%');
-    //     },
-    //     out: (_evt, ui) => {
-    //         $(ui.helper).css('opacity', '100%');
-    //     }
-    // }).attr('title', 'Drop a gradient stop here to discard');
-
-    // $gradientEditor.append($trash);
-
     globals.stateManager.subscribe($gradientView);
     $gradientView.on(STATE_UPDATE_EVENT, (evt) => {
         setCurrentGradient(currentGradientUuid);
@@ -141,8 +114,7 @@ export async function GradientEditor(inputProps) {
 }
 
 function setCurrentGradient(gradientUuid) {
-    if (!gradientUuid) {
-        gradientUuid = uuid();
+    if (!currentGradient) {
         currentGradient = DEFAULT_GRADIENT;
     } else {
         if (globals.stateManager.state['primitiveGradients'] && globals.stateManager.state['primitiveGradients'][gradientUuid]) {
@@ -211,7 +183,7 @@ function stopsFromGradient() {
 
         const pointSize = 15;
         let $point = $('<div>', {
-            class: 'gradient-stop',
+            class: 'gradient-stop editor-trashable',
             width: pointSize,
             height: pointSize,
             title: `Data Value: ${point.toFixed(2)}, Opacity: ${(floatValue* 100).toFixed(0)}%`,
@@ -241,6 +213,14 @@ function stopsFromGradient() {
                 saveGradient();
                 $('#gradient-view').append(getGradientColormap());
             },
+        });
+
+        // Allow this to be trashed
+        $point.data({
+            trashed: () => {
+                currentGradient = gradientFromStops();
+                saveGradient();
+            }
         });
 
         $pointCanvas.append($point);

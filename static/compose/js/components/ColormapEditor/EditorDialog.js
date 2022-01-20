@@ -123,6 +123,8 @@ export async function EditorDialog(inputProps, impressionUuid) {
                 relevantParamNames.indexOf(s['parameterName']) >= 0
         }, `/impressions/${impressionUuid}/inputValues`);
         inputsToConsider.push(...associatedDesignInputs);
+        // Also add any more design inputs that are associated in this current param name
+        inputsToConsider.push(...Object.values((v) => v.parameterName == inputProps.parameterName));
 
         let $histogramModule = await HistogramEditor(impressionInputs[relevantInputNames[0]], keyDataInput);
         $editorDialog.append($histogramModule);
@@ -142,6 +144,31 @@ export async function EditorDialog(inputProps, impressionUuid) {
         }
     }
     titleString = titleString.slice(0, titleString.length - 2) + variableEditorTitle + 'Editor';
+
+    let $trash = $('<img>', {
+        id: 'trash',
+        src: `${STATIC_URL}compose/trash.svg`,
+    }).droppable({
+        tolerance: 'touch',
+        accept: '.editor-trashable',
+        drop: (evt, ui) => {
+            let trashedFn = ui.draggable.data('trashed');
+            if (trashedFn) {
+                trashedFn();
+            }
+            $(ui.draggable).remove();
+        },
+        // Indicate that it's about to be deleted
+        over: (_evt, ui) => {
+            $(ui.helper).css('opacity', '25%');
+        },
+        out: (_evt, ui) => {
+            $(ui.helper).css('opacity', '100%');
+        }
+    }).attr('title', 'Drop a gradient stop here to discard');
+
+    $editorDialog.append($trash);
+
 
     $editorDialog.dialog({
         'title': titleString,

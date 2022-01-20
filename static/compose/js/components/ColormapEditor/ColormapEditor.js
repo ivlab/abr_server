@@ -131,27 +131,6 @@ export async function ColormapEditor(inputProps) {
 
     $colormapEditor.append($buttons);
 
-    // let $trash = $('<img>', {
-    //     id: 'trash',
-    //     src: `${STATIC_URL}compose/trash.svg`,
-    // }).droppable({
-    //     tolerance: 'touch',
-    //     accept: '.color-thumb',
-    //     drop: (evt, ui) => {
-    //         $(ui.draggable).remove();
-    //         activeColormap = getColormapFromThumbs();
-    //     },
-    //     // Indicate that it's about to be deleted
-    //     over: (_evt, ui) => {
-    //         $(ui.helper).css('opacity', '25%');
-    //     },
-    //     out: (_evt, ui) => {
-    //         $(ui.helper).css('opacity', '100%');
-    //     }
-    // }).attr('title', 'Drop a color swatch here to discard');
-
-    // $colormapEditor.append($trash);
-
     // Wait to render anything until this is part of the DOM
     $colormapEditor.on('ABR_AddedToEditor', () => {
         // Populate the colors from xml
@@ -159,10 +138,16 @@ export async function ColormapEditor(inputProps) {
         activeColormap.entries.forEach((c) => {
             let pt = c[0];
             let color = floatToHex(c[1]);
-            $('#color-slider').append(ColorThumb(pt, color, () => {
+            let $thumb = ColorThumb(pt, color, () => {
                 updateColormap();
                 saveColormap();
-            }));
+            });
+            $thumb.data({
+                trashed: () => {
+                    activeColormap = getColormapFromThumbs();
+                }
+            });
+            $('#color-slider').append($thumb);
         });
         updateColormap();
     });

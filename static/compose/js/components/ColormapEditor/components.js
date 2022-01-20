@@ -34,7 +34,7 @@ export function ColorThumb(perc, color, colorChangeCallback) {
     let mapHeight = $('#colormap .colormap-canvas').height();
     let left = mapLeft + mapWidth * perc;
     let $thumb = $('<div>', {
-        class: 'color-thumb',
+        class: 'color-thumb editor-trashable',
     }).draggable({
         containment: ".editor-dialog",
         drag: (_evt, ui) => {

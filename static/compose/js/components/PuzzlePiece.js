@@ -20,6 +20,7 @@
 import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
+import { uuid } from "../../../common/UUID.js";
 import { ColorMap } from "./ColormapEditor/color.js";
 import { gradientToColormap } from "./ColormapEditor/GradientEditor.js";
 import { PrimitiveInput } from "./Primitives.js";
@@ -338,14 +339,17 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
                 return;
             }
             let impressionUuid = $(evt.target).parents('.data-impression').data('uuid');
-            // Reassign uuid if it's changed and update state if necessary
-            let colorVar = getColorVar($el);
-            let keyData = getKeyData($el);
-            EditorDialog(resolvedProps, impressionUuid);
-            // GradientDialog(gradientUuid, colorVar, keyData).then((gradientUuidValue) => {
-            //     resolvedProps.inputValue = gradientUuidValue;
-            //     globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
-            // });
+            // Create a new uuid if there's no input value yet
+            let updatePromise = null;
+            if (!resolvedProps.inputValue) {
+                resolvedProps.inputValue = uuid();
+                updatePromise = globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+            } else {
+                updatePromise = new Promise().resolve();
+            }
+            updatePromise.then(() => {
+                EditorDialog(resolvedProps, impressionUuid);
+            });
         });
     }
 
@@ -402,7 +406,7 @@ export function SwatchInputPuzzlePiece(inputName, inputProps) {
                 }
             }
         }
-    })
+    }).addClass('swatch');
 }
 
 // A connector for a puzzle piece
