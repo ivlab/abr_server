@@ -21,7 +21,7 @@ import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
 import { ColorMap } from "./ColormapEditor/color.js";
-import { GradientDialog, gradientToColormap } from "./ColormapEditor/GradientDialog.js";
+import { gradientToColormap } from "./ColormapEditor/GradientEditor.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
 import { EditorDialog } from "./ColormapEditor/EditorDialog.js";
@@ -341,10 +341,11 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
             // Reassign uuid if it's changed and update state if necessary
             let colorVar = getColorVar($el);
             let keyData = getKeyData($el);
-            GradientDialog(gradientUuid, colorVar, keyData).then((gradientUuidValue) => {
-                resolvedProps.inputValue = gradientUuidValue;
-                globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
-            });
+            EditorDialog(resolvedProps, impressionUuid);
+            // GradientDialog(gradientUuid, colorVar, keyData).then((gradientUuidValue) => {
+            //     resolvedProps.inputValue = gradientUuidValue;
+            //     globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+            // });
         });
     }
 

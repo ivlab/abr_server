@@ -131,26 +131,26 @@ export async function ColormapEditor(inputProps) {
 
     $colormapEditor.append($buttons);
 
-    let $trash = $('<img>', {
-        id: 'trash',
-        src: `${STATIC_URL}compose/trash.svg`,
-    }).droppable({
-        tolerance: 'touch',
-        accept: '.color-thumb',
-        drop: (evt, ui) => {
-            $(ui.draggable).remove();
-            activeColormap = getColormapFromThumbs();
-        },
-        // Indicate that it's about to be deleted
-        over: (_evt, ui) => {
-            $(ui.helper).css('opacity', '25%');
-        },
-        out: (_evt, ui) => {
-            $(ui.helper).css('opacity', '100%');
-        }
-    }).attr('title', 'Drop a color swatch here to discard');
+    // let $trash = $('<img>', {
+    //     id: 'trash',
+    //     src: `${STATIC_URL}compose/trash.svg`,
+    // }).droppable({
+    //     tolerance: 'touch',
+    //     accept: '.color-thumb',
+    //     drop: (evt, ui) => {
+    //         $(ui.draggable).remove();
+    //         activeColormap = getColormapFromThumbs();
+    //     },
+    //     // Indicate that it's about to be deleted
+    //     over: (_evt, ui) => {
+    //         $(ui.helper).css('opacity', '25%');
+    //     },
+    //     out: (_evt, ui) => {
+    //         $(ui.helper).css('opacity', '100%');
+    //     }
+    // }).attr('title', 'Drop a color swatch here to discard');
 
-    $colormapEditor.append($trash);
+    // $colormapEditor.append($trash);
 
     // Wait to render anything until this is part of the DOM
     $colormapEditor.on('ABR_AddedToEditor', () => {

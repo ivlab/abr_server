@@ -27,6 +27,7 @@ import { uuid } from '../../../../common/UUID.js';
 import { ColorMap, floatToHex, hexToFloat } from './color.js';
 import { ColormapEditor } from './ColormapEditor.js';
 import { ColorThumb, dialogWidth, width, height } from './components.js';
+import { GradientEditor } from './GradientEditor.js';
 import { HistogramEditor } from './HistogramEditor.js';
 import { VisAssetGradientEditor } from './VisAssetGradientEditor.js';
 
@@ -35,6 +36,7 @@ const EDITOR_HANDLERS = {
     'IVLab.ABREngine.GlyphGradient': VisAssetGradientEditor,
     'IVLab.ABREngine.SurfaceTextureGradient': VisAssetGradientEditor,
     'IVLab.ABREngine.LineTextureGradient': VisAssetGradientEditor,
+    'IVLab.ABREngine.PrimitiveGradient': GradientEditor,
 };
 
 const TITLE_STRINGS = {

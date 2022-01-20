@@ -22,7 +22,7 @@
 
 // Constants for sizing the various dialogs
 export const margin = { top: 10, right: 0, bottom: 20, left: 0 };
-export const dialogWidth = $('body').width() * 0.6;
+export const dialogWidth = 700;
 export const numBins = 540;
 export const width = numBins - margin.left - margin.right;
 export const height = 100 - margin.top - margin.bottom;
@@ -36,7 +36,7 @@ export function ColorThumb(perc, color, colorChangeCallback) {
     let $thumb = $('<div>', {
         class: 'color-thumb',
     }).draggable({
-        containment: "#colormap-editor",
+        containment: ".editor-dialog",
         drag: (_evt, ui) => {
             let middle = ($(ui.helper).position().left - mapLeft) + $(ui.helper).width() / 2;
             // let percentage = middle / $('#colormap .colormap-canvas').width();

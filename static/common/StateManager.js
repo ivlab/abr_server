@@ -308,6 +308,7 @@ export class StateManager {
 
     subscribe($element) {
         this._subscribers.push($element);
+        console.log(this._subscribers);
     }
 
     unsubscribe($element) {
