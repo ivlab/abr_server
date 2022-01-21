@@ -154,7 +154,7 @@ class State():
             )
             vis_asset_fails = ''
             for input_value_object in all_visassets:
-                failed = download_visasset(input_value_object['inputValue'])
+                failed = download_visasset(input_value_object['inputValue'], None) # we don't know where it might've come from
                 vis_asset_fails += '\n' + str(failed) if len(failed) > 0 else ''
             if len(vis_asset_fails) > 0:
                 vis_asset_fails = '\nFailed to download VisAssets: ' + vis_asset_fails
