@@ -92,13 +92,20 @@ export class ComposeManager {
                     let matches = uuidRegex.exec(url);
 
                     if (matches[0]) {
+                        let artifactUuid = matches[0];
+
+                        // Find URL the artifact is coming from
+                        let firstIndex = url.indexOf(artifactUuid);
+                        let hostPath = url.slice(0, firstIndex);
+
                         $('.loading-spinner').css('visibility', 'visible');
-                        fetch('/api/download-visasset/' + matches[0], {
+                        fetch('/api/download-visasset/' + artifactUuid, {
                             method: 'POST',
                             headers: {
                                 // 'X-CSRFToken': csrftoken,
                             },
                             mode: 'same-origin',
+                            body: JSON.stringify({'hostPath': hostPath}),
                         }).then(() => {
                             $('.loading-spinner').css('visibility', 'hidden');
                         });
