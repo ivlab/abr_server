@@ -25,7 +25,7 @@ import { ColorMap } from "./ColormapEditor/color.js";
 import { gradientToColormap } from "./ColormapEditor/GradientEditor.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
-import { EditorDialog } from "./ColormapEditor/EditorDialog.js";
+import { EditorDialog, TITLE_STRINGS } from "./ColormapEditor/EditorDialog.js";
 import { gradientPreviewThumbnail } from "./ColormapEditor/VisAssetGradientEditor.js";
 
 const cssObjectFitMap = {
@@ -181,6 +181,33 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
     if (resolvedProps.inputGenre == 'VisAsset') {
         if (resolvedProps && !resolvedProps.inputValue) {
             $el = PuzzlePiece(inputName, resolvedProps.inputType, true, addClass);
+
+            // Special case to enable visasset gradients to be created by clicking
+            let visassetType = Object.keys(typeMap).find((k) => typeMap[k] == resolvedProps.inputType);
+            if (Object.keys(gradientTypeMap).indexOf(visassetType) >= 0) {
+                let gradientType = gradientTypeMap[visassetType];
+                let humanReadable = TITLE_STRINGS[gradientType];
+                resolvedProps.inputType = gradientType;
+                $el.attr('title', $el.attr('title') + '\nClick to add a ' + humanReadable);
+                $el.addClass('hover-bright');
+                $el.css('cursor', 'pointer');
+                let clickEvt = (evt) => {
+                    // Create a new uuid if there's no input value yet
+                    let impressionUuid = $el.parents('.data-impression').data('uuid');
+                    let updatePromise = null;
+                    if (!resolvedProps.inputValue) {
+                        resolvedProps.inputValue = uuid();
+                        updatePromise = globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+                    } else {
+                        updatePromise = new Promise().resolve();
+                    }
+                    updatePromise.then(() => {
+                        EditorDialog(resolvedProps, impressionUuid);
+                    });
+                };
+                $el.on('dblclick', clickEvt);
+                $el.on('click', clickEvt);
+            }
         } else {
             let uuid = resolvedProps.inputValue;
             // Add the family / class to tooltip

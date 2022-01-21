@@ -39,7 +39,7 @@ const EDITOR_HANDLERS = {
     'IVLab.ABREngine.PrimitiveGradient': GradientEditor,
 };
 
-const TITLE_STRINGS = {
+export const TITLE_STRINGS = {
     'IVLab.ABREngine.ColormapVisAsset': 'Colormap',
     'IVLab.ABREngine.GlyphGradient': 'Glyph Gradient',
     'IVLab.ABREngine.SurfaceTextureGradient': 'Texture Gradient',
@@ -126,21 +126,29 @@ export async function EditorDialog(inputProps, impressionUuid) {
         // Also add any more design inputs that are associated in this current param name
         inputsToConsider.push(...Object.values((v) => v.parameterName == inputProps.parameterName));
 
-        let $histogramModule = await HistogramEditor(impressionInputs[relevantInputNames[0]], keyDataInput);
-        $editorDialog.append($histogramModule);
-        variableEditorTitle = ' + Data Range ';
-    } else {
+        let trueVariable = impressionInputs[relevantInputNames[0]];
+        if (trueVariable) {
+            let $histogramModule = await HistogramEditor(trueVariable, keyDataInput);
+            $editorDialog.append($histogramModule);
+            variableEditorTitle = ' + Data Range ';
+        }
+    }
+
+    // Take pity on it and give it one input at least - the one we passed in
+    if (inputsToConsider.length == 0 && inputProps) {
         inputsToConsider.push(inputProps);
     }
 
-    // Find handlers for each valid input
     let titleString = '';
-    for (const input of inputsToConsider) {
-        let handler = EDITOR_HANDLERS[input.inputType];
-        if (handler != null) {
-            titleString += TITLE_STRINGS[input.inputType] + ' + ';
-            let $moduleEditor = await handler(input);
-            $editorDialog.append($moduleEditor);
+    if (inputProps) {
+        // Find handlers for each valid input
+        for (const input of inputsToConsider) {
+            let handler = EDITOR_HANDLERS[input.inputType];
+            if (handler != null) {
+                titleString += TITLE_STRINGS[input.inputType] + ' + ';
+                let $moduleEditor = await handler(input);
+                $editorDialog.append($moduleEditor);
+            }
         }
     }
     titleString = titleString.slice(0, titleString.length - 2) + variableEditorTitle + 'Editor';
@@ -154,7 +162,7 @@ export async function EditorDialog(inputProps, impressionUuid) {
         drop: (evt, ui) => {
             let trashedFn = ui.draggable.data('trashed');
             if (trashedFn) {
-                trashedFn();
+                trashedFn(evt, ui);
             }
             $(ui.draggable).remove();
         },

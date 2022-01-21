@@ -41,7 +41,7 @@ export function gradientPreviewThumbnail(gradient) {
 
 function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
     let $section = $('<div>', {
-        class: 'resizable-section',
+        class: 'resizable-section editor-trashable',
         width: sectionWidth,
     });
     $section.data({uuid});
@@ -126,7 +126,14 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
     }));
 
     $section.draggable({
-        helper: 'clone'
+        helper: 'clone',
+        scroll: false,
+        start: (evt, ui) => {
+            $(ui.helper).css('transform', 'scale(0.5)');
+        },
+        end: (evt, ui) => {
+            $(ui.helper).css('transform', 'scale(1.0)');
+        },
     });
 
     let percentage = 0;
@@ -231,36 +238,11 @@ function updateGradientDisplay() {
         let $starterIndicator = $('<div>', {
             class: 'visasset-starter-indicator',
         });
-        for (const t in gradientTypeMap) {
-            $starterIndicator.append(PuzzlePiece(t[0].toUpperCase() + t.slice(1), gradientTypeMap[t], true, 'drop-zone'));
-        }
-        $gradient.append($starterIndicator);
-        $gradient.append($('<p>', {
-            text: 'Drag and drop VisAssets to create a gradient',
-            css: {
-                'text-align': 'center',
-                'width': '100%',
-                'color': 'gray',
-                'position': 'absolute',
-                'top': '4rem', // puzzle piece height + margin
-            }
+        let t = Object.keys(gradientTypeMap).find(k => gradientTypeMap[k] == currentGradient.gradientType);
+        $starterIndicator.append(PuzzlePiece(t[0].toUpperCase() + t.slice(1), currentGradient.gradientType, true, 'drop-zone'));
+        $starterIndicator.append($('<p>', {
+            text: `Drag and drop ${t}s to create a gradient`,
         }));
-    } else if (currentGradient.visAssets.length == 1) {
-        let $starterIndicator = $('<div>', {
-            class: 'visasset-starter-indicator',
-        });
-        let labels = ['&lArr; +', '&olarr;', '+ &rArr;'];
-        let titles = ['Add a VisAsset to the left', 'Replace this VisAsset', 'Add a VisAsset to the right'];
-        for (let i = 0; i < 3; i++) {
-            let $puz = PuzzlePiece(
-                $('<label>', {html: labels[i], css: {'text-align': 'center', 'font-style': 'bold'}}),
-                gradientTypeMap[currentGradient.gradientType],
-                true,
-                'drop-zone'
-            );
-            $puz.attr('title', titles[i]);
-            $starterIndicator.append($puz);
-        }
         $gradient.append($starterIndicator);
     }
 }
@@ -269,20 +251,13 @@ function saveGradient() {
     globals.stateManager.update(`visAssetGradients/${currentGradient.uuid}`, currentGradient);
 }
 
-export async function VisAssetGradientEditor(gradientUuid) {
+export async function VisAssetGradientEditor(inputProps) {
+    let gradientUuid = inputProps.inputValue;
     let $visAssetGradientDialog = $('<div>', {
         id: 'vis-asset-gradient-dialog',
         class: 'puzzle-piece-overlay-dialog module-editor',
         width: width,
     });
-
-    // $visAssetGradientDialog.dialog({
-    //     'title': 'VisAsset Gradient Editor',
-    //     'minWidth': dialogWidth,
-    //     close: (evt, ui) => {
-    //         $('#vis-asset-gradient-dialog').remove();
-    //     }
-    // })
 
     // Build the gradient and allow it to respond to new VisAssets that are drag-n-dropped
     let $gradient = $('<div>', {
@@ -315,53 +290,42 @@ export async function VisAssetGradientEditor(gradientUuid) {
 
     $visAssetGradientDialog.append($gradient);
 
-    let $trash = $('<img>', {
-        id: 'visasset-trash',
-        src: `${STATIC_URL}compose/trash.svg`,
-    }).droppable({
-        tolerance: 'touch',
-        accept: '.resizable-section',
-        drop: (evt, ui) => {
-            let sectionUuid = $(ui.draggable).data('uuid');
-            $(ui.draggable).remove();
-            let thisIndex = currentGradient.visAssets.indexOf(sectionUuid);
-            if (thisIndex >= 0) {
-                currentGradient.visAssets.splice(thisIndex, 1);
-                if (currentGradient.visAssets.length > 1 && thisIndex - 1 >= 0) {
-                    currentGradient.points.splice(thisIndex - 1, 1);
-                } else {
-                    currentGradient.points = [];
-                }
-                updateGradientDisplay();
-                saveGradient();
-            }
-        },
-        // Indicate that it's about to be deleted
-        over: (_evt, ui) => {
-            $(ui.helper).css('opacity', '25%');
-        },
-        out: (_evt, ui) => {
-            $(ui.helper).css('opacity', '100%');
-        }
-    }).attr('title', 'Drop a section here to discard');
-    $visAssetGradientDialog.append($trash);
-
     // Retrieve gradient from state, if any
     if (globals.stateManager.state.visAssetGradients && globals.stateManager.state.visAssetGradients[gradientUuid]) {
         currentGradient = globals.stateManager.state.visAssetGradients[gradientUuid];
     } else {
         // Otherwise, set up default
-        gradientUuid = uuid();
         currentGradient = {
             uuid: gradientUuid,
             gradientScale: 'discrete',
-            gradientType: null, // will be defined once we drag-n-drop visassets
+            gradientType: inputProps.inputType,
             points: [],
             visAssets: [],
         }
     }
 
-    $visAssetGradientDialog.on('ABR_AddedToEditor', () => updateGradientDisplay());
+    $visAssetGradientDialog.on('ABR_AddedToEditor', () => {
+        updateGradientDisplay()
+
+        // enable the trash
+        $('.resizable-section').data({
+            trashed: (evt, ui) => {
+                let sectionUuid = $(ui.draggable).data('uuid');
+                $(ui.draggable).remove();
+                let thisIndex = currentGradient.visAssets.indexOf(sectionUuid);
+                if (thisIndex >= 0) {
+                    currentGradient.visAssets.splice(thisIndex, 1);
+                    if (currentGradient.visAssets.length > 1 && thisIndex - 1 >= 0) {
+                        currentGradient.points.splice(thisIndex - 1, 1);
+                    } else {
+                        currentGradient.points = [];
+                    }
+                    updateGradientDisplay();
+                    saveGradient();
+                }
+            }
+        });
+    });
 
     return $visAssetGradientDialog;
 }
