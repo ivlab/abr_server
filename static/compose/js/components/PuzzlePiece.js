@@ -419,6 +419,7 @@ export function SwatchInputPuzzlePiece(inputName, inputProps) {
         helper: 'clone',
         cursor: 'grabbing',
         drag: (evt, ui) => {
+            // Enable swatch puzzle pieces to float OVER any dialogs that need it
             let $d = $('.puzzle-piece-overlay-dialog');
             if ($d.length > 0) {
                 let pos = $(ui.helper).position();

@@ -217,7 +217,8 @@ function stopsFromGradient() {
 
         // Allow this to be trashed
         $point.data({
-            trashed: () => {
+            trashed: (evt, ui) => {
+                $(ui.draggable).remove();
                 currentGradient = gradientFromStops();
                 saveGradient();
             }

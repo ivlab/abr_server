@@ -142,11 +142,6 @@ export async function ColormapEditor(inputProps) {
                 updateColormap();
                 saveColormap();
             });
-            $thumb.data({
-                trashed: () => {
-                    activeColormap = getColormapFromThumbs();
-                }
-            });
             $('#color-slider').append($thumb);
         });
         updateColormap();
@@ -243,10 +238,17 @@ function updateColorThumbPositions() {
     activeColormap.entries.forEach((c) => {
         let pt = c[0];
         let color = floatToHex(c[1]);
-        $('#color-slider').append(ColorThumb(pt, color, () => {
+        let $thumb = ColorThumb(pt, color, () => {
             updateColormap();
             saveColormap();
-        }));
+        });
+        $thumb.data({
+            trashed: (evt, ui) => {
+                $(ui.draggable).remove();
+                activeColormap = getColormapFromThumbs();
+            }
+        });
+        $('#color-slider').append($thumb);
     });
     updateSpectrum();
 }

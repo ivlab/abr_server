@@ -68,7 +68,7 @@ export const TITLE_STRINGS = {
 // on inputs from the current data impression.
 export async function EditorDialog(inputProps, impressionUuid) {
     let $editorDialog = $('<div>', {
-        class: 'editor-dialog'
+        class: 'editor-dialog puzzle-piece-overlay-dialog' // enable puzzle pieces to float *over* dialog
     });
 
     // There can only be one editor
@@ -134,8 +134,8 @@ export async function EditorDialog(inputProps, impressionUuid) {
         }
     }
 
-    // Take pity on it and give it one input at least - the one we passed in
-    if (inputsToConsider.length == 0 && inputProps) {
+    // Make sure AT LEAST the input we passed in shows up, if it exists...
+    if (inputProps && !inputsToConsider.find(i => i.inputValue == inputProps.inputValue)) {
         inputsToConsider.push(inputProps);
     }
 
@@ -144,6 +144,7 @@ export async function EditorDialog(inputProps, impressionUuid) {
         // Find handlers for each valid input
         for (const input of inputsToConsider) {
             let handler = EDITOR_HANDLERS[input.inputType];
+            // TODO: consider adding a "highlight" for the module we actually clicked on
             if (handler != null) {
                 titleString += TITLE_STRINGS[input.inputType] + ' + ';
                 let $moduleEditor = await handler(input);
@@ -164,7 +165,6 @@ export async function EditorDialog(inputProps, impressionUuid) {
             if (trashedFn) {
                 trashedFn(evt, ui);
             }
-            $(ui.draggable).remove();
         },
         // Indicate that it's about to be deleted
         over: (_evt, ui) => {
