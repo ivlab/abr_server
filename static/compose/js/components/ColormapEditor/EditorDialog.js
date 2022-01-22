@@ -144,10 +144,12 @@ export async function EditorDialog(inputProps, impressionUuid) {
         // Find handlers for each valid input
         for (const input of inputsToConsider) {
             let handler = EDITOR_HANDLERS[input.inputType];
-            // TODO: consider adding a "highlight" for the module we actually clicked on
             if (handler != null) {
                 titleString += TITLE_STRINGS[input.inputType] + ' + ';
                 let $moduleEditor = await handler(input);
+                if (input.inputValue == inputProps.inputValue) {
+                    $moduleEditor.addClass('editor-source');
+                }
                 $editorDialog.append($moduleEditor);
             }
         }

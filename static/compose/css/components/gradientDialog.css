@@ -7,6 +7,26 @@
 .editor-dialog {
     overflow: hidden !important;
 }
+.editor-source::before {
+    animation-name: editor-source-indicator;
+    animation-duration: 0.3s;
+    animation-timing-function: linear;
+    animation-iteration-count: 2;
+    animation-delay: 0.3s;
+    opacity: 0%;
+    content: ' ';
+    background-color: #39a7e7;
+    width: 2rem;
+    height: 5rem;
+    border-radius: 2rem;
+    position: absolute;
+    left: 1rem;
+}
+@keyframes editor-source-indicator {
+    0% {opacity: 0%;}
+    50% {opacity: 100%;}
+    100% {opacity: 0%;}
+}
 
 #gradient-view {
     position: relative;
