@@ -22,21 +22,12 @@
  */
 
 import { globals } from '../../../../common/globals.js';
-import { uuid } from '../../../../common/UUID.js';
 import { ColorMap } from './color.js';
 import { getDisplayVal, getFloatVal } from '../Primitives.js';
 import { STATE_UPDATE_EVENT } from '../../../../common/StateManager.js';
 import { createSvg } from '../../../../common/helpers.js';
-import { DataPath } from '../../../../common/DataPath.js';
-import { width, height, margin } from './components.js';
-
-// const margin = { top: 10, right: 50, bottom: 20, left: 50 };
-// const dialogWidth = 700;
-// const width = dialogWidth - margin.left - margin.right;
-// const height = 100 - margin.top - margin.bottom;
-
-// Label width + 2 * padding width
-const labelWidth = 60 + 2 * 10;
+import { width, height } from './dialogConsts.js';
+import { histogramDragIndicator, histogramDragIndicatorDone } from './HistogramEditor.js';
 
 const DEFAULT_GRADIENT = {
     "points": [
@@ -208,10 +199,16 @@ function stopsFromGradient() {
 
         $point.draggable({
             containment: '.editor-dialog',
+            drag: (evt, ui) => {
+                let stopWidth = $(ui.helper).get(0).clientWidth;
+                let percentage = ($(ui.helper).position().left + stopWidth / 2.0) / width;
+                histogramDragIndicator(percentage);
+            },
             stop: (evt, ui) => {
                 currentGradient = gradientFromStops();
                 saveGradient();
                 $('#gradient-view').append(getGradientColormap());
+                histogramDragIndicatorDone();
             },
         });
 

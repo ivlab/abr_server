@@ -18,9 +18,9 @@
  */
 
 import { globals } from "../../../../common/globals.js";
-import { uuid } from "../../../../common/UUID.js";
 import { gradientTypeMap, PuzzlePiece, typeMap } from "../PuzzlePiece.js";
-import { width } from "./components.js";
+import { width } from "./dialogConsts.js";
+import { histogramDragIndicator, histogramDragIndicatorDone } from "./HistogramEditor.js";
 
 var currentGradient = null;
 
@@ -159,6 +159,7 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
                 let percFormat = `${(percentage * 100).toFixed(0)}%`;
                 $(evt.target).find('.right-section-label').text(percFormat);
                 $(evt.target).next().find('.left-section-label').text(percFormat);
+                histogramDragIndicator(percentage);
             },
             stop: (evt, ui) => {
                 // Update the actual gradient
@@ -167,6 +168,7 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
                     currentGradient.points[visAssetIndex] = percentage;
                     saveGradient();
                 }
+                histogramDragIndicatorDone();
             }
         });
     }

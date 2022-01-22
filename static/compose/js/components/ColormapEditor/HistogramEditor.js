@@ -23,15 +23,28 @@
 
 import { globals } from '../../../../common/globals.js';
 import { DataPath } from '../../../../common/DataPath.js';
-import { DataRemappingSlider, margin, width } from './components.js';
+import { margin, width } from './dialogConsts.js';
+import { DataRemappingSlider } from './components.js';
 
-const histogramHeight = 200 - margin.top - margin.bottom;
+const fullHeight = 200;
+const histogramHeight = fullHeight - margin.top - margin.bottom;
 
 var zippedHistogram = null;
 var currentVarPath = null;
 var currentKeyDataPath = null;
 var currentMinMax = null;
 var customRange = false;
+
+export function histogramDragIndicator(percentage) {
+    let fullWidth = $('#histogram-drag-indicator').parent().width();
+    let leftMargin = (fullWidth - width) / 2.0;
+    let remappedPx = width * percentage + leftMargin;
+    $('#histogram-drag-indicator').css('opacity', '100%');
+    $('#histogram-drag-indicator').css('left', remappedPx);
+}
+export function histogramDragIndicatorDone() {
+    $('#histogram-drag-indicator').css('opacity', '0%');
+}
 
 // Histogram component to plug into the editor dialog
 export async function HistogramEditor(variableInput, keyDataInput) {
@@ -90,6 +103,21 @@ export async function HistogramEditor(variableInput, keyDataInput) {
     $histContainer.append($('<div>', {
         id: 'histogram',
     }));
+
+    // Enable a "stick" indicator that anyone can use whilst editing their
+    // particular thing so they can see where in the data range it lies
+    $histContainer.append($('<div>', {
+        id: 'histogram-drag-indicator',
+        css: {
+            position: 'absolute',
+            height: histogramHeight,
+            width: 2,
+            top: margin.top + margin.bottom,
+            'background-color': '#3d3d3d',
+            opacity: '0%',
+        }
+    }))
+
 
     $histogramEditor.append($histContainer);
 

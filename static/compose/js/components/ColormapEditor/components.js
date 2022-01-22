@@ -20,12 +20,7 @@
  */
 // -------------------- Begin components --------------------
 
-// Constants for sizing the various dialogs
-export const margin = { top: 10, right: 0, bottom: 20, left: 0 };
-export const dialogWidth = 700;
-export const numBins = 540;
-export const width = numBins - margin.left - margin.right;
-export const height = 100 - margin.top - margin.bottom;
+import { histogramDragIndicator, histogramDragIndicatorDone } from "./HistogramEditor.js";
 
 export function ColorThumb(perc, color, colorChangeCallback) {
     let mapLeft = $('#colormap .colormap-canvas').position().left;
@@ -39,10 +34,14 @@ export function ColorThumb(perc, color, colorChangeCallback) {
         containment: ".editor-dialog",
         drag: (_evt, ui) => {
             let middle = ($(ui.helper).position().left - mapLeft) + $(ui.helper).width() / 2;
-            // let percentage = middle / $('#colormap .colormap-canvas').width();
+            let percentage = middle / $('#colormap .colormap-canvas').width();
+            histogramDragIndicator(percentage);
             // $(ui.helper).find('.percentage-display').text(`${(percentage * 100).toFixed(0)}%`);
         },
-        stop: colorChangeCallback,
+        stop: (evt, ui) => {
+            colorChangeCallback(evt, ui);
+            histogramDragIndicatorDone();
+        },
     }).append(
         $('<input>', {
             class: 'color-input',
@@ -53,10 +52,10 @@ export function ColorThumb(perc, color, colorChangeCallback) {
     //         class: 'percentage-display',
     //         text: `${(perc * 100).toFixed(0)}%`
     //     })
-    ).append(
-        $('<div>', {
-            class: 'marker-bar',
-        }).css('height', mapHeight * 3).css('top', -mapHeight * 3)
+    // ).append(
+    //     $('<div>', {
+    //         class: 'marker-bar',
+    //     }).css('height', mapHeight * 3).css('top', -mapHeight * 3)
     ).css('position', 'absolute');
 
     // 25 = ((spectrum input) + margin) / 2

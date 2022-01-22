@@ -23,10 +23,8 @@
  */
 
 import { globals } from '../../../../common/globals.js';
-import { uuid } from '../../../../common/UUID.js';
-import { ColorMap, floatToHex, hexToFloat } from './color.js';
 import { ColormapEditor } from './ColormapEditor.js';
-import { ColorThumb, dialogWidth, width, height } from './components.js';
+import { dialogWidth } from './dialogConsts.js';
 import { GradientEditor } from './GradientEditor.js';
 import { HistogramEditor } from './HistogramEditor.js';
 import { VisAssetGradientEditor } from './VisAssetGradientEditor.js';
