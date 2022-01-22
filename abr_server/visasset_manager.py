@@ -69,6 +69,7 @@ def download_visasset(uuid, library_host):
     if library_host is not None:
         LIBRARIES_TO_SEARCH.add(library_host)
 
+    failed = []
     for host in LIBRARIES_TO_SEARCH:
         va_path = settings.VISASSET_PATH.joinpath(uuid)
         artifact_json_path = va_path.joinpath(settings.VISASSET_JSON)
@@ -77,7 +78,6 @@ def download_visasset(uuid, library_host):
         artifact_json_url = va_url + settings.VISASSET_JSON
 
         # Download the Artifact JSON
-        failed = []
         success = check_exists_and_download(artifact_json_url, artifact_json_path)
         if not success:
             failed.append(artifact_json_path)
@@ -104,7 +104,7 @@ def download_visasset(uuid, library_host):
                 name = download_tasks[future]
                 if not future:
                     failed.append(name)
-        return failed
+    return failed
 
 def check_exists_and_download(url, output_path):
     if not output_path.exists():
