@@ -199,7 +199,7 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
                         resolvedProps.inputValue = uuid();
                         updatePromise = globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
                     } else {
-                        updatePromise = new Promise().resolve();
+                        updatePromise = new Promise((resolve, reject) => resolve());
                     }
                     updatePromise.then(() => {
                         EditorDialog(resolvedProps, impressionUuid);
@@ -372,7 +372,7 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
                 resolvedProps.inputValue = uuid();
                 updatePromise = globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
             } else {
-                updatePromise = new Promise().resolve();
+                updatePromise = new Promise((resolve, reject) => resolve());
             }
             updatePromise.then(() => {
                 EditorDialog(resolvedProps, impressionUuid);
