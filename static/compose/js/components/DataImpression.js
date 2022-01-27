@@ -169,6 +169,11 @@ function InputSocket(inputName, inputProps, addClass=undefined) {
             $(ui.draggable).data('draggedOut', true);
         },
         drop: (evt, ui) => {
+            // Skip socket drop events if piece is inside a dialog
+            if (ui.draggable.parents('.puzzle-piece-overlay-dialog').length > 0) {
+                return;
+            }
+
             // Get the impression that this input is a part of
             let $impression = $(evt.target).closest('.data-impression');
             let impressionId = $impression.data('uuid');
