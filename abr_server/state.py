@@ -72,13 +72,13 @@ class State():
                     if fin.read() == resp.text:
                         need_backup = False
             if need_backup:
-                schema_name = datetime.datetime.now().isoformat() + '.json'
+                schema_name = datetime.datetime.now().isoformat().replace(':', '_') + '.json'
                 if not os.path.isdir(backup_schema_dir):
                     os.makedirs(backup_schema_dir)
-                schema_bak_path = os.path.join(backup_schema_dir, schema_name)
+                schema_bak_path = Path(backup_schema_dir).joinpath(schema_name)
                 with open(schema_bak_path, 'w') as fout:
                     fout.write(resp.text)
-                logger.info('Saved backup schema to ' + schema_bak_path)
+                logger.info('Saved backup schema to ' + str(schema_bak_path))
 
         # Lock around state modifications
         self._state_lock = Lock()
