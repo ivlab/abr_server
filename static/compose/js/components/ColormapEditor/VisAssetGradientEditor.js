@@ -23,6 +23,8 @@ import { width } from "./dialogConsts.js";
 import { histogramDragIndicator, histogramDragIndicatorDone } from "./HistogramEditor.js";
 
 var currentGradient = null;
+const MaxTexturesPerGradient = 16; // the number defined in GradientBlendMap.cs in the ABREngine.
+const MinSectionWidth = 0.04; // twice the blend width defined in GradientBlendMap.cs in the ABREngine
 
 export function gradientPreviewThumbnail(gradient) {
     let $thumb = $('<div>', {
@@ -145,6 +147,7 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
             start: (evt, ui) => {
                 startWidth = $(evt.target).width();
                 nextStartWidth = $(evt.target).next().width();
+                $(evt.target).resizable('option', 'minWidth', $section.parent().width() * MinSectionWidth);
             },
             resize: (evt, ui) => {
                 let sectionWidth = $(evt.target).width();
@@ -187,6 +190,11 @@ function gradientTypeValid(abrType) {
 }
 
 function addGradientStopRelative(uuid, abrType, existingUuid, leftOf) {
+    if (currentGradient.visAssets.length >= MaxTexturesPerGradient) {
+        alert(`Cannot add more than ${MaxTexturesPerGradient} VisAssets in a gradient`);
+        return;
+    }
+
     if (!gradientTypeValid(abrType)) {
         return;
     }
