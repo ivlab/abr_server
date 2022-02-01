@@ -110,22 +110,12 @@ function ResizableSection(sectionWidth, uuid, leftPerc, rightPerc, resizable) {
     $section.append($centerDrop);
     $section.append($rightDrop);
 
-    $section.append($('<p>', {
-        class: 'left-section-label',
-        text: `${Math.round(leftPerc * 100)}%`
-    }));
-
     $section.append(
         $('<img>', {
             class: 'rounded',
             src: `/media/visassets/${uuid}/thumbnail.png`,
         })
     );
-
-    $section.append($('<p>', {
-        class: 'right-section-label',
-        text: `${Math.round(rightPerc * 100)}%`
-    }));
 
     $section.draggable({
         helper: 'clone',
