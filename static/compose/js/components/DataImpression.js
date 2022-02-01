@@ -170,7 +170,7 @@ function InputSocket(inputName, inputProps, addClass=undefined) {
         },
         drop: (evt, ui) => {
             // Skip socket drop events if piece is inside a dialog
-            if (ui.draggable.parents('.puzzle-piece-overlay-dialog').length > 0) {
+            if (ui.helper.parents('.puzzle-piece-overlay-dialog').length > 0) {
                 return;
             }
 
