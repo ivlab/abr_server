@@ -41,6 +41,9 @@ export function histogramDragIndicator(percentage) {
     let remappedPx = width * percentage + leftMargin;
     $('#histogram-drag-indicator').css('opacity', '100%');
     $('#histogram-drag-indicator').css('left', remappedPx);
+    let $label = $('#histogram-drag-indicator').find('p');
+    let dataValue = (currentMinMax.max - currentMinMax.min) * percentage + currentMinMax.min;
+    $label.text(dataValue.toFixed(2));
 }
 export function histogramDragIndicatorDone() {
     $('#histogram-drag-indicator').css('opacity', '0%');
@@ -106,7 +109,7 @@ export async function HistogramEditor(variableInput, keyDataInput) {
 
     // Enable a "stick" indicator that anyone can use whilst editing their
     // particular thing so they can see where in the data range it lies
-    $histContainer.append($('<div>', {
+    let $dragIndicator = $('<div>', {
         id: 'histogram-drag-indicator',
         css: {
             position: 'absolute',
@@ -116,7 +119,19 @@ export async function HistogramEditor(variableInput, keyDataInput) {
             'background-color': '#3d3d3d',
             opacity: '0%',
         }
-    }))
+    });
+    // Append a numeric indicator for the actual data value
+    $dragIndicator.append($('<p>', {
+        text: '',
+        css: {
+            position: 'absolute',
+            bottom: '-2rem',
+            left: '-2rem',
+            width: '4rem',
+            'text-align': 'center',
+        }
+    }));
+    $histContainer.append($dragIndicator);
 
 
     $histogramEditor.append($histContainer);
