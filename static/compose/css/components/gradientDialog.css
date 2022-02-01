@@ -6,6 +6,7 @@
 
 .editor-dialog {
     overflow: hidden !important;
+    padding: 0 !important;
 }
 .editor-source::before {
     animation-name: editor-source-indicator;

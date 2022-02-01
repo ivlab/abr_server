@@ -1,6 +1,6 @@
 // Constants for sizing the various dialogs
-export const margin = { top: 10, right: 0, bottom: 20, left: 0 };
-export const dialogWidth = 700;
+export const dialogWidth = $('body').width() * 0.75;
+export const margin = { top: 10, right: dialogWidth * 0.1, bottom: 20, left: dialogWidth * 0.1 };
 export const numBins = 540;
-export const width = numBins - margin.left - margin.right;
+export const width = dialogWidth - margin.left - margin.right;
 export const height = 100 - margin.top - margin.bottom;
