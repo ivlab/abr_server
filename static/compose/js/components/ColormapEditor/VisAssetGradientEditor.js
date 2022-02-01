@@ -242,6 +242,8 @@ function updateGradientDisplay() {
                     currentGradient.visAssets.splice(thisIndex, 1);
                     if (currentGradient.visAssets.length > 1 && thisIndex - 1 >= 0) {
                         currentGradient.points.splice(thisIndex - 1, 1);
+                    } else if (currentGradient.visAssets.length > 1 && thisIndex == 0) {
+                        currentGradient.points.shift();
                     } else {
                         currentGradient.points = [];
                     }
