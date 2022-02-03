@@ -86,29 +86,52 @@ export class ComposeManager {
         this.$element.on('drop', (evt) => {
             if (!$(evt.target).hasClass('ui-droppable')) {
                 evt.preventDefault();
-                evt.originalEvent.dataTransfer.items[0].getAsString((url) => {
+                evt.originalEvent.dataTransfer.items[0].getAsString(async (visAssetData) => {
                     let uuidRegex = /[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/;
-                    let matches = uuidRegex.exec(url);
+                    let matches = uuidRegex.exec(visAssetData);
 
-                    if (matches[0]) {
-                        let artifactUuid = matches[0];
+                    let dependencies = [];
+                    let hostPath = '';
+                    if (visAssetData.startsWith('data:image/png')) {
+                        // First, try to see if it is a gradient (incoming png)
+                        let commaIndex = visAssetData.indexOf(',');
+                        let header = visAssetData.slice(0, commaIndex);
+                        let headerItems = header.split(';');
+                        hostPath = headerItems[headerItems.length - 2];
+                        let gradientDataEncoded = headerItems[headerItems.length - 1];
+                        let gradient = JSON.parse(decodeURIComponent(gradientDataEncoded));
+
+                        // Add the gradient to state
+                        await globals.stateManager.update('visAssetGradients/' + gradient.uuid, gradient);
+
+                        // Queue up the dependencies to download
+                        dependencies = gradient.visAssets;
+                    } else if (matches[0]) {
+                        // Otherwise, it's a single VisAsset
+                        dependencies = [matches[0]];
 
                         // Find URL the artifact is coming from
-                        let firstIndex = url.indexOf(artifactUuid);
-                        let hostPath = url.slice(0, firstIndex);
+                        let firstIndex = visAssetData.indexOf(dependencies[0]);
+                        hostPath = visAssetData.slice(0, firstIndex);
+                    }
 
+                    // Start downloading every VisAsset dependency or single VisAsset
+                    let fetchPromises = [];
+                    for (const artifactUuid of dependencies) {
                         $('.loading-spinner').css('visibility', 'visible');
-                        fetch('/api/download-visasset/' + artifactUuid, {
+                        fetchPromises.push(fetch('/api/download-visasset/' + artifactUuid, {
                             method: 'POST',
                             headers: {
                                 // 'X-CSRFToken': csrftoken,
                             },
                             mode: 'same-origin',
                             body: JSON.stringify({'hostPath': hostPath}),
-                        }).then(() => {
-                            $('.loading-spinner').css('visibility', 'hidden');
-                        });
+                        }));
                     }
+                    // Wait until everything is downloaded until loading disappears
+                    Promise.all(fetchPromises).then(() => {
+                        $('.loading-spinner').css('visibility', 'hidden');
+                    });
                 });
             }
         });
