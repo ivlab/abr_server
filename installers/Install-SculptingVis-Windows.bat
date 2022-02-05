@@ -22,10 +22,10 @@ mkdir logs
 @REM Forward port 8000 for Design Server
 @REM Mount volume for media directory (datasets and visassets)
 @REM Download and create the Docker container from the image online, and save the container ID for later
-echo "Downloading ABR Server (this may take a while)"
-for /f %%i in ('docker create -p 8000:8000 -v "%this_dir%/media:/media" bridgerherman/sculpting-vis-app:v1.0.0 --name %name%') do set container_id=%%i
+echo "- Downloading ABR Server (this may take a while)"
+for /f %%i in ('docker create --name %name% -p 8000:8000 -v "%this_dir%/media:/media" bridgerherman/sculpting-vis-app:v1.0.0') do set container_id=%%i
 
-echo "Container ID: %container_id%"
+echo "- Container ID: %container_id%"
 
 echo %container_id%>_container_id_sculpting-vis-app
 set /p loaded_id=<_container_id_sculpting-vis-app

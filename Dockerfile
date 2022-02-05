@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM python:3.8-slim
 
 LABEL maintainer="gda@tacc.utexas.edu"
 LABEL version="0.1"
@@ -6,9 +6,9 @@ LABEL description="SculptingVis app"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt update
-RUN echo 'y' | apt install python3.8 python3-pip less
-RUN python3.8 -m pip install --upgrade pip
+# RUN apt update
+# RUN echo 'y' | apt install python3.8 python3-pip less
+# RUN python3.8 -m pip install --upgrade pip
 
 COPY ./requirements.txt requirements.txt
 RUN python3.8 -m pip install -r requirements.txt

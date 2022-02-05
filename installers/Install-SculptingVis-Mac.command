@@ -22,7 +22,7 @@ mkdir -p $this_dir/logs
 # Mount volume for media directory (datasets and visassets)
 # Download and create the Docker container from the image online, and save the container ID for later
 echo "Downloading ABR Server (this may take a while)"
-container_id=`docker create -p 8000:8000 -v "$this_dir/media:/media" bridgerherman/sculpting-vis-app:v1.0.0 --name $name`
+container_id=`docker create --name $name -p 8000:8000 -v "$this_dir/media:/media" bridgerherman/sculpting-vis-app:v1.0.0`
 
 echo "Container ID: $container_id"
 
