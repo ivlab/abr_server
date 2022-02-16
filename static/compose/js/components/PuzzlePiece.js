@@ -49,7 +49,6 @@ export const gradientTypeMap = {
     'texture': 'IVLab.ABREngine.SurfaceTextureGradient',
 };
 
-
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     let $element = $('<div>', {
         class: 'puzzle-piece rounded ' + addClasses,
@@ -254,6 +253,7 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
             }
 
             // Allow the gradient to be edited
+            let gradient = false;
             if (Object.values(gradientTypeMap).indexOf(resolvedProps.inputType) >= 0) {
                 $el.attr('title', $el.attr('title') + '\nClick to customize');
                 $el.addClass('hover-bright');
@@ -271,7 +271,32 @@ export function InputPuzzlePiece(inputName, inputProps, addClass) {
                 };
                 $el.on('dblclick', clickEvt);
                 $el.on('click', clickEvt);
+
+                gradient = true;
             }
+
+            // Handle right-click to copy VisAsset import code for ABR
+            $el.attr('title', $el.attr('title') + '\nRight-click to copy C# ABR code');
+            $el.on('contextmenu', (evt) => {
+                evt.preventDefault();
+                // Get the UUID
+                let uuid = $el.data('inputValue');
+                if (!gradient) {
+                    navigator.clipboard.writeText(uuid);
+                    $.toast({
+                        text: `Copied UUID ${uuid} import code to clipboard`,
+                        hideAfter: 2000,
+                        position: 'bottom-right'
+                    });
+                } else {
+                    $.toast({
+                        text: `Cannot copy gradient UUIDs`,
+                        icon: 'warning',
+                        hideAfter: 2000,
+                        position: 'bottom-right'
+                    });
+                }
+            });
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
         if (resolvedProps && resolvedProps.inputValue) {
