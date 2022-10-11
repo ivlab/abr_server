@@ -193,8 +193,9 @@ export function Header() {
         }).dialog({
             resizable: false,
             height: 'auto',
-            width: 400,
+            width: $('body').width() * 0.75,
             modal: true,
+            position: { my: 'center top', at: 'center top', of: window},
             buttons: {
                 "Load": function () {
                     let stateName = $(this).find('.selected-state .state-name').text();
@@ -222,6 +223,7 @@ export function Header() {
                 let stateName = item.replace(STORAGE_STATE_PREFIX, '');
                 $allStates.append($('<div>', {
                     class: 'state-selector rounded',
+                    title: 'Select a state and click "Load" or double click a state',
                     css: { cursor: 'pointer' }
                 }).on('click', (evt) => {
                     let $target = $(evt.target).closest('.state-selector');
@@ -234,6 +236,12 @@ export function Header() {
                         .find('.ui-button')
                         .filter((i, el) => $(el).text() == 'Load')
                         .css('background-color', '#ceedff');
+                }).on('dblclick', (evt) => {
+                    let stateName = $(evt.target).parents().find('.selected-state .state-name').text();
+                    $('#state-header #state-name').text(stateName);
+                    // Tell the server to update
+                    globals.stateManager.updateState(localStorage.getItem(STORAGE_STATE_PREFIX + stateName));
+                    $('#load-state-dialog').dialog('destroy');
                 }).append(
                     $('<img>', {
                         class: 'state-thumbnail',

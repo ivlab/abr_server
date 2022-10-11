@@ -28,6 +28,9 @@ from abr_server.colormap_utilities import colormap_from_xml
 
 POOL_MANAGER = urllib3.PoolManager()
 
+# All the places we can search for this VisAsset
+LIBRARIES_TO_SEARCH = {settings.VISASSET_LIBRARY}
+
 def remove_visasset(uuid):
     va_path = settings.VISASSET_PATH.joinpath(uuid)
     if va_path.exists():
@@ -62,41 +65,45 @@ def save_from_local(visasset_data):
     else:
         return False
 
-def download_visasset(uuid):
-    va_path = settings.VISASSET_PATH.joinpath(uuid)
-    artifact_json_path = va_path.joinpath(settings.VISASSET_JSON)
+def download_visasset(uuid, library_host):
+    if library_host is not None:
+        LIBRARIES_TO_SEARCH.add(library_host)
 
-    va_url = settings.VISASSET_LIBRARY + uuid + '/'
-    artifact_json_url = va_url + settings.VISASSET_JSON
-
-    # Download the Artifact JSON
     failed = []
-    success = check_exists_and_download(artifact_json_url, artifact_json_path)
-    if not success:
-        failed.append(artifact_json_path)
-        return failed # cannot continue without artifact json
+    for host in LIBRARIES_TO_SEARCH:
+        va_path = settings.VISASSET_PATH.joinpath(uuid)
+        artifact_json_path = va_path.joinpath(settings.VISASSET_JSON)
 
-    with open(artifact_json_path) as fin:
-        artifact_json = json.load(fin)
+        va_url = host + uuid + '/'
+        artifact_json_url = va_url + settings.VISASSET_JSON
 
-    # Download the Thumbnail
-    preview_img = artifact_json['preview']
-    preview_path = va_path.joinpath(preview_img)
-    success = check_exists_and_download(va_url + preview_img, preview_path)
-    if not success:
-        failed.append(preview_path)
+        # Download the Artifact JSON
+        success = check_exists_and_download(artifact_json_url, artifact_json_path)
+        if not success:
+            failed.append(artifact_json_path)
+            continue
 
-    # Get all of the files specified in artifactData
-    all_files = []
-    get_all_strings_from_json(artifact_json['artifactData'], all_files)
+        with open(artifact_json_path) as fin:
+            artifact_json = json.load(fin)
 
-    # Download all files in a threaded form
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        download_tasks = {executor.submit(check_exists_and_download, va_url + f, va_path.joinpath(f)): f for f in all_files}
-        for future in concurrent.futures.as_completed(download_tasks):
-            name = download_tasks[future]
-            if not future:
-                failed.append(name)
+        # Download the Thumbnail
+        preview_img = artifact_json['preview']
+        preview_path = va_path.joinpath(preview_img)
+        success = check_exists_and_download(va_url + preview_img, preview_path)
+        if not success:
+            failed.append(preview_path)
+
+        # Get all of the files specified in artifactData
+        all_files = []
+        get_all_strings_from_json(artifact_json['artifactData'], all_files)
+
+        # Download all files in a threaded form
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            download_tasks = {executor.submit(check_exists_and_download, va_url + f, va_path.joinpath(f)): f for f in all_files}
+            for future in concurrent.futures.as_completed(download_tasks):
+                name = download_tasks[future]
+                if not future:
+                    failed.append(name)
     return failed
 
 def check_exists_and_download(url, output_path):

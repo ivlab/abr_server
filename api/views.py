@@ -155,7 +155,11 @@ def list_datasets(request):
 @csrf_exempt
 def download_visasset(request, uuid):
     if request.method == 'POST':
-        failed_downloads = visasset_manager.download_visasset(uuid)
+        try:
+            host_path = json.loads(request.body)['hostPath']
+        except:
+            host_path = settings.VISASSET_LIBRARY
+        failed_downloads = visasset_manager.download_visasset(uuid, host_path)
         if len(failed_downloads) == 0:
             notifier.notify(NotifierMessage(MessageTarget.VisAssetsCache))
             return HttpResponse('Downloaded files', status=200)

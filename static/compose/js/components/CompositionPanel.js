@@ -70,17 +70,28 @@ export function CompositionPanel() {
 
             // Trash VisAssets
             if (uuidVisAsset) {
+                // If it's a swatch, remove it from palette
+                if ($(ui.draggable).hasClass('swatch')) {
+                    let localVisAssets = globals.stateManager.state.localVisAssets;
+                    let visAssetGradients = globals.stateManager.state.visAssetGradients;
+                    if (localVisAssets && localVisAssets.hasOwnProperty(uuidVisAsset)) {
+                        // Trash local VisAssets (Custom Colormaps)
+                        globals.stateManager.removePath('localVisAssets/' + uuidVisAsset);
+                    } else if (visAssetGradients && visAssetGradients.hasOwnProperty(uuidVisAsset)) {
+                        // Trash VisAsset gradients
+                        globals.stateManager.removePath('visAssetGradients/' + uuidVisAsset);
+                    } else {
+                        // Trash other kinds of VisAssets (Colormaps, Glyphs, Line Textures, Surface Textures)
+                        globals.stateManager.removeVisAsset(uuidVisAsset);
+                    }
+                } else {
+                    // Otherwise, just remove it from this tower (the user
+                    // probably meant to just drag it off the tower)
+                    let impressionUuid = $(ui.draggable).parents('.data-impression').data('uuid');
+                    let inputName = $(ui.draggable).data('inputName');
+                    globals.stateManager.removePath(`impressions/${impressionUuid}/inputValues/${inputName}`);
+                }
                 $(ui.draggable).remove();
-
-                let localVisAssets = globals.stateManager.state.localVisAssets;
-                if (localVisAssets && localVisAssets.hasOwnProperty(uuidVisAsset)) {
-                    // Trash local VisAssets (Custom Colormaps)
-                    globals.stateManager.removePath('localVisAssets/' + uuidVisAsset);
-                }
-                else {
-                    // Trash other kinds of VisAssets (Colormaps, Glyphs, Line Textures, Surface Textures)
-                    globals.stateManager.removeVisAsset(uuidVisAsset);
-                }
             }
         },
         // Indicate that it's about to be deleted

@@ -24,13 +24,9 @@
 import * as Components from './Components.js';
 import { globals } from '../../../common/globals.js';
 import { CACHE_UPDATE } from '../../../common/StateManager.js';
-
-const typeMap = {
-    'colormap': 'IVLab.ABREngine.ColormapVisAsset',
-    'glyph': 'IVLab.ABREngine.GlyphVisAsset',
-    'line': 'IVLab.ABREngine.LineTextureVisAsset',
-    'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
-};
+import { typeMap, gradientTypeMap } from './PuzzlePiece.js';
+import { EditorDialog } from './ColormapEditor/EditorDialog.js';
+// import { VisAssetGradientDialog } from './ColormapEditor/VisAssetGradientDialog.js';
 
 export function DesignPanel() {
     let $designPanel = $('<div>', {
@@ -50,44 +46,44 @@ export function DesignPanel() {
     let $plateList = Components.SwatchList('Plates', plateTypes);
     $designPanel.append($plateList);
 
+    let $clearMenuItem = $('<li>').append($('<div>', { title: 'Clear all unused VisAssets' }).append(
+        $('<span>', { class: 'material-icons', text: 'delete_sweep' })
+    ).append(
+        $('<span>', { text: 'Clear unused...'})
+    ).on('click', async (evt) => {
+        let usedUuids = globals.stateManager.findAll((s) => {
+            return s.hasOwnProperty('inputGenre') &&
+            s['inputGenre'] == 'VisAsset'
+        }).map((v) => v.inputValue);
+
+        let visAssets = Object.keys(globals.stateManager.getCache('visassets'));
+        let localVisAssets = globals.stateManager.state.localVisAssets;
+        localVisAssets = localVisAssets ? Object.keys(localVisAssets) : [];
+        let visAssetsToRemove = [...visAssets, ...localVisAssets].filter((v) => usedUuids.indexOf(v) < 0);
+
+        let confirmed = confirm(`Really delete ${visAssetsToRemove.length} VisAssets?`);
+        if (confirmed) {
+            for (const va of visAssetsToRemove) {
+                if (localVisAssets.includes(va)) {
+                    // Use await here to make sure the localVisAsset is removed first before the cache is refreshed
+                    await globals.stateManager.removePath('localVisAssets/' + va);
+                }
+                else {
+                    globals.stateManager.removeVisAsset(va);
+                }
+            }
+            // Refresh the cache so that the puzzle piece disappear from the panel
+            globals.stateManager.refreshCache('visassets');
+        }
+    }));
 
     let outTimer = null;
     let $visAssetMenu = $('<ul>', {
         id: 'vis-asset-menu',
         css: { visibility: 'hidden', position: 'fixed' },
     }).append(
-        $('<li>').append($('<div>', { title: 'Clear all unused VisAssets' }).append(
-            $('<span>', { class: 'material-icons', text: 'delete_sweep' })
-        ).append(
-            $('<span>', { text: 'Clear unused...'})
-        ).on('click', async (evt) => {
-
-            let usedUuids = globals.stateManager.findAll((s) => {
-                return s.hasOwnProperty('inputGenre') &&
-                s['inputGenre'] == 'VisAsset'
-            }).map((v) => v.inputValue);
-
-            let visAssets = Object.keys(globals.stateManager.getCache('visassets'));
-            let localVisAssets = globals.stateManager.state.localVisAssets;
-            localVisAssets = localVisAssets ? Object.keys(localVisAssets) : [];
-            let visAssetsToRemove = [...visAssets, ...localVisAssets].filter((v) => usedUuids.indexOf(v) < 0);
-            
-            let confirmed = confirm(`Really delete ${visAssetsToRemove.length} VisAssets?`);
-            if (confirmed) {
-                for (const va of visAssetsToRemove) {
-                    if (localVisAssets.includes(va)) {
-                        // Use await here to make sure the localVisAsset is removed first before the cache is refreshed
-                        await globals.stateManager.removePath('localVisAssets/' + va);
-                    }
-                    else {
-                        globals.stateManager.removeVisAsset(va);
-                    }
-                }
-                // Refresh the cache so that the puzzle piece disappear from the panel
-                globals.stateManager.refreshCache('visassets');
-            }
-        })
-    )).menu().on('mouseout', (evt) => {
+        $clearMenuItem
+    ).menu().on('mouseout', (evt) => {
         outTimer = setTimeout(() => $('#vis-asset-menu').css('visibility', 'hidden'), 500);
     }).on('mouseover', (evt) => {
         clearTimeout(outTimer);
@@ -126,7 +122,25 @@ export function DesignPanel() {
     for (const t in typeMap) {
         visassetsByType[t] = [];
     }
-    
+
+    // First, add VisAsset Gradients to their respective types
+    let gradients = globals.stateManager.state.visAssetGradients;
+    if (gradients) {
+        for (const t in visassetsByType) {
+            let gradientsOfType = Object.values(gradients).filter((g) => g.gradientType == t);
+            for (const g of gradientsOfType) {
+                let mockInput = {
+                    inputGenre: 'VisAsset',
+                    inputValue: g.uuid,
+                    inputType: gradientTypeMap[t]
+                }
+                let $puzzlePiece = Components.SwatchInputPuzzlePiece(gradientTypeMap[t], mockInput);
+                visassetsByType[t].push($puzzlePiece);
+            }
+        }
+    }
+
+    // ... Then, add the individual VisAssets
     for (const va in visassetsCopy) {
         let type = visassetsCopy[va].type;
         let artifactType = visassetsCopy[va].artifactType;

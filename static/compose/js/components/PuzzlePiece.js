@@ -20,11 +20,13 @@
 import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
 import { CACHE_UPDATE, resolveSchemaConsts } from "../../../common/StateManager.js";
+import { uuid } from "../../../common/UUID.js";
 import { ColorMap } from "./ColormapEditor/color.js";
-import { ColormapDialog } from "./ColormapEditor/ColormapDialog.js";
-import { GradientDialog, gradientToColormap } from "./ColormapEditor/GradientDialog.js";
+import { gradientToColormap } from "./ColormapEditor/GradientEditor.js";
 import { PrimitiveInput } from "./Primitives.js";
 import { VariableList } from "./VariableList.js";
+import { EditorDialog, TITLE_STRINGS } from "./ColormapEditor/EditorDialog.js";
+import { gradientPreviewThumbnail } from "./ColormapEditor/VisAssetGradientEditor.js";
 
 const cssObjectFitMap = {
     'IVLab.ABREngine.ColormapVisAsset': 'fill',
@@ -33,6 +35,19 @@ const cssObjectFitMap = {
     'IVLab.ABREngine.SurfaceTextureVisAsset': 'contain',
     'IVLab.ABREngine.GlyphVisAsset': 'contain',
 }
+
+export const typeMap = {
+    'colormap': 'IVLab.ABREngine.ColormapVisAsset',
+    'glyph': 'IVLab.ABREngine.GlyphVisAsset',
+    'line': 'IVLab.ABREngine.LineTextureVisAsset',
+    'texture': 'IVLab.ABREngine.SurfaceTextureVisAsset',
+};
+
+export const gradientTypeMap = {
+    'glyph': 'IVLab.ABREngine.GlyphGradient',
+    'line': 'IVLab.ABREngine.LineTextureGradient',
+    'texture': 'IVLab.ABREngine.SurfaceTextureGradient',
+};
 
 export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
     let $element = $('<div>', {
@@ -56,7 +71,20 @@ export function PuzzlePiece(label, inputType, leftConnector, addClasses) {
         // Find all drop zones that match this input type
         let elType = $(evt.target).data('inputType');
         let $dropZones = $('.input-socket .puzzle-piece.drop-zone');
-        let $sameTypeZones = $dropZones.filter((i, el) => $(el).data('inputType') == elType );
+        let validTypes = [elType];
+        let isVisAsset = Object.keys(typeMap)
+            .map((t) => { return {'visAssetType': t, 'abrType': typeMap[t]}})
+            .find((tt) => tt['abrType'] == elType);
+        let isGradient = Object.keys(gradientTypeMap)
+            .map((t) => { return {'visAssetType': t, 'abrType': gradientTypeMap[t]}})
+            .find((tt) => tt['abrType'] == elType);
+        if (isVisAsset) {
+            validTypes = validTypes + [isVisAsset['abrType'], gradientTypeMap[isVisAsset['visAssetType']]];
+        }
+        if (isGradient) {
+            validTypes = validTypes + [isGradient['abrType'], typeMap[isGradient['visAssetType']]];
+        }
+        let $sameTypeZones = $dropZones.filter((i, el) => validTypes.indexOf($(el).data('inputType')) >= 0);
         $sameTypeZones.addClass('highlighted');
     });
     $element.on('dragstop', (evt, ui) => {
@@ -70,24 +98,28 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
     let visassets = globals.stateManager.getCache('visassets');
     let localVisAssets = globals.stateManager.state.localVisAssets;
     let gradients = globals.stateManager.state.primitiveGradients;
+    let visAssetGradients = globals.stateManager.state.visAssetGradients;
+
+    let $thumb = $('<img>', {
+        class: 'artifact-thumbnail rounded',
+        src: `${STATIC_URL}compose/${inputType}_default.png`,
+    });
+
     if (visassets && visassets[uuid]) {
         let previewImg = visassets[uuid]['preview'];
-        thumbUrl = `/media/visassets/${uuid}/${previewImg}`;
+        $thumb.attr('src', `/media/visassets/${uuid}/${previewImg}`);
     } else if (localVisAssets && localVisAssets[uuid]) {
         // TODO assuming colormap xml for now
         let colormapXml = localVisAssets[uuid].artifactDataContents['colormap.xml'];
         let colormapObj = ColorMap.fromXML(colormapXml);
-        thumbUrl = colormapObj.toBase64(true);
+        $thumb.attr('src', colormapObj.toBase64(true));
     } else if (gradients && gradients[uuid]) {
         let colormap = gradientToColormap(gradients[uuid]);
-        thumbUrl = colormap.toBase64(true);
-    } else {
-        thumbUrl = `${STATIC_URL}compose/${inputType}_default.png`;
+        $thumb.attr('src', colormap.toBase64(true));
+    } else if (visAssetGradients && visAssetGradients[uuid]) {
+        $thumb = gradientPreviewThumbnail(visAssetGradients[uuid], 300, 50);
     }
-    let $thumb = $('<img>', {
-        class: 'artifact-thumbnail rounded',
-        src: thumbUrl,
-    });
+
     if (cssObjectFit) {
         $thumb.css('object-fit', cssObjectFit);
     }
@@ -108,7 +140,7 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
         timer = setTimeout(() => $tooltip.css('visibility', 'hidden'), 2000);
     }).on('mousemove', (evt) => {
         $tooltip.css('top', `${evt.pageY - $clone.height() - tooltipOffset}px`);
-        $tooltip.css('left', `${evt.pageX - $clone.width() / 2}px`);
+        $tooltip.css('left', `${evt.pageX - $clone.width()}px`);
         clearTimeout(timer);
         timer = setTimeout(() => $tooltip.css('visibility', 'hidden'), 2000);
     }).on('mouseout', (_evt) => {
@@ -120,12 +152,19 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 
     let $ret = PuzzlePiece($thumb, inputType, leftConnector, addClasses);
 
-    // If it's a localVisAsset, indicate it as such
+    // If it's a localVisAsset or visAsset Gradient, indicate it as such
     if (globals.stateManager.keyExists(['localVisAssets'], uuid)) {
         $ret.find('.puzzle-label').append($('<p>', {
             class: 'custom-indicator rounded',
             attr: { title: 'This colormap is custom' },
             text: 'C',
+        }));
+    }
+    if (globals.stateManager.keyExists(['visAssetGradients'], uuid)) {
+        $ret.find('.puzzle-label').append($('<p>', {
+            class: 'custom-indicator rounded',
+            attr: { title: 'VisAsset Gradient' },
+            text: 'G',
         }));
     }
 
@@ -134,19 +173,40 @@ export function PuzzlePieceWithThumbnail(uuid, inputType, leftConnector, addClas
 }
 
 // Can be either something waiting for an input or the input itself
-export function InputPuzzlePiece(inputName, inputProps) {
+export function InputPuzzlePiece(inputName, inputProps, addClass) {
     let $el;
     let resolvedProps = resolveSchemaConsts(inputProps);
 
-    // Avoid name stuttering
-    let shortInputName = inputName;
-    if (inputName != resolvedProps.parameterName && inputName.indexOf(resolvedProps.parameterName) >= 0) {
-        shortInputName = inputName.replace(resolvedProps.parameterName, '').trim();
-    }
-
     if (resolvedProps.inputGenre == 'VisAsset') {
         if (resolvedProps && !resolvedProps.inputValue) {
-            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, true, '');
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, true, addClass);
+
+            // Special case to enable visasset gradients to be created by clicking
+            let visassetType = Object.keys(typeMap).find((k) => typeMap[k] == resolvedProps.inputType);
+            if (Object.keys(gradientTypeMap).indexOf(visassetType) >= 0) {
+                let gradientType = gradientTypeMap[visassetType];
+                let humanReadable = TITLE_STRINGS[gradientType];
+                resolvedProps.inputType = gradientType;
+                $el.attr('title', $el.attr('title') + '\nClick to add a ' + humanReadable);
+                $el.addClass('hover-bright');
+                $el.css('cursor', 'pointer');
+                let clickEvt = (evt) => {
+                    // Create a new uuid if there's no input value yet
+                    let impressionUuid = $el.parents('.data-impression').data('uuid');
+                    let updatePromise = null;
+                    if (!resolvedProps.inputValue) {
+                        resolvedProps.inputValue = uuid();
+                        updatePromise = globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+                    } else {
+                        updatePromise = new Promise((resolve, reject) => resolve());
+                    }
+                    updatePromise.then(() => {
+                        EditorDialog(resolvedProps, impressionUuid);
+                    });
+                };
+                $el.on('dblclick', clickEvt);
+                $el.on('click', clickEvt);
+            }
         } else {
             let uuid = resolvedProps.inputValue;
             // Add the family / class to tooltip
@@ -167,7 +227,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 resolvedProps.inputValue,
                 resolvedProps.inputType,
                 true,
-                '',
+                addClass,
                 cssObjectFitMap[resolvedProps.inputType]
             ];
 
@@ -184,20 +244,65 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 $el.css('cursor', 'pointer');
                 let clickEvt = (evt) => {
                     if (!dragging) {
-                        let colorVar = getColorVar($el);
-                        let keyData = getKeyData($el);
-                        ColormapDialog(resolvedProps.inputValue, colorVar, keyData);
+                        let impressionUuid = $el.parents('.data-impression').data('uuid');
+                        EditorDialog(resolvedProps, impressionUuid);
                     }
                 };
                 $el.on('dblclick', clickEvt);
                 $el.on('click', clickEvt);
             }
+
+            // Allow the gradient to be edited
+            let gradient = false;
+            if (Object.values(gradientTypeMap).indexOf(resolvedProps.inputType) >= 0) {
+                $el.attr('title', $el.attr('title') + '\nClick to customize');
+                $el.addClass('hover-bright');
+                let dragging = false;
+                $el.on('dragstart', () => dragging = true);
+                $el.on('dragend', () => dragging = false);
+                $el.css('cursor', 'pointer');
+                let clickEvt = (evt) => {
+                    if (!dragging) {
+                        // let gradUuid = $el.data('inputValue');
+                        // VisAssetGradientDialog(gradUuid);
+                        let impressionUuid = $el.parents('.data-impression').data('uuid');
+                        EditorDialog(resolvedProps, impressionUuid);
+                    }
+                };
+                $el.on('dblclick', clickEvt);
+                $el.on('click', clickEvt);
+
+                gradient = true;
+            }
+
+            // Handle right-click to copy VisAsset import code for ABR
+            $el.attr('title', $el.attr('title') + '\nRight-click to copy C# ABR code');
+            $el.on('contextmenu', (evt) => {
+                evt.preventDefault();
+                // Get the UUID
+                let uuid = $el.data('inputValue');
+                if (!gradient) {
+                    navigator.clipboard.writeText(uuid);
+                    $.toast({
+                        text: `Copied UUID ${uuid} import code to clipboard`,
+                        hideAfter: 2000,
+                        position: 'bottom-right'
+                    });
+                } else {
+                    $.toast({
+                        text: `Cannot copy gradient UUIDs`,
+                        icon: 'warning',
+                        hideAfter: 2000,
+                        position: 'bottom-right'
+                    });
+                }
+            });
         }
     } else if (resolvedProps.inputGenre == 'Variable') {
         if (resolvedProps && resolvedProps.inputValue) {
-            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, '');
+            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, addClass);
         } else {
-            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, false, '');
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, addClass);
         }
         $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : 'No Variable');
 
@@ -249,21 +354,22 @@ export function InputPuzzlePiece(inputName, inputProps) {
         })
     } else if (resolvedProps.inputGenre == 'KeyData') {
         if (resolvedProps && resolvedProps.inputValue) {
-            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, 'keydata');
+            $el = PuzzlePiece(DataPath.getName(resolvedProps.inputValue), resolvedProps.inputType, false, 'keydata ' + addClass);
         } else {
-            $el = PuzzlePiece(shortInputName, resolvedProps.inputType, false, 'keydata');
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, 'keydata ' + addClass);
         }
         $el.attr('title', resolvedProps && resolvedProps.inputValue ? resolvedProps.inputValue : null);
     } else if (resolvedProps.inputGenre == 'Primitive') {
-        $el = PrimitiveInput(inputName, shortInputName, resolvedProps);
+        $el = PrimitiveInput(inputName, inputName, resolvedProps);
         $el.addClass('no-drag');
+        $el.addClass(addClass);
     } else if (resolvedProps.inputGenre == 'PrimitiveGradient') {
         let gradientUuid = null;
         let args = [
             resolvedProps.inputValue,
             resolvedProps.inputType,
             false,
-            '',
+            addClass,
             'fill'
         ];
         if (resolvedProps && resolvedProps.inputValue) {
@@ -271,7 +377,7 @@ export function InputPuzzlePiece(inputName, inputProps) {
             $el.attr('title', 'Click to edit gradient');
             gradientUuid = resolvedProps.inputValue;
         } else {
-            $el = PuzzlePiece(shortInputName, resolvedProps.inputType);
+            $el = PuzzlePiece(inputName, resolvedProps.inputType, false, addClass);
             $el.attr('title', 'Click to add gradient');
         }
         $el.css('cursor', 'pointer');
@@ -285,12 +391,16 @@ export function InputPuzzlePiece(inputName, inputProps) {
                 return;
             }
             let impressionUuid = $(evt.target).parents('.data-impression').data('uuid');
-            // Reassign uuid if it's changed and update state if necessary
-            let colorVar = getColorVar($el);
-            let keyData = getKeyData($el);
-            GradientDialog(gradientUuid, colorVar, keyData).then((gradientUuidValue) => {
-                resolvedProps.inputValue = gradientUuidValue;
-                globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+            // Create a new uuid if there's no input value yet
+            let updatePromise = null;
+            if (!resolvedProps.inputValue) {
+                resolvedProps.inputValue = uuid();
+                updatePromise = globals.stateManager.update(`impressions/${impressionUuid}/inputValues/${inputName}`, resolvedProps);
+            } else {
+                updatePromise = new Promise((resolve, reject) => resolve());
+            }
+            updatePromise.then(() => {
+                EditorDialog(resolvedProps, impressionUuid);
             });
         });
     }
@@ -305,8 +415,8 @@ export function InputPuzzlePiece(inputName, inputProps) {
 
 // A puzzle piece that's already assigned on a data impression; when it's
 // removed it will send a message to the server telling it that it's removed
-export function AssignedInputPuzzlePiece(inputName, inputProps) {
-    let $input = InputPuzzlePiece(inputName, inputProps);
+export function AssignedInputPuzzlePiece(inputName, inputProps, addClass=undefined) {
+    let $input = InputPuzzlePiece(inputName, inputProps, addClass);
     if (!$input.hasClass('no-drag')) {
         $input.draggable({
             cursor: 'grabbing',
@@ -333,7 +443,23 @@ export function SwatchInputPuzzlePiece(inputName, inputProps) {
     return InputPuzzlePiece(inputName, inputProps).draggable({
         helper: 'clone',
         cursor: 'grabbing',
-    })
+        drag: (evt, ui) => {
+            // Enable swatch puzzle pieces to float OVER any dialogs that need it
+            let $d = $('.puzzle-piece-overlay-dialog');
+            if ($d.length > 0) {
+                let pos = $(ui.helper).position();
+                let dPos = $d.parents('.ui-dialog').position();
+                let gPos = $d.position();
+                let cPos = {left: dPos.left - gPos.left, top: dPos.top - gPos.top};
+                if (pos.left > cPos.left && pos.left < cPos.left + $d.width() &&
+                    pos.top > cPos.top && pos.top < cPos.top + $d.height()
+                ) {
+                    $(ui.helper).appendTo($d);
+                    $(ui.helper).css('position', 'fixed');
+                }
+            }
+        }
+    }).addClass('swatch');
 }
 
 // A connector for a puzzle piece

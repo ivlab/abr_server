@@ -21,9 +21,10 @@
 
 import { DataPath } from "../../../common/DataPath.js";
 import { globals } from "../../../common/globals.js";
-import { CACHE_UPDATE } from '../../../common/StateManager.js';
+import { CACHE_UPDATE, resolveSchemaConsts } from '../../../common/StateManager.js';
 import { COMPOSITION_LOADER_ID } from '../components/Components.js';
 import { InputPuzzlePiece, AssignedInputPuzzlePiece } from "./PuzzlePiece.js";
+import { uuid } from "../../../common/UUID.js";
 
 export function DataImpression(plateType, uuid, name, impressionData) {
     let $element = $('<div>', { class: 'data-impression rounded' })
@@ -59,14 +60,6 @@ export function DataImpression(plateType, uuid, name, impressionData) {
         class: 'data-impression-header rounded-top',
     }).css({ cursor: 'grabbing'}).append(
         $('<p>', { text: name, })
-    ).append(
-        $('<button>', {
-            class: 'rounded',
-            html: collapsed ? '+' : '&ndash;',
-            title: collapsed ? 'Show More' : 'Show Less'
-        }).on('click', (evt) => {
-            globals.stateManager.update(`/uiData/compose/impressionData/${uuid}/collapsed`, !collapsed);
-        })
     ));
 
     let inputValues = null;
@@ -82,6 +75,10 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     // Separate out all the inputs into their individual parameters
     let parameterMapping = {};
     for (const inputName in plateSchema) {
+        // Skip Key Data (these are constructed separately)
+        if (plateSchema[inputName].properties.inputGenre.const == 'KeyData') {
+            continue;
+        }
         let parameterName = plateSchema[inputName].properties.parameterName.const;
         if (parameterName in parameterMapping) {
             parameterMapping[parameterName].push(inputName);
@@ -91,6 +88,20 @@ export function DataImpression(plateType, uuid, name, impressionData) {
     }
 
     $element.append(DataImpressionSummary(uuid, name, impressionData, inputValues, parameterMapping));
+
+    // Construct KeyData input
+    let kdInputName = 'Key Data';
+    let $kdParam = $('<div>', { class: 'keydata parameter rounded-bottom' });
+    let $kdSocket = InputSocket(kdInputName, plateSchema[kdInputName].properties, 'keydata');
+    if (inputValues && inputValues[kdInputName]) {
+        let $kdInput = AssignedInputPuzzlePiece(kdInputName, inputValues[kdInputName], 'keydata');
+        $kdInput.appendTo($kdSocket);
+    }
+    $kdParam.append($kdSocket);
+
+    if (!collapsed) {
+        $element.append($kdParam);
+    }
 
     let $parameterList = $('<div>', {
         class: 'parameter-list',
@@ -144,9 +155,9 @@ export function DataImpression(plateType, uuid, name, impressionData) {
 }
 
 // A socket that can be dropped into
-function InputSocket(inputName, inputProps) {
+function InputSocket(inputName, inputProps, addClass=undefined) {
     let $socket = $('<div>', {
-        class: 'input-socket',
+        class: 'input-socket ' + addClass,
     });
     // It's an input, but we can't drag it
     let $dropZone = InputPuzzlePiece(inputName, inputProps);
@@ -158,6 +169,11 @@ function InputSocket(inputName, inputProps) {
             $(ui.draggable).data('draggedOut', true);
         },
         drop: (evt, ui) => {
+            // Skip socket drop events if piece is inside a dialog
+            if (ui.helper.parents('.puzzle-piece-overlay-dialog').length > 0) {
+                return;
+            }
+
             // Get the impression that this input is a part of
             let $impression = $(evt.target).closest('.data-impression');
             let impressionId = $impression.data('uuid');
@@ -166,10 +182,7 @@ function InputSocket(inputName, inputProps) {
             // Get the default values for this input, in case there's nothing
             // there already
             let defaultInputsSchema = globals.schema.definitions.Plates[plateType].properties[inputName].properties;
-            let defaultInputs = {};
-            for (const p in defaultInputsSchema) {
-                defaultInputs[p] = defaultInputsSchema[p].const;
-            }
+            let defaultInputs = resolveSchemaConsts(defaultInputsSchema);
 
             // See if there's an input there already, if not assign the defaults
             let impressionState;
@@ -183,12 +196,21 @@ function InputSocket(inputName, inputProps) {
                 inputState = defaultInputs;
             }
 
-            // Ensure the dropped type matches the actual type
+            // Ensure the dropped type matches the actual type -- account for
+            // polymorphic VisAsset types that can take gradients or regular
             let droppedType = ui.draggable.data('inputType');
-            if (droppedType == inputProps.inputType.const) {
-                // Update the inputState
+            let validTypes;
+            if (inputProps.inputType.oneOf) {
+                validTypes = inputProps.inputType.oneOf.map(t => t.const);
+            } else {
+                validTypes = [inputProps.inputType.const];
+            }
+            if (validTypes.indexOf(droppedType) >= 0) {
+                // Update the inputState with value and type (type may be
+                // different, but compatible)
                 let droppedValue = ui.draggable.data('inputValue');
                 inputState['inputValue'] = droppedValue;
+                inputState['inputType'] = droppedType;
 
                 // Send the update to the server
                 globals.stateManager.update(`impressions/${impressionId}/inputValues/${inputName}`, inputState);
@@ -220,14 +242,15 @@ function InputSocket(inputName, inputProps) {
 }
 
 function Parameter(parameterName) {
-    return $('<div>', { class: 'parameter' }).append(
-        $('<div>', { class: "parameter-label" }).append(
-            $('<p>', { text: parameterName })
-        )
-    );
+    return $('<div>', { class: 'parameter' });
 }
 
 function DataImpressionSummary(uuid, name, impressionData, inputValues, parameterMapping) {
+    let collapsed = false;
+    if (impressionData && impressionData.collapsed) {
+        collapsed = true;
+    }
+
     let oldVisibility = true;
     if (globals.stateManager.state.impressions && globals.stateManager.state.impressions[uuid]) {
         if (globals.stateManager.state.impressions[uuid].renderHints) {
@@ -235,7 +258,7 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
         }
     }
     let $el = $('<div>', {
-        class: 'data-impression-summary rounded-bottom'
+        class: 'data-impression-summary'
     }).append(
         $('<div>', { class: 'impression-controls' }).append(
             $('<button>', {
@@ -246,17 +269,22 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
                 globals.stateManager.update(`/impressions/${uuid}/renderHints/Visible`, !oldVisibility);
             })
         ).append(
-            // Pencil icon
             $('<button>', {
-                class: 'material-icons rounded',
-                text: 'edit',
-                title: 'Rename data impression'
-            }).on('click', (evt) => {
-                let newName = prompt('Rename data impression:', name);
-                if (newName) {
-                    globals.stateManager.update(`/impressions/${uuid}/name`, newName);
-                    globals.stateManager.update(`/impressions/${uuid}/isRenamedByUser`, true);
-                }
+                class: 'rounded',
+                title: collapsed ? 'Show More' : 'Show Less'
+            }).append(
+                $('<span>', { class: 'material-icons', text: collapsed ? 'lock' : 'lock_open'})
+            ).on('click', (evt) => {
+                globals.stateManager.update(`/uiData/compose/impressionData/${uuid}/collapsed`, !collapsed);
+            })
+        ).append(
+            $('<button>', {
+                class: 'rounded',
+                title: 'Duplicate this data impression'
+            }).append(
+                $('<span>', { class: 'material-icons', text: 'content_copy'})
+            ).on('click', (evt) => {
+                duplicateDataImpression(uuid);
             })
         )
     );
@@ -266,13 +294,15 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
         let $props = $('<div>', {
             class: 'summary-properties parameter'
         });
+        let kdInputName = 'Key Data';
+        if (inputValues && inputValues[kdInputName]) {
+            $props.append(AssignedInputPuzzlePiece(kdInputName, inputValues[kdInputName], 'summary'));
+        }
         for (const parameter in parameterMapping) {
             for (const inputName of parameterMapping[parameter]) {
                 if (inputValues && inputValues[inputName]) {
                     // Display a non-editable version of the piece in the summary block
-                    let $input = AssignedInputPuzzlePiece(inputName, inputValues[inputName]);
-                    $input.css('position', 'relative');
-                    $input.css('height', '2rem');
+                    let $input = AssignedInputPuzzlePiece(inputName, inputValues[inputName], 'summary');
                     $input.off('click');
                     if ($input.hasClass('ui-draggable')) {
                         $input.draggable('destroy');
@@ -295,4 +325,20 @@ function DataImpressionSummary(uuid, name, impressionData, inputValues, paramete
     }
 
     return $el;
+}
+
+function duplicateDataImpression(oldUuid) {
+    let oldImpressionContents = globals.stateManager.state.impressions[oldUuid];
+    let oldImpressionData = globals.stateManager.state.uiData.compose.impressionData[oldUuid];
+    let newImpression = {};
+    let newImpressionData = {};
+    Object.assign(newImpression, oldImpressionContents);
+    Object.assign(newImpressionData, oldImpressionData);
+
+    let newUuid = uuid();
+    newImpression.uuid = newUuid;
+    newImpressionData.position.top += 100;
+    newImpressionData.position.left += 100;
+    globals.stateManager.update(`/impressions/${newUuid}`, newImpression);
+    globals.stateManager.update('uiData/compose/impressionData/' + newUuid, newImpressionData);
 }

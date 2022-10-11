@@ -110,6 +110,7 @@ function incrementPrimitive(primitiveString, inputType, positive) {
 export function PrimitiveInput(inputName, shortInputName, resolvedProps) {
     let $el = $('<div>', {
         class: 'puzzle-label rounded',
+        title: `${inputName}: ${resolvedProps.inputValue}`,
     });
     $el.append($('<p>', {
         class: 'primitive-name',
