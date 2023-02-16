@@ -27,7 +27,7 @@ import { getDisplayVal, getFloatVal } from '../Primitives.js';
 import { STATE_UPDATE_EVENT } from '../../../../common/StateManager.js';
 import { createSvg } from '../../../../common/helpers.js';
 import { width, height } from './dialogConsts.js';
-import { histogramDragIndicator, histogramDragIndicatorDone } from './HistogramEditor.js';
+import { histogramDragIndicator, histogramDragIndicatorDone, histogramExists } from './HistogramEditor.js';
 
 const DEFAULT_GRADIENT = {
     "points": [
@@ -109,15 +109,11 @@ export async function GradientEditor(inputProps) {
 }
 
 function setCurrentGradient(gradientUuid) {
+    if (globals.stateManager.state['primitiveGradients'] && globals.stateManager.state['primitiveGradients'][gradientUuid]) {
+        currentGradient = globals.stateManager.state['primitiveGradients'][gradientUuid];
+    }
     if (!currentGradient) {
         currentGradient = DEFAULT_GRADIENT;
-    } else {
-        if (globals.stateManager.state['primitiveGradients'] && globals.stateManager.state['primitiveGradients'][gradientUuid]) {
-            currentGradient = globals.stateManager.state['primitiveGradients'][gradientUuid];
-        } else {
-            alert('No gradient to edit!');
-            return;
-        }
     }
     currentGradientUuid = gradientUuid;
 }
@@ -206,13 +202,15 @@ function stopsFromGradient() {
             drag: (evt, ui) => {
                 let stopWidth = $(ui.helper).get(0).clientWidth;
                 let percentage = ($(ui.helper).position().left + stopWidth / 2.0) / width;
-                histogramDragIndicator(percentage);
+                if (histogramExists())
+                    histogramDragIndicator(percentage);
             },
             stop: (evt, ui) => {
                 currentGradient = gradientFromStops();
                 saveGradient();
                 $('#gradient-view').append(getGradientColormap());
-                histogramDragIndicatorDone();
+                if (histogramExists())
+                    histogramDragIndicatorDone();
             },
         });
 

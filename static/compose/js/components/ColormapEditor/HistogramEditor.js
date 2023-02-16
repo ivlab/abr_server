@@ -48,6 +48,9 @@ export function histogramDragIndicator(percentage) {
 export function histogramDragIndicatorDone() {
     $('#histogram-drag-indicator').css('opacity', '0%');
 }
+export function histogramExists() {
+    return typeof($('#histogram-editor').get(0)) !== 'undefined';
+}
 
 // Histogram component to plug into the editor dialog
 export async function HistogramEditor(variableInput, keyDataInput) {
