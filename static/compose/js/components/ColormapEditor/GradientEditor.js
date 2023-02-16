@@ -45,6 +45,10 @@ var currentGradientUuid = null;
 
 // Returns the new uuid if there is one
 export async function GradientEditor(inputProps) {
+    // clear some stateful items that might hang around
+    currentGradient = null;
+    currentGradientUuid = null;
+
     let gradientUuid = inputProps.inputValue;
     setCurrentGradient(gradientUuid);
 
