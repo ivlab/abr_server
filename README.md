@@ -56,6 +56,16 @@ python manage.py livereload
 
 ## Docker VisManager Build Instructions
 
+### Prerequisites:
+
+You do NOT need a Docker Hub account to build the docker image locally, but if you intend to deploy to the web for broad use (e.g. in class) then you DO need one. Go to hub.docker.com and create a personal account. or create one to share.
+
+Then, sign into Docker Desktop with your new Docker Hub account (upper right > Sign In).
+
+Note: in the instructions below, replace all instances of `bridgerherman` with your docker hub ID.
+
+### Building the image
+
 To build the Docker image for release, use the following steps.
 
 1. Ensure Docker is running
