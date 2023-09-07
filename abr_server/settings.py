@@ -15,6 +15,7 @@ import os
 import time
 from pathlib import Path
 from types import MemberDescriptorType
+import configparser
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -121,12 +122,12 @@ USE_L10N = True
 
 USE_TZ = True
 
-logdir = os.path.join(BASE_DIR, '../logs')
-if not os.path.exists(logdir):
-    os.mkdir(logdir)
+# logdir = os.path.join(BASE_DIR, '../logs')
+# if not os.path.exists(logdir):
+#     os.mkdir(logdir)
 
-logfile = os.path.join(logdir, 'abr_server-{}.log'.format(time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime())))
-print('Logging to', logfile)
+# logfile = os.path.join(logdir, 'abr_server-{}.log'.format(time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime())))
+# print('Logging to', logfile)
 
 # LOGGING = {
 #     'version': 1,
@@ -154,8 +155,15 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, os.path.join('..', 'static'))
 STATICFILES_DIRS = [os.path.join('static')]
 
+# load the configuration
+with open(os.path.join(BASE_DIR, 'abr_server.cfg')) as fin:
+    config = configparser.ConfigParser()
+    config.read(fin)
+    print(config.sections())
+
 # Serve media files in media dir (using cors_server.py)
-MEDIA_ROOT = os.path.join(BASE_DIR, os.path.join('..', 'media'))
+MEDIA_ROOT = config['media']['path']
+# MEDIA_ROOT = os.path.join(BASE_DIR, os.path.join('..', 'media'))
 if not os.path.exists(MEDIA_ROOT):
     os.makedirs(MEDIA_ROOT)
 
@@ -174,12 +182,12 @@ if not VISASSET_PATH.exists():
     VISASSET_PATH.mkdir()
 
 VISASSET_JSON = 'artifact.json'
-VISASSET_LIBRARY = 'http://sculptingvis.tacc.utexas.edu/static/Artifacts/'
+VISASSET_LIBRARY = config['visassets']['online_library']
 
-WS_SEND_SCHEMA = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/abr-server-websocket-send.json'
-WS_RECEIVE_SCHEMA = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/abr-server-websocket-receive.json'
+WS_SEND_SCHEMA = config['schemas']['notifier_send']
+WS_RECEIVE_SCHEMA = config['schemas']['notifier_receive']
 
-SCHEMA_URL = 'https://raw.githubusercontent.com/ivlab/abr-schema/master/ABRSchema_0-2-0.json'
+SCHEMA_URL = config['schemas']['abr']
 
 BACKUP_LOCATIONS = {
     'linux': Path('~/.config/abr/'),
