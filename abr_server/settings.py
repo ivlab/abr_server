@@ -156,20 +156,18 @@ STATIC_ROOT = os.path.join(BASE_DIR, os.path.join('..', 'static'))
 STATICFILES_DIRS = [os.path.join('static')]
 
 # load the configuration
-with open(os.path.join(BASE_DIR, 'abr_server.cfg')) as fin:
-    config = configparser.ConfigParser()
-    config.read(fin)
-    print(config.sections())
+config = configparser.ConfigParser()
+config.read(os.path.join(BASE_DIR, 'abr_server.cfg'))
 
 # Serve media files in media dir (using cors_server.py)
-MEDIA_ROOT = config['media']['path']
-# MEDIA_ROOT = os.path.join(BASE_DIR, os.path.join('..', 'media'))
+MEDIA_ROOT = os.path.realpath(config['Media']['path'])
 if not os.path.exists(MEDIA_ROOT):
     os.makedirs(MEDIA_ROOT)
 
 
 # ABR-Specific settings
-DOWNLOAD_VISASSETS = True # Download visassets from a particular state if they don't exist
+# DOWNLOAD_VISASSETS = True # Download visassets from a particular state if they don't exist
+DOWNLOAD_VISASSETS = config['VisAssets']['download_missing']
 VISASSET_PATH = Path(MEDIA_ROOT).joinpath('visassets')
 DATASET_PATH = Path(MEDIA_ROOT).joinpath('datasets')
 THUMBNAILS_PATH = Path(MEDIA_ROOT).joinpath('thumbnails')
@@ -180,14 +178,16 @@ if not DATASET_PATH.exists():
     DATASET_PATH.mkdir()
 if not VISASSET_PATH.exists():
     VISASSET_PATH.mkdir()
+if not THUMBNAILS_PATH.exists():
+    THUMBNAILS_PATH.mkdir()
 
 VISASSET_JSON = 'artifact.json'
-VISASSET_LIBRARY = config['visassets']['online_library']
+VISASSET_LIBRARY = config['VisAssets']['download_missing_from']
 
-WS_SEND_SCHEMA = config['schemas']['notifier_send']
-WS_RECEIVE_SCHEMA = config['schemas']['notifier_receive']
+WS_SEND_SCHEMA = config['Schemas']['notifier_send']
+WS_RECEIVE_SCHEMA = config['Schemas']['notifier_receive']
 
-SCHEMA_URL = config['schemas']['abr']
+SCHEMA_URL = config['Schemas']['abr']
 
 BACKUP_LOCATIONS = {
     'linux': Path('~/.config/abr/'),
