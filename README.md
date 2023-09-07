@@ -1,5 +1,60 @@
 # ABR Server
 
+## Installation
+
+To get started with development, first make sure you have the `pipenv` package.
+This enables all developers of the server to share the same Python configuration
+for this app. Essentially, the Pipenv contains a "local" copy of each dependency
+that's unique to this project to reduce the chance of conflicting dependencies
+with your system Python installation. Check out the [pipenv
+project](https://docs.pipenv.org/) for more information. If you're on Windows,
+replace `python3` with `py`.
+
+All these commands are tested with Python 3.8; they are NOT guaranteed to work
+with other versions of Python.
+
+```
+python3 pip install --user pipenv
+```
+
+Then, install the local dependencies:
+
+```
+python3 -m pipenv install
+```
+
+Then, to begin development, "activate" the Pipenv by entering a shell:
+
+```
+python3 -m pipenv shell
+```
+
+From here, you should have access to all the dependencies of the project.
+
+
+## Building the executable version
+
+The ABR server can also be built to an executable for easy distribution.
+
+First, you need the `pyinstaller` package:
+
+```
+python3 -m pip install pyinstaller
+```
+
+Restart your terminal to make sure `pyinstaller` ends up on your PATH.
+
+
+Then, to build the executable, run the following command:
+
+```
+pyinstaller  --name="abr-server" --hidden-import="compose" --hidden-import="compose.urls" --hidden-import="api" --hidden-import="api.urls" --hidden-import="abr_server.routing" --add-data="templates:templates" --add-data="static:static" manage.py
+```
+
+this will output an executable (for the OS/architecture that you run pyinstaller on) to the folder `./dist/abr-server`. You can zip this up, etc. for distribution.
+
+## Old news below here, probably delete
+
 This is the main server component of the ABR architecture.
 
 ![The four-component ABR Architecture, including Design User Interfaces, Server,
