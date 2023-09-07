@@ -166,7 +166,6 @@ if not os.path.exists(MEDIA_ROOT):
 
 
 # ABR-Specific settings
-# DOWNLOAD_VISASSETS = True # Download visassets from a particular state if they don't exist
 DOWNLOAD_VISASSETS = config['VisAssets']['download_missing']
 VISASSET_PATH = Path(MEDIA_ROOT).joinpath('visassets')
 DATASET_PATH = Path(MEDIA_ROOT).joinpath('datasets')
