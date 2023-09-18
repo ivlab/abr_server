@@ -1,5 +1,9 @@
 # ABR Server
 
+THIS REPOSITORY IS ARCHIVED and no longer maintained. The ABR Server core code
+is now maintained inside the
+[ABREngine-UnityPackage](https://github.com/ivlab/ABREngine-UnityPackage).
+
 ## Installation
 
 To get started with development, first make sure you have the `pipenv` package.
